@@ -10,7 +10,9 @@ export interface ChannelPointer {
   rolloutPercent: number;
   paused: boolean;
   limited?: boolean; // plan limit reached: new downloads paused
-  allowedNativeBuilds?: string[]; // empty/undefined = any
+  allowedNativeBuilds?: string[]; // empty/undefined = any, unless enforceNativeBuilds
+  /** When true the list is a hard allow list even when empty (the app has recorded native builds). */
+  enforceNativeBuilds?: boolean;
 }
 
 /** Capgo self hosted protocol request (public docs, clean room). */
@@ -43,7 +45,7 @@ export async function decideUpdate(pointer: ChannelPointer | null | undefined, r
     if (!req.device_id || !req.app_id) return NO_UPDATE;
     if (req.version_name === pointer.bundleVersion) return NO_UPDATE;
     const allowed = pointer.allowedNativeBuilds;
-    if (allowed && allowed.length > 0 && (!req.version_build || !allowed.includes(req.version_build))) return NO_UPDATE;
+    if ((pointer.enforceNativeBuilds || (allowed && allowed.length > 0)) && (!req.version_build || !(allowed ?? []).includes(req.version_build))) return NO_UPDATE;
     if (!(await inRollout(req.device_id, pointer.channelId, pointer.rolloutPercent))) return NO_UPDATE;
     const res: UpdateResponse = { version: pointer.bundleVersion, url: pointer.url, checksum: pointer.checksum };
     if (pointer.sessionKey) (res as { session_key?: string }).session_key = pointer.sessionKey;

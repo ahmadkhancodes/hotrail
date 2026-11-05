@@ -2,6 +2,7 @@ import type { AppDoc, BundleDoc, ChannelDoc, ReleaseAction } from "@/lib/db/type
 import { HttpError } from "@/lib/http";
 import { uuidv7 } from "@/lib/ids";
 import { recordAudit, requireApp, requireScope } from "./guard";
+import { incompatibleFor, type Incompatible } from "./native";
 import { publishPointers } from "./pointers";
 import type { Principal, ShipDeps } from "./types";
 
@@ -14,7 +15,7 @@ export interface ReleaseInput {
   autopauseThreshold?: number;
 }
 
-export interface ReleaseResult { headcode: string; version: string; percent: number; channel: string; action: ReleaseAction }
+export interface ReleaseResult { headcode: string; version: string; percent: number; channel: string; action: ReleaseAction; /** Recorded store builds that will not get this bundle, with the reason. */ incompatible: Incompatible[] }
 
 async function getChannelOrCreate(deps: ShipDeps, p: Principal, app: AppDoc, name: string, create: boolean): Promise<ChannelDoc> {
   const existing = await deps.db.getChannelByName(app.id, name);
@@ -73,7 +74,7 @@ export async function releaseBundle(deps: ShipDeps, p: Principal, input: Release
   await recordAudit(deps, p, `channel.${action === "percent" ? "percent_changed" : "released"}`, `${app.bundleId}:${ch.name}`, { headcode: bundle.headcode, version: bundle.version, percent, from: ch.rolloutPercent });
   await publishPointers(deps, app);
   await deps.emit(p.orgId, "release.created", { app: app.bundleId, channel: ch.name, headcode: bundle.headcode, version: bundle.version, percent, action }).catch(() => undefined);
-  return { headcode: bundle.headcode, version: bundle.version, percent, channel: ch.name, action };
+  return { headcode: bundle.headcode, version: bundle.version, percent, channel: ch.name, action, incompatible: await incompatibleFor(deps, app, bundle) };
 }
 
 /** One click rollback: the previous bundle goes live at 100% and the channel is un-paused. */
@@ -92,7 +93,7 @@ export async function rollbackChannel(deps: ShipDeps, p: Principal, input: { app
   await recordAudit(deps, p, "channel.rolled_back", `${app.bundleId}:${ch.name}`, { to: prev.headcode, from: from?.headcode ?? null });
   await publishPointers(deps, app);
   await deps.emit(p.orgId, "release.rolled_back", { app: app.bundleId, channel: ch.name, headcode: prev.headcode, version: prev.version, from: from?.headcode ?? null }).catch(() => undefined);
-  return { headcode: prev.headcode, version: prev.version, percent: 100, channel: ch.name, action: "rollback" };
+  return { headcode: prev.headcode, version: prev.version, percent: 100, channel: ch.name, action: "rollback", incompatible: await incompatibleFor(deps, app, prev) };
 }
 
 export async function setChannelPaused(deps: ShipDeps, p: Principal, input: { appId: string; channel: string; paused: boolean }): Promise<{ channel: string; paused: boolean }> {

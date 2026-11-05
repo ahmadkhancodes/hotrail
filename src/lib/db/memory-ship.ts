@@ -1,4 +1,4 @@
-import type { AppDoc, BundleDoc, ChannelDoc, DeviceDoc, EventDoc, OverrideDoc, ReleaseDoc, ShipDb } from "./types";
+import { bucketStart, type AppDoc, type BundleDoc, type ChannelDoc, type DeviceDoc, type EventDoc, type NativeBuildDoc, type OverrideDoc, type ReleaseDoc, type ShipDb, type UsageBucketDoc } from "./types";
 
 /** Memory implementation of the ship path collections (same semantics as mongo-ship.ts). */
 export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: string): void; exportOrg(orgId: string): Record<string, unknown> } {
@@ -9,6 +9,8 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
   const devices = new Map<string, DeviceDoc>();
   const overrides = new Map<string, OverrideDoc>();
   const events: EventDoc[] = [];
+  const buckets = new Map<string, UsageBucketDoc>();
+  const nativeBuilds = new Map<string, NativeBuildDoc>();
   const clone = <T>(x: T): T => structuredClone(x);
   const dk = (appId: string, deviceId: string) => `${appId}|${deviceId}`;
 
@@ -21,6 +23,10 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
     },
     async getAppByBundleId(bundleId) {
       const a = [...apps.values()].find((x) => x.bundleId === bundleId);
+      return a ? clone(a) : null;
+    },
+    async getAppById(id) {
+      const a = apps.get(id);
       return a ? clone(a) : null;
     },
     async listApps(orgId) {
@@ -56,6 +62,12 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
       const b = [...bundles.values()].find((x) => x.appId === appId && x.headcode === headcode && x.state === "active");
       return b ? clone(b) : null;
     },
+    async softDeleteBundle(appId, id) {
+      const b = bundles.get(id);
+      if (!b || b.appId !== appId || b.state !== "active") return false;
+      bundles.set(id, { ...b, state: "softDeleted" });
+      return true;
+    },
     async listBundles(appId, limit = 50) {
       return [...bundles.values()]
         .filter((b) => b.appId === appId && b.state === "active")
@@ -81,6 +93,9 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
     async listChannels(appId) {
       return [...channels.values()].filter((c) => c.appId === appId).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || (a.name < b.name ? -1 : 1)).map(clone);
     },
+    async listLiveChannels(limit = 1000) {
+      return [...channels.values()].filter((c) => c.currentBundleId && !c.paused).slice(0, limit).map(clone);
+    },
     async updateChannel(appId, id, patch, expectRev) {
       const c = channels.get(id);
       if (!c || c.appId !== appId) return null;
@@ -102,6 +117,10 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
     },
     async getDevice(appId, deviceId) {
       const d = devices.get(dk(appId, deviceId));
+      return d ? clone(d) : null;
+    },
+    async getDeviceByCustomId(appId, customId) {
+      const d = [...devices.values()].find((x) => x.appId === appId && x.customId === customId);
       return d ? clone(d) : null;
     },
     async countDevices(appId, since) {
@@ -134,11 +153,29 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
     async appendEvent(e) {
       events.push({ ...clone(e), app });
     },
-    async listEvents(appId, { since, channelId, bundleVersion, limit = 1000 } = {}) {
+    async listEvents(appId, { since, channelId, bundleVersion, deviceId, limit = 1000 } = {}) {
       return events
-        .filter((e) => e.appId === appId && (!since || e.ts >= since) && (!channelId || e.channelId === channelId) && (!bundleVersion || e.bundleVersion === bundleVersion))
+        .filter((e) => e.appId === appId && (!deviceId || e.deviceId === deviceId) && (!since || e.ts >= since) && (!channelId || e.channelId === channelId) && (!bundleVersion || e.bundleVersion === bundleVersion))
         .sort((a, b) => b.ts.getTime() - a.ts.getTime())
         .slice(0, limit).map(clone);
+    },
+
+    async bumpBucket(b) {
+      const start = bucketStart(b.at);
+      const k = `${b.appId}|${start.getTime()}|${b.channelId}|${b.bundleVersion}`;
+      const cur = buckets.get(k) ?? { app, appId: b.appId, bucket: start, channelId: b.channelId, bundleVersion: b.bundleVersion, counts: { download: 0, applied: 0, failed: 0, rolledBack: 0 }, expiresAt: b.expiresAt };
+      cur.counts[b.action]++;
+      buckets.set(k, cur);
+    },
+    async listBuckets(appId, { since, until }) {
+      return [...buckets.values()].filter((x) => x.appId === appId && x.bucket >= since && (!until || x.bucket < until)).sort((a, b) => a.bucket.getTime() - b.bucket.getTime()).map(clone);
+    },
+
+    async recordNativeBuild(b) {
+      nativeBuilds.set(`${b.appId}|${b.versionBuild}`, { ...clone(b), app });
+    },
+    async listNativeBuilds(appId) {
+      return [...nativeBuilds.values()].filter((x) => x.appId === appId).sort((a, b) => a.recordedAt.getTime() - b.recordedAt.getTime()).map(clone);
     },
 
     deleteOrg(orgId) {
@@ -149,6 +186,8 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
       for (let i = releases.length - 1; i >= 0; i--) if (releases[i]!.orgId === orgId) releases.splice(i, 1);
       for (const [k, d] of devices) if (appIds.has(d.appId)) devices.delete(k);
       for (const [k, o] of overrides) if (appIds.has(o.appId)) overrides.delete(k);
+      for (const [k, x] of buckets) if (appIds.has(x.appId)) buckets.delete(k);
+      for (const [k, x] of nativeBuilds) if (appIds.has(x.appId)) nativeBuilds.delete(k);
       for (let i = events.length - 1; i >= 0; i--) if (appIds.has(events[i]!.appId)) events.splice(i, 1);
     },
     exportOrg(orgId) {

@@ -1,6 +1,6 @@
 import {
   buildManifest, checkArchive, checkFile, headcodeForIndex, isSemver, normalizePath, planUpload, sha256Hex, signManifest, verifyManifest,
-  type Manifest, type PolicyViolation, POLICY_URL,
+  type Manifest, type NativeInfo, type PolicyViolation, POLICY_URL,
 } from "@buffersol/hotrail-core";
 import type { AppDoc, BundleDoc } from "@/lib/db/types";
 import { open as openSecret } from "@/lib/crypto/secretbox";
@@ -21,9 +21,11 @@ export interface PlanInput {
   signature: string | null;
   publicKey?: string;
   nativeBuilds?: string[];
+  native?: NativeInfo;
 }
 
 interface PendingUpload {
+  native?: NativeInfo | null;
   manifest: Manifest;
   signature: string | null;
   nativeBuilds: string[];
@@ -115,7 +117,7 @@ export async function planBundle(deps: ShipDeps, p: Principal, input: PlanInput)
     uploads[sha] = presigned ?? { url: await blobUploadUrl(deps, app.id, sha, size) };
   }
   const pending: PendingUpload = {
-    manifest: input.manifest, signature: input.signature, nativeBuilds: input.nativeBuilds ?? [],
+    manifest: input.manifest, signature: input.signature, nativeBuilds: input.nativeBuilds ?? [], native: input.native ?? null,
     uploadBytes: missing.reduce((n, s) => n + sizes.get(s)!, 0), by: p.actor,
   };
   await putJson(deps.store, keys.pending(app.id, input.version), pending);
@@ -154,11 +156,11 @@ export async function finalizeBundle(deps: ShipDeps, p: Principal, input: { appI
   const zip = writeZip(files);
   return commitBundle(deps, p, app, {
     version: input.version, manifest: pending.manifest, signature: pending.signature, zip,
-    uploadBytes: pending.uploadBytes, nativeBuilds: pending.nativeBuilds,
+    uploadBytes: pending.uploadBytes, nativeBuilds: pending.nativeBuilds, native: pending.native,
   });
 }
 
-export interface ZipUploadInput { appId: string; version: string; zip: Uint8Array; nativeFingerprint?: string; nativeBuilds?: string[] }
+export interface ZipUploadInput { appId: string; version: string; zip: Uint8Array; nativeFingerprint?: string; nativeBuilds?: string[]; native?: NativeInfo }
 
 /** `POST /api/v1/bundles`: one request with a zip. The server inspects it, signs with the app's managed key and stores only new blobs. */
 export async function uploadZipBundle(deps: ShipDeps, p: Principal, input: ZipUploadInput): Promise<FinalizeResult> {
@@ -209,10 +211,10 @@ export async function uploadZipBundle(deps: ShipDeps, p: Principal, input: ZipUp
   }
   const priv = await openSecret(app.signingKeyEnc, await deps.kek(), app.id);
   const signed = await signManifest(manifest, priv, await keyIdOf(app.signingPublicKey ?? ""));
-  return commitBundle(deps, p, app, { version: input.version, manifest, signature: signed.signature, zip: input.zip, uploadBytes, nativeBuilds: input.nativeBuilds ?? [] });
+  return commitBundle(deps, p, app, { version: input.version, manifest, signature: signed.signature, zip: input.zip, uploadBytes, nativeBuilds: input.nativeBuilds ?? [], native: input.native });
 }
 
-interface Commit { version: string; manifest: Manifest; signature: string | null; zip: Uint8Array; uploadBytes: number; nativeBuilds: string[] }
+interface Commit { version: string; manifest: Manifest; signature: string | null; zip: Uint8Array; uploadBytes: number; nativeBuilds: string[]; native?: NativeInfo | null }
 
 async function commitBundle(deps: ShipDeps, p: Principal, app: AppDoc, c: Commit): Promise<FinalizeResult> {
   const id = uuidv7();
@@ -235,7 +237,7 @@ async function commitBundle(deps: ShipDeps, p: Principal, app: AppDoc, c: Commit
   let bundle: BundleDoc;
   try {
     bundle = await deps.db.createBundle({
-      id, orgId: p.orgId, appId: app.id, version: c.version, headcode, nativeFingerprint: c.manifest.nativeFingerprint,
+      id, orgId: p.orgId, appId: app.id, version: c.version, headcode, nativeFingerprint: c.manifest.nativeFingerprint, nativeInfo: c.native ?? null,
       manifestKey, zipKey, zipSha256, sizeBytes: totalBytes, fileCount: c.manifest.files.length, signed: c.signature !== null,
       allowedNativeBuilds: c.nativeBuilds, delta: { baseVersion: stats.baseVersion, changedFiles, uploadBytes: stats.uploadBytes, totalBytes, uploadRatio: stats.uploadRatio },
       createdBy: p.actor, state: "active", createdAt: deps.now(),

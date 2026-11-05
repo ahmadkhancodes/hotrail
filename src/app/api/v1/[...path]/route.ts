@@ -19,3 +19,4 @@ const handler = withApi<Ctx>(async (req, ctx) => {
 export const GET = handler;
 export const POST = handler;
 export const PUT = handler;
+export const DELETE = handler;

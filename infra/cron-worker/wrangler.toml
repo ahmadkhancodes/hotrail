@@ -4,7 +4,7 @@ compatibility_date = "2026-10-01"
 
 [vars]
 APP_URL = "https://hotrail.buffersoltech.com"
-JOBS = "webhook-retries"
+JOBS = "autopause-sweep,webhook-retries"
 
 [triggers]
 crons = ["* * * * *"]

@@ -5,7 +5,7 @@ import {
   type SignedManifest,
 } from "@buffersol/hotrail-core";
 import { ApiError, createApi, type Api } from "./api";
-import { detectAppId, detectWebDir, fingerprintOf, readJson, readPackage, usesCapgoUpdater, walk, type HotrailConfig } from "./project";
+import { detectAppId, detectWebDir, fingerprintOf, nativeInfo, readJson, readPackage, usesCapgoUpdater, walk, type HotrailConfig } from "./project";
 
 export interface Io {
   cwd: string;
@@ -26,6 +26,8 @@ Usage: npx @buffersol/hotrail <command> [options]
   release --channel c [--bundle 2K47 | --version x.y.z] [--percent n] [--autopause 0.02]
                                Point a channel at a bundle
   rollback --channel c         Reverse a channel to its previous bundle
+  native register --build 41 [--platform ios|android]
+                               Record this store build's native fingerprint (run after each store release)
   status                       Show channels, bundles and rollout state
 
 Environment: HOTRAIL_API_KEY (required), HOTRAIL_API_URL (default https://hotrail.buffersoltech.com)
@@ -128,7 +130,7 @@ async function upload(io: Io, flags: Record<string, string | true>): Promise<voi
     signed = { ...(await signManifest(manifest, key.privateKey)), publicKey: key.publicKey };
   }
 
-  const plan = await api.post<PlanResponse>("/api/v1/upload/plan", { appId: cfg.appId, version, ...signed });
+  const plan = await api.post<PlanResponse>("/api/v1/upload/plan", { appId: cfg.appId, version, ...signed, native: nativeInfo(io.cwd) });
   const known = new Set(manifest.files.map((f) => f.sha256).filter((h) => !plan.missing.includes(h)));
   const local = planUpload(manifest.files, known);
   io.out(`${manifest.files.length} files, ${local.reused} already stored, uploading ${local.missing.length} (${(local.uploadRatio * 100).toFixed(1)}% of ${local.totalBytes} bytes).`);
@@ -155,8 +157,9 @@ async function release(io: Io, flags: Record<string, string | true>): Promise<vo
   if (!Number.isFinite(percent) || percent < 0 || percent > 100) throw new ApiError(0, "--percent must be between 0 and 100.");
   const autopause = flags.autopause === undefined ? undefined : Number(flags.autopause);
   if (autopause !== undefined && (!Number.isFinite(autopause) || autopause < 0 || autopause > 1)) throw new ApiError(0, "--autopause must be between 0 and 1.");
-  const res = await api.post<{ headcode: string; percent: number; channel: string }>("/api/v1/channels/release", { appId: cfg.appId, channel, bundle, version, percent, autopauseThreshold: autopause });
+  const res = await api.post<{ headcode: string; percent: number; channel: string; incompatible?: { build: string; reasons: string[] }[] }>("/api/v1/channels/release", { appId: cfg.appId, channel, bundle, version, percent, autopauseThreshold: autopause });
   io.out(`Released ${res.headcode} to ${res.channel} at ${res.percent}%.`);
+  for (const i of res.incompatible ?? []) io.out(`Not offered to store build ${i.build}: ${i.reasons.join("; ")}.`);
 }
 
 async function rollback(io: Io, flags: Record<string, string | true>): Promise<void> {
@@ -165,6 +168,18 @@ async function rollback(io: Io, flags: Record<string, string | true>): Promise<v
   const channel = str(flags.channel) ?? cfg.channel;
   const res = await api.post<{ headcode: string; channel: string }>("/api/v1/channels/rollback", { appId: cfg.appId, channel });
   io.out(`Reversed ${res.channel} to ${res.headcode}. Devices pick it up on their next check.`);
+}
+
+async function native(io: Io, sub: string | undefined, flags: Record<string, string | true>): Promise<void> {
+  if (sub !== "register") throw new ApiError(0, "Usage: hotrail native register --build <store build number>");
+  const cfg = loadConfig(io);
+  const api = makeApi(io, cfg);
+  const build = str(flags.build);
+  if (!build) throw new ApiError(0, "Say which store build this is.", "Pass --build 41 (the versionCode or CFBundleVersion of the store release).");
+  const platform = str(flags.platform);
+  if (platform !== undefined && platform !== "ios" && platform !== "android") throw new ApiError(0, "--platform must be ios or android.");
+  const res = await api.post<{ versionBuild: string; fingerprint: string }>("/api/v1/native-builds", { appId: cfg.appId, versionBuild: build, native: nativeInfo(io.cwd), platform });
+  io.out(`Recorded store build ${res.versionBuild} with native fingerprint ${res.fingerprint}.`);
 }
 
 async function status(io: Io): Promise<void> {
@@ -184,6 +199,7 @@ export async function main(argv: string[], io: Io): Promise<number> {
       case "release": await release(io, flags); return 0;
       case "rollback": await rollback(io, flags); return 0;
       case "status": await status(io); return 0;
+      case "native": await native(io, argv[1], flags); return 0;
       case "": case "help": case "--help": io.out(HELP); return 0;
       default: io.err(`Unknown command "${cmd}".\n\n${HELP}`); return 2;
     }

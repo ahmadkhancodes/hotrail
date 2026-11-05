@@ -9,3 +9,4 @@ export * from "./delta";
 export * from "./policy";
 export * from "./fingerprint";
 export * from "./update";
+export * from "./compat";

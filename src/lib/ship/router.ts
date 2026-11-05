@@ -3,7 +3,11 @@ import { clientIp, HttpError, json } from "@/lib/http";
 import { listAppsFor } from "./apps-list";
 import { requireApp, requireScope } from "./guard";
 import { buildLine, lampOf } from "./line";
+import { deleteBundle } from "./bundles";
+import { findDevice } from "./devices";
+import { listNativeBuilds, registerNativeBuild } from "./native";
 import { releaseBundle, rollbackChannel, setChannelPaused } from "./release";
+import { usageSeries } from "./usage";
 import { acceptBlob, finalizeBundle, planBundle, uploadZipBundle } from "./upload";
 import { MAX_BUNDLE_BYTES, type Principal, type ShipDeps } from "./types";
 
@@ -39,16 +43,27 @@ const manifestSchema = z.object({
   files: z.array(z.object({ path: z.string().min(1).max(512), sha256: sha, size: z.number().int().nonnegative() })).max(20_000),
   createdAt: z.string(),
 });
+const nativeInfoSchema = z.object({ capacitor: z.string().max(32), plugins: z.record(z.string().max(128), z.string().max(64)) });
 const planSchema = z.object({
   appId, version, manifest: manifestSchema, signature: z.string().max(200).nullable().optional().transform((v) => v ?? null),
   publicKey: z.string().max(100).optional(), nativeBuilds: z.array(z.string().max(32)).max(50).optional(),
+  native: nativeInfoSchema.optional(),
 });
+const registerBuildSchema = z.object({ appId, versionBuild: z.string().min(1).max(32), native: nativeInfoSchema, platform: z.enum(["all", "ios", "android"]).optional() });
 const finalizeSchema = z.object({ appId, version });
 const releaseSchema = z.object({
   appId, channel: z.string().min(1).max(32), bundle: z.string().max(8).optional(), version: version.optional(),
   percent: z.number().min(0).max(100).optional(), autopauseThreshold: z.number().min(0).max(1).optional(),
 });
 const channelRef = z.object({ appId, channel: z.string().min(1).max(32) });
+
+function parseNativeParam(raw: string | null): { capacitor: string; plugins: Record<string, string> } | undefined {
+  if (!raw) return undefined;
+  try {
+    const r = nativeInfoSchema.safeParse(JSON.parse(raw));
+    return r.success ? r.data : undefined;
+  } catch { return undefined; }
+}
 
 export interface RouterOptions {
   /** Called after authentication, before the handler (per key rate limit). */
@@ -96,6 +111,7 @@ export async function handleShip(req: Request, segments: string[], deps: ShipDep
       appId: url.searchParams.get("appId") ?? "", version: url.searchParams.get("version") ?? "", zip,
       nativeFingerprint: url.searchParams.get("nativeFingerprint") ?? undefined,
       nativeBuilds: url.searchParams.get("nativeBuilds")?.split(",").filter(Boolean),
+      native: parseNativeParam(url.searchParams.get("native")),
     });
     return json(res, 201);
   }
@@ -103,6 +119,18 @@ export async function handleShip(req: Request, segments: string[], deps: ShipDep
     requireScope(p, "read");
     const line = await buildLine(deps, { ...p, scope: "all" }, url.searchParams.get("appId") ?? "");
     return json({ bundles: line.bundles });
+  }
+
+  if (a === "bundles" && !b && method === "DELETE") {
+    return json(await deleteBundle(deps, p, { appId: url.searchParams.get("appId") ?? "", bundle: url.searchParams.get("bundle") ?? "" }));
+  }
+  if (a === "native-builds" && !b && method === "POST") return json(await registerNativeBuild(deps, p, await readBody(req, registerBuildSchema, 100_000)), 201);
+  if (a === "native-builds" && !b && method === "GET") return json(await listNativeBuilds(deps, p, url.searchParams.get("appId") ?? ""));
+  if (a === "usage" && !b && method === "GET") {
+    return json(await usageSeries(deps, p, { appId: url.searchParams.get("appId") ?? "", hours: Number(url.searchParams.get("hours") ?? 24) }));
+  }
+  if (a === "devices" && !b && method === "GET") {
+    return json(await findDevice(deps, p, { appId: url.searchParams.get("appId") ?? "", q: url.searchParams.get("q") ?? "" }));
   }
 
   if (a === "channels" && !b && method === "GET") {

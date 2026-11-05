@@ -37,3 +37,9 @@
     - Connect custom domain `hotrail-cdn.buffersoltech.com` to the bucket (bucket Settings, Custom Domains) and set `R2_PUBLIC_BASE=https://hotrail-cdn.buffersoltech.com`. Without it, downloads go through `/api/v1/files`.
     - Generate `SECRETS_KEK` (`openssl rand -base64 32`), store it in Vercel env and keep a copy in the owner's password manager: losing it makes managed signing keys unreadable.
     - Run `npm run db:indexes` once with `MONGODB_URI` set (new unique indexes for apps, bundles, channels).
+
+11. **M3 deploy extras**
+    - Run `npm run db:indexes` again (new indexes: events by device, devices by custom id, usage buckets TTL, native builds).
+    - Cloudflare Worker cron: `cd infra/cron-worker && npx wrangler secret put CRON_SECRET && npx wrangler deploy` (https://dash.cloudflare.com/?to=/:account/workers). `JOBS` now defaults to `autopause-sweep,webhook-retries`.
+    - npm token to publish `@buffersol/hotrail`, `@buffersol/hotrail-core`, `@buffersol/hotrail-updater`, `@buffersol/hotrail-mcp`: https://www.npmjs.com/settings/~/tokens (add as repo secret `NPM_TOKEN`).
+    - Run `.github/workflows/plugin-ci.yml` once on GitHub (macOS runner) and fix whatever the first native build reports; no native code has been compiled yet.
