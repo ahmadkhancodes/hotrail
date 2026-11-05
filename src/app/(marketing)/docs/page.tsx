@@ -6,7 +6,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "Documentation",
-  description: `Guides and reference for the ${product.name} API, authentication, billing and webhooks.`,
+  description: `Quickstart, migration from @capgo/capacitor-updater, CLI and CI recipes, API, billing and webhooks for ${product.fullName}.`,
   path: "/docs",
 });
 
@@ -15,7 +15,7 @@ export default function DocsIndexPage() {
     <Container className="py-12 md:py-20">
       <header className="mb-12 flex max-w-3xl flex-col gap-3">
         <h1 className="heading-4 text-text">Documentation</h1>
-        <p className="body-3 text-text-subtle">Everything you need to connect {product.name} to your sites and systems.</p>
+        <p className="body-3 text-text-subtle">Ship your first bundle, migrate from @capgo/capacitor-updater, and connect {product.name} to your CI and systems.</p>
       </header>
       <div className="flex flex-col gap-12">
         {docGroups.map((g) => (

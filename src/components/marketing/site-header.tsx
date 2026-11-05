@@ -76,8 +76,8 @@ export function SiteHeader() {
   return (
     <header className="fixed inset-x-0 top-3 z-50 px-4 sm:px-6">
       <div className="relative z-50 mx-auto flex w-full max-w-7xl items-center justify-between gap-4 rounded-lg border border-border bg-surface/80 py-1 pl-4 pr-1 backdrop-blur-md">
-        <Link href="/" className="inline-flex min-h-11 items-center rounded-md title-2 text-text focus-visible:focus-ring" aria-label={`${product.name} home`}>
-          {product.name}
+        <Link href="/" className="inline-flex min-h-11 items-center rounded-md title-2 text-text focus-visible:focus-ring" aria-label={`${product.fullName} home`}>
+          {product.name}<span className="body-6 ml-2 hidden font-normal text-text-subtle sm:inline">by BufferSol</span>
         </Link>
         <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
           {product.nav.map((n) => (
@@ -87,8 +87,8 @@ export function SiteHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-1">
-          <Link href="/sign-in" className={cn(buttonClass("tertiary", "md"), "hidden md:inline-flex")}>Sign in</Link>
-          <Link href="/sign-in" className={cn(buttonClass("primary", "md"), "hidden md:inline-flex")}>Start free</Link>
+          <Link href="/sign-in" className={cn(buttonClass("tertiary", "md"), "max-md:hidden")}>Sign in</Link>
+          <Link href="/sign-in" className={cn(buttonClass("primary", "md"), "max-md:hidden")}>Start free</Link>
           <ThemeToggle />
           <button
             ref={toggleRef}

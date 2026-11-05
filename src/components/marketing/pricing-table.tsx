@@ -5,6 +5,7 @@ import { product, plans, type Interval, type Plan, type PlanPrice } from "@/conf
 import { buttonClass } from "@/components/ui/button";
 import Link from "next/link";
 import { cn } from "@/components/ui/cn";
+import { capgoList, capgoCheckedOn } from "@/content/compare";
 
 const money = (cents: number) =>
   new Intl.NumberFormat("en-US", {
@@ -19,14 +20,11 @@ function priceFor(plan: Plan, interval: Interval): PlanPrice | null {
   return plan.prices.find((p) => p.interval === interval) ?? plan.prices[0] ?? null;
 }
 
-/** Whole-percent saving of paying yearly, for every plan that sells both intervals. */
-function annualSavings(): { min: number; max: number } | null {
-  const pct = plans.flatMap((p) => {
-    const m = p.prices.find((x) => x.interval === "month");
-    const y = p.prices.find((x) => x.interval === "year");
-    return m && y ? [Math.round((1 - y.usd / (m.usd * 12)) * 100)] : [];
-  });
-  return pct.length ? { min: Math.min(...pct), max: Math.max(...pct) } : null;
+/** Dollars saved a year by paying annually, for a plan that sells both intervals. */
+function yearlySaving(plan: Plan): number | null {
+  const m = plan.prices.find((x) => x.interval === "month");
+  const y = plan.prices.find((x) => x.interval === "year");
+  return m && y ? m.usd * 12 - y.usd : null;
 }
 
 const RISK_FREE = "No credit card needed.";
@@ -34,8 +32,6 @@ const RISK_PAID = "Cancel anytime from your account.";
 
 export function PricingTable({ id = "pricing", title }: { id?: string; title?: string }) {
   const [interval, setBilling] = useState<Interval>(product.defaultInterval);
-  const saving = annualSavings();
-  const savingText = saving ? (saving.min === saving.max ? `${saving.max}%` : `${saving.min}% to ${saving.max}%`) : null;
   const options: { id: Interval; label: string }[] = [
     { id: "month", label: "Monthly" },
     { id: "year", label: "Annual" },
@@ -45,9 +41,8 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
     <div id={id}>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         {title ? <h2 id={`${id}-title`} className="heading-4 md:heading-2 text-text">{title}</h2> : <span />}
-        {saving ? (
-          <div className="flex flex-col gap-2 md:items-end">
-            <div role="group" aria-label="Billing interval" className="inline-flex w-fit rounded-lg border border-border bg-surface-raised p-1">
+        <div className="flex flex-col gap-2 md:items-end">
+            <div role="group" aria-label="Billing interval" className="inline-flex w-fit rounded-md border border-border bg-surface-raised p-1">
               {options.map((o) => (
                 <button
                   key={o.id}
@@ -55,7 +50,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                   aria-pressed={interval === o.id}
                   onClick={() => setBilling(o.id)}
                   className={cn(
-                    "min-h-11 rounded-md px-4 button-sm transition-colors duration-300 ease-out-kit focus-visible:focus-ring",
+                    "min-h-11 rounded-sm px-4 button-sm transition-colors duration-300 ease-out-kit focus-visible:focus-ring",
                     interval === o.id ? "bg-surface text-text" : "text-text-subtle hover:text-text",
                   )}
                 >
@@ -63,9 +58,8 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                 </button>
               ))}
             </div>
-            <p className="caption-2 text-text-subtle">Annual billing saves {savingText} on plans sold both ways.</p>
+            <p className="caption-2 text-text-subtle">Prices in USD. Annual saves the dollar amount shown on each plan.</p>
           </div>
-        ) : null}
       </div>
 
       <ul className="mt-8 grid gap-4 md:mt-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-y-0">
@@ -77,7 +71,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
             <li
               key={plan.id}
               className={cn(
-                "grid grid-rows-[auto_auto_auto_auto_1fr] rounded-lg border bg-surface p-6 lg:row-span-5 lg:grid-rows-subgrid",
+                "grid grid-rows-[auto_auto_auto_auto_1fr] rounded-md border bg-surface p-6 lg:row-span-5 lg:grid-rows-subgrid",
                 plan.featured ? "border-action ring-1 ring-action" : "border-border",
               )}
             >
@@ -88,10 +82,20 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                 </div>
                 <p className="body-6 mt-1 text-text-subtle">{plan.tagline}</p>
               </div>
-              <p className="flex items-baseline gap-1 pb-6">
-                <span className="heading-3 tabular-nums text-text">{free ? "$0" : money(price.usd)}</span>
-                <span className="body-6 text-text-subtle">{free ? "free" : `per ${price.interval}`}</span>
-              </p>
+              <div className="pb-6">
+                <p className="flex items-baseline gap-1">
+                  <span className="heading-3 tabular-nums text-text">{free ? "$0" : money(price.usd)}</span>
+                  <span className="body-6 text-text-subtle">{free ? "free" : `per ${price.interval}`}</span>
+                </p>
+                {price && price.interval === "year" && yearlySaving(plan) ? (
+                  <p className="caption-2 mt-1 text-text-subtle">Saves {money(yearlySaving(plan)!)} a year against monthly.</p>
+                ) : null}
+                {capgoList[plan.id] ? (
+                  <p className="caption-2 mt-1 text-text-subtle">
+                    Capgo lists ${capgoList[plan.id]![price?.interval ?? interval]} a month{(price?.interval ?? interval) === "year" ? ", billed yearly" : ""} (checked {capgoCheckedOn}).
+                  </p>
+                ) : null}
+              </div>
               <div className="pb-3">
                 <Link href={href} className={cn(buttonClass(plan.featured ? "primary" : "secondary", "md"), "w-full")}>{plan.cta}</Link>
               </div>
@@ -108,6 +112,22 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
           );
         })}
       </ul>
+
+      <div className="mt-4 grid gap-4 rounded-md border border-border bg-surface p-6 md:grid-cols-12 md:items-center">
+        <div className="md:col-span-4">
+          <h3 className="heading-6 text-text">{product.scale.name}</h3>
+          <p className="body-6 mt-1 text-text-subtle">{product.scale.tagline}</p>
+          <p className="caption-2 mt-1 text-text-subtle">From {money(product.scale.fromUsdMonthly)} a month, sales assisted.</p>
+        </div>
+        <ul className="flex flex-col gap-1 body-6 text-text md:col-span-5">
+          {product.scale.highlights.map((h) => (
+            <li key={h} className="flex items-start gap-2"><Check size={16} weight="regular" aria-hidden className="mt-0.5 shrink-0 text-success" /><span>{h}</span></li>
+          ))}
+        </ul>
+        <div className="md:col-span-3 md:justify-self-end">
+          <a href={`mailto:${product.supportEmail}?subject=Hotrail%20Scale`} className={buttonClass("secondary", "md")}>Talk to us</a>
+        </div>
+      </div>
     </div>
   );
 }

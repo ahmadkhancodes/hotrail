@@ -7,7 +7,8 @@ const columns = [
     links: [
       { href: "/pricing", label: "Pricing" },
       { href: "/docs", label: "Docs" },
-      { href: "/compare/web3forms", label: "Compare" },
+      { href: "/docs/quickstart", label: "Quickstart" },
+      { href: "/compare/capgo", label: "Compare" },
     ],
   },
   {
@@ -32,7 +33,8 @@ export function SiteFooter() {
         <div className="grid gap-12 md:grid-cols-12">
           <div className="flex max-w-xs flex-col gap-3 md:col-span-5">
             <Link href="/" className="title-2 w-fit rounded-sm text-text focus-visible:focus-ring">{product.name}</Link>
-            <p className="body-6 text-text-subtle">{product.tagline}.</p>
+            <p className="body-6 text-text-subtle">{product.tagline}</p>
+            <p className="caption-5 text-text-muted">Capacitor and Ionic are trademarks of their owners. {product.name} is not affiliated with them.</p>
           </div>
           <div className="grid grid-cols-2 gap-8 md:col-span-7 md:grid-cols-3">
             {columns.map((col) => (

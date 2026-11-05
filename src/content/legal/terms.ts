@@ -60,7 +60,7 @@ export const terms: LegalDoc = {
       id: "your-data",
       title: "Your data",
       body: [
-        "You own your content and submissions. You give us a limited license to host, process and deliver it to run the service. You are responsible for having a lawful basis to collect the data your forms gather and for telling your visitors how it is used.",
+        "You own your bundles, manifests and the data about your devices. You give us a limited license to host, process and deliver them to run the service. You are responsible for your app complying with Apple and Google store rules, for having a lawful basis to collect data from your users and for telling them how it is used. Live updates may change only the web layer of your app.",
       ],
     },
     {

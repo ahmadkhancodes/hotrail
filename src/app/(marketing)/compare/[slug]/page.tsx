@@ -35,7 +35,7 @@ export default async function ComparePage({ params }: Props) {
     <>
       <Section labelledBy="compare-title">
         <div className="flex max-w-2xl flex-col items-start gap-6">
-          <h1 id="compare-title" className="hero-gradient-text heading-3 md:heading-1">{entry.headline}</h1>
+          <h1 id="compare-title" className="heading-3 md:heading-2 text-text">{entry.headline}</h1>
           <p className="body-3 text-text-subtle md:title-1">{entry.intro}</p>
           <ButtonLink href="/sign-in" size="lg">Start free</ButtonLink>
         </div>
@@ -48,13 +48,20 @@ export default async function ComparePage({ params }: Props) {
           />
         </div>
         <p className="body-6 mt-6 max-w-2xl text-text-subtle">{entry.fitNote}</p>
+        <p className="caption-2 mt-4 max-w-2xl text-text-subtle">
+          Last checked {entry.checkedOn}. Sources:{" "}
+          {entry.sources.map((src, i) => (
+            <span key={src.href}>{i ? ", " : ""}<a href={src.href} rel="noopener noreferrer" className="underline underline-offset-4 hover:text-text focus-visible:focus-ring">{src.label}</a></span>
+          ))}
+          . Not affiliated with {entry.competitor}.
+        </p>
       </Section>
       <Faq title="Common questions" items={entry.faq} />
       <FinalCta
-        title={`Try ${product.name} on one form`}
-        body="Point a form at your endpoint and watch the first delivery receipt arrive."
+        title={`Try ${product.name} on one app`}
+        body="Run the init command, ship one bundle to a beta channel and watch the train reach a device."
         cta={{ href: "/sign-in", label: "Start free" }}
-        note="No credit card needed."
+        note="Free plan, no card."
       />
     </>
   );

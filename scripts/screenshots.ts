@@ -6,8 +6,8 @@ import { chromium } from "playwright";
 import { mkdirSync } from "node:fs";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
-const ROUTES = ["/", "/pricing", "/docs", "/docs/getting-started", "/legal/privacy", "/legal/terms", "/compare/web3forms", "/sign-in", "/this-page-does-not-exist", ...process.argv.slice(2)];
-const OUT = process.env.OUT_DIR ?? `docs/qa/${new Date().toISOString().slice(0, 10)}`;
+const ROUTES = ["/", "/pricing", "/compare/capgo", "/docs/quickstart", "/sign-in", ...process.argv.slice(2)];
+const OUT = process.env.OUT_DIR ?? "docs/qa";
 const WIDTHS = [375, 1440];
 
 async function main() {

@@ -4,7 +4,7 @@ import type { LegalDoc } from "./types";
 export const security: LegalDoc = {
   slug: "security",
   title: "Security",
-  description: `How ${p.name} protects your account and your submissions.`,
+  description: `How ${p.name} protects your account, your bundles and your device data.`,
   sections: [
     {
       id: "overview",
@@ -21,6 +21,7 @@ export const security: LegalDoc = {
             "Data is encrypted at rest by our database and hosting providers.",
             "API keys and webhook secrets are shown once. API keys are stored as hashes.",
             "Every query is scoped to your organization.",
+            "An audit log records sensitive actions on every plan.",
           ],
         },
       ],
@@ -45,12 +46,20 @@ export const security: LegalDoc = {
         {
           list: [
             "Rate limiting on public endpoints and on the API.",
-            "Spam and abuse filtering on submissions.",
+            "Abuse filtering on sign up and public forms.",
+            "Bundle manifests are signed with Ed25519 keys that you hold, and the plugin rejects a tampered manifest (shipping with the update API).",
+            "Native files are rejected at upload, so a live update changes only the web layer.",
+            "There is no third party in the update delivery path.",
             "Outbound webhooks are signed so you can verify them.",
             "Dependencies are updated regularly and checked for known vulnerabilities.",
           ],
         },
       ],
+    },
+    {
+      id: "certifications",
+      title: "Certifications",
+      body: ["We do not have SOC 2 or ISO 27001 yet. We publish this page, the data processing addendum and the sub-processor list, and we plan an external penetration test before the Team plan launches."],
     },
     {
       id: "infrastructure",

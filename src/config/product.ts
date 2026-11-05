@@ -62,6 +62,7 @@ export const product = {
   subProcessors: [
     { name: "Vercel Inc.", purpose: "Hosting and edge network", location: "United States" },
     { name: "MongoDB Inc. (Atlas)", purpose: "Database hosting", location: "United States (AWS us-east-1)" },
+    { name: "Cloudflare, Inc.", purpose: "Bundle storage (R2) and delivery", location: "United States and global edge network" },
     { name: "Stripe Inc.", purpose: "Payments and invoicing", location: "United States" },
     { name: "Email delivery provider", purpose: "Transactional email until our own mail servers are live", location: "United States" },
   ],
@@ -85,7 +86,7 @@ export const product = {
       tagline: "For indie developers shipping every week",
       prices: [price("solo", "month", 699), price("solo", "year", 7188)],
       limits: { mau: 2000, storage_gib: 100, event_days: 30, build_min: 60 },
-      highlights: ["2,000 monthly active users", "Unlimited apps and members", "100 GiB fair use storage", "30 day event history", "60 build minutes a month"],
+      highlights: ["2,000 monthly active users", "Unlimited apps and members", "100 GiB fair use storage", "30 day event history", "60 build minutes a month (coming in v1)"],
       cta: "Choose Solo",
       trialDays: 0,
     },
@@ -95,7 +96,7 @@ export const product = {
       tagline: "For teams that need rollouts and auto-pause",
       prices: [price("maker", "month", 1999), price("maker", "year", 20388)],
       limits: { mau: 10000, storage_gib: 1024, event_days: 60, build_min: 300 },
-      highlights: ["10,000 monthly active users", "Auto-pause rollouts and webhooks", "1 TB fair use storage", "60 day event history", "300 build minutes a month"],
+      highlights: ["10,000 monthly active users", "Auto-pause rollouts and webhooks", "1 TB fair use storage", "60 day event history", "300 build minutes a month (coming in v1)"],
       cta: "Choose Maker",
       featured: true,
       trialDays: 0,
@@ -106,7 +107,7 @@ export const product = {
       tagline: "For studios and apps with a large install base",
       prices: [price("team", "month", 4999), price("team", "year", 50388)],
       limits: { mau: 100000, storage_gib: 10240, event_days: 90, build_min: 1200 },
-      highlights: ["100,000 monthly active users", "SSO and priority email", "10 TB fair use storage", "90 day event history", "1,200 build minutes a month"],
+      highlights: ["100,000 monthly active users", "SSO and priority email", "10 TB fair use storage", "90 day event history", "1,200 build minutes a month (coming in v1)"],
       cta: "Choose Team",
       trialDays: 0,
     },
@@ -119,9 +120,17 @@ export const product = {
     signups_enabled: "on",
     maintenance: "off",
   } as Record<string, string>,
+  /** Sales-assisted tier: not a Stripe plan, shown as "talk to us" (brief, pricing table). */
+  scale: {
+    name: "Scale",
+    tagline: "For Appflow migrations, SLAs and security reviews",
+    fromUsdMonthly: 12499,
+    highlights: ["1M monthly active users", "99.9% SLA and DPA", "Dedicated Slack channel", "Annual contract with migration help"],
+  },
   nav: [
-    { href: "/pricing", label: "Pricing" },
     { href: "/docs", label: "Docs" },
+    { href: "/pricing", label: "Pricing" },
+    { href: "/compare/capgo", label: "Compare" },
   ],
 } as const;
 
