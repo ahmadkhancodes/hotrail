@@ -35,7 +35,7 @@ jobs:
         with: { node-version: 22 }
       - name: Install app dependencies
         run: |
-          if [ -f pnpm-lock.yaml ]; then corepack enable && pnpm install --frozen-lockfile || pnpm install; elif [ -f package-lock.json ]; then npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps; fi
+          if [ -f package-lock.json ]; then npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps; elif [ -f pnpm-lock.yaml ]; then npm install -g pnpm && pnpm install --no-frozen-lockfile; fi
       - name: Install the Agent SDK
         run: npm install --prefix "$RUNNER_TEMP/runner" --no-audit --no-fund @anthropic-ai/claude-agent-sdk@0.3.318
       - name: Pick task and model
