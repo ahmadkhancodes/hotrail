@@ -6,6 +6,6 @@
   "type": "module",
   "bin": { "hotrail": "./src/bin.ts" },
   "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
-  "dependencies": { "@buffersol/hotrail-core": "workspace:*" },
+  "dependencies": { "@buffersol/hotrail-core": "*" },
   "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0", "vitest": "^2.1.0" }
 }

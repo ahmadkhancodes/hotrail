@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   serverExternalPackages: ["mongodb"],
+  transpilePackages: ["@buffersol/hotrail-core"],
   turbopack: {
     rules: {
       "*.css": {

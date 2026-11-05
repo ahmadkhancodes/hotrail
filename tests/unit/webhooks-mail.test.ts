@@ -7,7 +7,7 @@ import { consoleTransport, outbox, resendTransport } from "@/lib/mail/transports
 import { magicLinkEmail } from "@/lib/mail/templates";
 
 let db: Db;
-beforeEach(() => { db = createMemoryDb("postslot"); });
+beforeEach(() => { db = createMemoryDb("hotrail"); });
 
 describe("outbound webhooks", () => {
   it("signs with HMAC-SHA256 over `t.body` and verifies within tolerance", async () => {
@@ -29,7 +29,7 @@ describe("outbound webhooks", () => {
       return new Response("", { status: fail ? 500 : 200 });
     }) as unknown as typeof fetch;
     const now = new Date(1_800_000_000_000);
-    const [d] = await emitEvent("o1", "billing.updated", { plan: "pro" }, { db, fetchFn, now });
+    const [d] = await emitEvent("o1", "billing.updated", { plan: "maker" }, { db, fetchFn, now });
     expect(seen).toHaveLength(1); // ep2 not subscribed
     expect(seen[0]!.headers.get("x-webhook-signature")).toMatch(/^t=\d+,v1=/);
     expect(await verifySignature("whsec_1", await seen[0]!.text(), seen[0]!.headers.get("x-webhook-signature")!, now.getTime())).toBe(true);

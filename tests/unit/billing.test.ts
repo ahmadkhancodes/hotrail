@@ -14,7 +14,7 @@ const urls = { success: "https://app.test/app/billing?checkout=success", cancel:
 let db: Db;
 let f: ReturnType<typeof fakeStripe>;
 beforeEach(() => {
-  db = createMemoryDb("postslot");
+  db = createMemoryDb("hotrail");
   f = fakeStripe();
   clearPriceCache();
 });
@@ -37,12 +37,12 @@ describe("Stripe API version tolerance", () => {
 
 describe("checkout", () => {
   it("creates a hosted Checkout Session for this app's price, tagged metadata.app (C-28)", async () => {
-    const r = await createCheckoutSession(f.stripe, db, subject, "pro", "year", urls);
+    const r = await createCheckoutSession(f.stripe, db, subject, "maker", "year", urls);
     expect(r.url).toMatch(/^https:\/\/checkout\.stripe\.test\//);
     const call = f.calls.find((c) => c.method === "checkout.sessions.create")!.args as Record<string, any>;
     expect(call.mode).toBe("subscription");
-    expect(call.line_items[0].price).toBe("price_pro_y");
-    expect(call.subscription_data.metadata).toMatchObject({ app: "postslot", plan: "pro", org_id: "org_1" });
+    expect(call.line_items[0].price).toBe("price_maker_y");
+    expect(call.subscription_data.metadata).toMatchObject({ app: "hotrail", plan: "maker", org_id: "org_1" });
     expect(call.client_reference_id).toBe("org_1");
     expect(call.success_url).toContain("{CHECKOUT_SESSION_ID}");
     expect((await db.getBillingAccount("org_1"))?.stripeCustomerId).toMatch(/^cus_/);
@@ -50,19 +50,19 @@ describe("checkout", () => {
 
   it("rejects the free plan, unknown intervals and foreign prices", async () => {
     await expect(createCheckoutSession(f.stripe, db, subject, "free", "month", urls)).rejects.toMatchObject({ code: "bad_plan" });
-    await expect(createCheckoutSession(f.stripe, db, subject, "starter", "month", urls)).rejects.toMatchObject({ code: "unknown_price" });
+    await expect(createCheckoutSession(f.stripe, db, subject, "solo", "month", urls)).rejects.toMatchObject({ code: "unknown_price" });
   });
 
   it("no duplicate live subscription (409 already_subscribed)", async () => {
-    await createCheckoutSession(f.stripe, db, subject, "pro", "month", urls);
+    await createCheckoutSession(f.stripe, db, subject, "maker", "month", urls);
     const cus = (await db.getBillingAccount("org_1"))!.stripeCustomerId!;
-    f.addSub(cus, "postslot_pro_monthly");
-    await expect(createCheckoutSession(f.stripe, db, subject, "agency", "year", urls)).rejects.toMatchObject({ status: 409, code: "already_subscribed" });
+    f.addSub(cus, "hotrail_maker_monthly");
+    await expect(createCheckoutSession(f.stripe, db, subject, "team", "year", urls)).rejects.toMatchObject({ status: 409, code: "already_subscribed" });
   });
 
   it("reuses the customer and opens the portal", async () => {
-    await createCheckoutSession(f.stripe, db, subject, "pro", "month", urls);
-    await createCheckoutSession(f.stripe, db, subject, "pro", "year", urls);
+    await createCheckoutSession(f.stripe, db, subject, "maker", "month", urls);
+    await createCheckoutSession(f.stripe, db, subject, "maker", "year", urls);
     expect(f.customers.size).toBe(1);
     const p = await createPortalSession(f.stripe, db, "org_1", "https://app.test/app/billing");
     expect(p.url).toContain("billing.stripe.test");
@@ -72,7 +72,7 @@ describe("checkout", () => {
 
 describe("webhook", () => {
   const setup = async () => {
-    await createCheckoutSession(f.stripe, db, subject, "pro", "month", urls);
+    await createCheckoutSession(f.stripe, db, subject, "maker", "month", urls);
     return (await db.getBillingAccount("org_1"))!.stripeCustomerId!;
   };
 
@@ -86,21 +86,21 @@ describe("webhook", () => {
 
   it("checkout.session.completed activates the plan (recompute from Stripe)", async () => {
     const cus = await setup();
-    f.addSub(cus, "postslot_pro_monthly");
+    f.addSub(cus, "hotrail_maker_monthly");
     const r = await hook(event("checkout.session.completed", { customer: cus }));
     expect(r.status).toBe(200);
     const e = await db.getEntitlement("org_1");
-    expect(e).toMatchObject({ isPaid: true, status: "active", plan: "pro", interval: "month" });
-    expect(effectivePlan(e, NOW).id).toBe("pro");
+    expect(e).toMatchObject({ isPaid: true, status: "active", plan: "maker", interval: "month" });
+    expect(effectivePlan(e, NOW).id).toBe("maker");
   });
 
   it("C-20: past_due keeps the plan (grace), then Stripe cancelling ends it", async () => {
     const cus = await setup();
-    const s = f.addSub(cus, "postslot_pro_monthly", "past_due");
+    const s = f.addSub(cus, "hotrail_maker_monthly", "past_due");
     await hook(event("invoice.payment_failed", { customer: cus }));
     const e = await db.getEntitlement("org_1");
     expect(e).toMatchObject({ isPaid: true, status: "past_due", pastDueSince: NOW });
-    expect(effectivePlan(e, NOW).id).toBe("pro");
+    expect(effectivePlan(e, NOW).id).toBe("maker");
     expect(effectivePlan(e, NOW + 8 * 864e5).id).toBe("free"); // grace over
     s.status = "canceled";
     await hook(event("customer.subscription.deleted", { customer: cus }));
@@ -109,19 +109,19 @@ describe("webhook", () => {
 
   it("C-25: duplicate events are ignored, out-of-order delivery converges", async () => {
     const cus = await setup();
-    f.addSub(cus, "postslot_pro_monthly");
+    f.addSub(cus, "hotrail_maker_monthly");
     const body = event("customer.subscription.updated", { customer: cus }, "evt_dup");
     await hook(body);
     const second = await (await hook(body)).json();
     expect(second.duplicate).toBe(true);
     // an older "created" event arriving last still recomputes to the same truth
     await hook(event("customer.subscription.created", { customer: cus }));
-    expect((await db.getEntitlement("org_1"))?.plan).toBe("pro");
+    expect((await db.getEntitlement("org_1"))?.plan).toBe("maker");
   });
 
   it("records the event only AFTER success, so a failed run is retried", async () => {
     const cus = await setup();
-    f.addSub(cus, "postslot_pro_monthly");
+    f.addSub(cus, "hotrail_maker_monthly");
     const orig = f.stripe.subscriptions.list;
     (f.stripe.subscriptions as any).list = async () => { throw new Error("stripe down"); };
     const body = event("invoice.paid", { customer: cus }, "evt_retry");
@@ -135,7 +135,7 @@ describe("webhook", () => {
 
   it("C-27: full refund cancels the subscription and ends the plan; partial refund is ignored", async () => {
     const cus = await setup();
-    f.addSub(cus, "postslot_pro_annual");
+    f.addSub(cus, "hotrail_maker_annual");
     await hook(event("invoice.paid", { customer: cus }));
     await hook(event("charge.refunded", { customer: cus, refunded: false, payment_intent: "pi_1" }));
     expect((await db.getEntitlement("org_1"))?.isPaid).toBe(true);
@@ -146,42 +146,42 @@ describe("webhook", () => {
 
   it("C-27: full refund of a lifetime purchase drops it (keeps trialUsed)", async () => {
     const cus = await setup();
-    await db.setEntitlement("org_1", lifetimeEntitlement("agency", "pi_life", NOW));
+    await db.setEntitlement("org_1", lifetimeEntitlement("team", "pi_life", NOW));
     await hook(event("charge.refunded", { customer: cus, refunded: true, payment_intent: "pi_life" }));
     expect(await db.getEntitlement("org_1")).toMatchObject({ isPaid: false, status: "none", trialUsed: true });
   });
 
   it("2022-11-15 invoice without customer resolves it through the subscription", async () => {
     const cus = await setup();
-    const s = f.addSub(cus, "postslot_agency_annual");
+    const s = f.addSub(cus, "hotrail_team_annual");
     await hook(event("invoice.paid", { subscription: s.id }));
     expect(f.calls.some((c) => c.method === "subscriptions.retrieve")).toBe(true);
-    expect((await db.getEntitlement("org_1"))?.plan).toBe("agency");
+    expect((await db.getEntitlement("org_1"))?.plan).toBe("team");
   });
 
   it("ignores other apps' customers and other apps' subscriptions", async () => {
     const cus = await setup();
     const r = await (await hook(event("invoice.paid", { customer: "cus_foreign" }))).json();
     expect(r.ignored).toBe(true);
-    f.addSub(cus, "postslot_pro_monthly", "active", { metadata: { app: "otherapp" } });
+    f.addSub(cus, "hotrail_maker_monthly", "active", { metadata: { app: "otherapp" } });
     await hook(event("invoice.paid", { customer: cus }));
     expect((await db.getEntitlement("org_1"))?.isPaid).toBe(false);
   });
 
   it("the best live subscription wins (higher plan beats lower)", async () => {
     const cus = await setup();
-    f.addSub(cus, "postslot_starter_annual");
-    f.addSub(cus, "postslot_agency_monthly");
+    f.addSub(cus, "hotrail_starter_annual");
+    f.addSub(cus, "hotrail_team_monthly");
     await hook(event("customer.subscription.updated", { customer: cus }));
-    expect((await db.getEntitlement("org_1"))?.plan).toBe("agency");
+    expect((await db.getEntitlement("org_1"))?.plan).toBe("team");
   });
 });
 
 describe("gating", () => {
   it("requirePlan throws 402 plan_required below the minimum; expired entitlements fall to free", () => {
-    expect(() => requirePlan(null, "pro", NOW)).toThrow("plan_required");
-    const e = { ...NONE(NOW), isPaid: true, status: "active" as const, plan: "pro" as const, expiresAt: NOW - 10 * 864e5 };
+    expect(() => requirePlan(null, "maker", NOW)).toThrow("plan_required");
+    const e = { ...NONE(NOW), isPaid: true, status: "active" as const, plan: "maker" as const, expiresAt: NOW - 10 * 864e5 };
     expect(effectivePlan(e, NOW).id).toBe("free"); // missed webhook cannot keep a plan on forever
-    expect(requirePlan({ ...e, expiresAt: NOW + 864e5 }, "starter", NOW).id).toBe("pro");
+    expect(requirePlan({ ...e, expiresAt: NOW + 864e5 }, "solo", NOW).id).toBe("maker");
   });
 });

@@ -8,22 +8,24 @@
 :root {
   --font-sans-family: var(--font-kit-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono-family: var(--font-kit-mono), ui-monospace, monospace;
+  --font-display-family: var(--font-kit-display), ui-sans-serif, system-ui, sans-serif;
 
-  /* raw ramp (neutral 00..1000) */
+  /* raw ramp: signal navy ink ramp on cool paper (docs/DESIGN.md §5) */
   --n-0: #ffffff;
-  --n-50: #f7f7f7;
-  --n-100: #efefef;
-  --n-200: #e2e2e2;
-  --n-300: #cfcfcf;
-  --n-400: #a3a3a3;
-  --n-500: #767676;
-  --n-600: #5c5c5c;
-  --n-700: #404040;
-  --n-800: #272727;
-  --n-900: #181818;
-  --n-1000: #000000;
-  --accent-500: #3d5a80; /* placeholder accent, <80% saturation */
-  --accent-600: #2f4766;
+  --n-50: #f6f5f0;
+  --n-100: #eceff4;
+  --n-200: #d5dae2;
+  --n-300: #b9c1cd;
+  --n-400: #8a96a8;
+  --n-500: #5f6b7e;
+  --n-600: #4a5668;
+  --n-700: #2f3d55;
+  --n-800: #1c2b44;
+  --n-900: #0f1b2d;
+  --n-1000: #0a101b;
+  --accent-500: #14284b; /* signal navy */
+  --accent-600: #0e1d38;
+  --amber-500: #e0a21b; /* signal amber */
 
   /* role tokens: light */
   --surface: var(--n-0);
@@ -39,43 +41,43 @@
   --action: var(--accent-500);
   --action-hover: var(--accent-600);
   --action-text: #ffffff;
-  --focus: var(--accent-500);
-  --success: #2f7a4a;
-  --success-surface: #ecf6ef;
+  --focus: var(--amber-500);
+  --success: #2e9e5b; /* the go lamp */
+  --success-surface: #e8f5ed;
   --warning: #8a5a00;
-  --warning-surface: #fdf5e4;
-  --danger: #b3261e;
-  --danger-surface: #fcecea;
-  --hero-from: #000000;
-  --hero-to: #666666;
-  --shadow-color: 0 0% 0%;
+  --warning-surface: #fdf3da;
+  --danger: #c8372d;
+  --danger-surface: #fbeceb;
+  --hero-from: #0f1b2d;
+  --hero-to: #4a5668;
+  --shadow-color: 215 40% 12%;
   color-scheme: light;
 }
 
 :root[data-theme="dark"] {
-  --surface: #181818;
-  --surface-raised: #1f1f1f;
-  --surface-sunken: #000000;
-  --surface-inverse: var(--n-50);
-  --text: #f2f2f2;
-  --text-subtle: #b4b4b4;
-  --text-muted: #8f8f8f;
-  --text-inverse: var(--n-900);
-  --border: #313131;
-  --border-strong: #404040;
-  --action: #8fa9cc;
-  --action-hover: #a9bfdc;
-  --action-text: #0b1320;
-  --focus: #8fa9cc;
-  --success: #6fcf8f;
-  --success-surface: #13261a;
-  --warning: #e7b85a;
+  --surface: #121b2b;
+  --surface-raised: #182338;
+  --surface-sunken: #0a101b;
+  --surface-inverse: #e7ecf4;
+  --text: #e7ecf4;
+  --text-subtle: #9aa7ba;
+  --text-muted: #8391a6;
+  --text-inverse: #0a101b;
+  --border: #243148;
+  --border-strong: #34445f;
+  --action: #e7ecf4;
+  --action-hover: #ffffff;
+  --action-text: #0a101b;
+  --focus: #f0b93a;
+  --success: #3dbb73;
+  --success-surface: #10261a;
+  --warning: #f0b93a;
   --warning-surface: #2a210e;
-  --danger: #f2877e;
+  --danger: #e4574d;
   --danger-surface: #2c1513;
   --hero-from: #ffffff;
-  --hero-to: #9b9b9b;
-  --shadow-color: 0 0% 0%;
+  --hero-to: #9aa7ba;
+  --shadow-color: 220 60% 3%;
   color-scheme: dark;
 }
 
@@ -84,6 +86,7 @@
 @theme inline {
   --font-sans: var(--font-sans-family);
   --font-mono: var(--font-mono-family);
+  --font-display: var(--font-display-family);
 
   --color-*: initial;
   --color-transparent: transparent;

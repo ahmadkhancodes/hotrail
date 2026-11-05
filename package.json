@@ -1,5 +1,5 @@
 {
-  "name": "postslot",
+  "name": "hotrail",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit -p .",
-    "test": "vitest run",
+    "test": "vitest run && npm test --workspaces --if-present",
     "stripe:setup": "tsx scripts/stripe-setup.ts",
     "db:indexes": "tsx scripts/ensure-indexes.ts",
     "screenshots": "tsx scripts/screenshots.ts",
@@ -27,7 +27,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "stripe": "^23.1.0",
-    "zod": "^4.6.7"
+    "zod": "^4.6.7",
+    "@buffersol/hotrail-core": "*"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
@@ -41,5 +42,8 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.1.0"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

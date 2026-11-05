@@ -5,6 +5,9 @@
 - Pre-kit work, pure TS, no app code:
   - `packages/core` (`@buffersol/hotrail-core`): canonical JSON, SHA-256, semver, sticky bucketing, headcodes, manifest, Ed25519 signing (WebCrypto), delta planning, native file and zip-bomb policy, native fingerprint, `decideUpdate` (hot path decision). 21 tests.
   - `packages/cli` (`@buffersol/hotrail`): init, upload, release, rollback, status against the `/api/v1/*` contract in ARCHITECTURE.md, with a fake-server test suite. 12 tests.
-  - Both: `pnpm install && pnpm -r typecheck && pnpm -r test` is green.
+  - Both: `npm install && npm test` is green (moved from pnpm to npm workspaces in M1-A).
 - Infra notes from the orchestrator: Vercel via `VERCEL_TOKEN_NEW_ACCOUNT` CLI/REST only (team ahmad-code); `DB_DRIVER=memory` until `MONGODB_URI` arrives.
-- Waiting for: "kit-v1 ready". Next: copy kit, apply tokens, M1.
+- M1-A done (5 Nov 2026): kit adopted and renamed to Hotrail, plans/limits from brief (Free/Solo/Maker/Team, meter = MAU), design tokens and fonts applied, npm workspaces (core, cli). lint, typecheck, test (45 app + 12 cli + 21 core), build green. Marketing pages still the kit sample copy.
+- Next: M1-B, landing and pricing pages.
+
+- 2026-11-05: M1-A finished: rename, npm workspaces, tokens, green checks.

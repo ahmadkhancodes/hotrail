@@ -6,6 +6,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/unit/**/*.test.ts"],
-    env: { NODE_ENV: "test", DB_DRIVER: "memory", APP_NAME: "postslot", MAIL_PROVIDER: "console" },
+    env: { NODE_ENV: "test", DB_DRIVER: "memory", APP_NAME: "hotrail", MAIL_PROVIDER: "console" },
   },
 });
