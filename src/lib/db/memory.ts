@@ -1,4 +1,5 @@
 import { uuidv7 } from "@/lib/ids";
+import { createMemoryShip } from "./memory-ship";
 import type { AuditEntry, BillingAccount, Db, Entitlement, Suppression, WebhookDelivery, WebhookEndpoint } from "./types";
 
 /** In-memory Db for tests, local dev and stub mode. Same semantics as the Mongo driver (dbContract.ts). */
@@ -12,12 +13,15 @@ export function createMemoryDb(app: string, config: Record<string, string> = {})
   const endpoints = new Map<string, WebhookEndpoint>();
   const deliveries = new Map<string, WebhookDelivery>();
   const suppressions = new Map<string, Suppression>();
+  const ship = createMemoryShip(app);
   const cfg = new Map(Object.entries(config));
   const clone = <T>(x: T): T => structuredClone(x);
   const sKey = (email: string, scope = "all") => `${email.toLowerCase()}|${scope}`;
 
+  const { deleteOrg: shipDeleteOrg, exportOrg: shipExportOrg, ...shipApi } = ship;
   return {
     app,
+    ...shipApi,
     async getBillingAccount(id) {
       const a = accounts.get(id);
       return a ? clone(a) : null;
@@ -138,9 +142,11 @@ export function createMemoryDb(app: string, config: Record<string, string> = {})
         entitlement: ents.get(orgId) ?? null,
         webhookEndpoints: [...endpoints.values()].filter((e) => e.orgId === orgId).map(({ secret: _s, ...rest }) => rest),
         auditLog: audit.filter((a) => a.orgId === orgId),
+        ...shipExportOrg(orgId),
       };
     },
     async deleteOrgData(orgId) {
+      shipDeleteOrg(orgId);
       accounts.delete(orgId);
       ents.delete(orgId);
       for (const [k] of usage) if (k.startsWith(`${orgId}|`)) usage.delete(k);

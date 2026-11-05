@@ -1,4 +1,5 @@
 import { MongoClient, type Collection, type Db as MongoDatabase, type Document } from "mongodb";
+import { createMongoShip, ensureShipIndexes } from "./mongo-ship";
 import { uuidv7 } from "@/lib/ids";
 import { DELIVERY_TTL_DAYS, type AuditEntry, type BillingAccount, type Db, type Entitlement, type Suppression, type WebhookDelivery, type WebhookEndpoint } from "./types";
 
@@ -31,8 +32,11 @@ export function createMongoDb(uri: string, dbName: string, app: string): Db {
     return rest as T;
   };
 
+  const { deleteOrg: shipDeleteOrg, exportOrg: shipExportOrg, ...shipApi } = createMongoShip(col, app);
+
   return {
     app,
+    ...shipApi,
     async getBillingAccount(id) {
       return strip<BillingAccount>(await (await col<WithId<BillingAccount>>("billing_accounts")).findOne({ _id: id, app }));
     },
@@ -189,9 +193,10 @@ export function createMongoDb(uri: string, dbName: string, app: string): Db {
         this.listWebhookEndpoints(orgId),
         this.listAudit(orgId, { limit: 200 }),
       ]);
-      return { billingAccount, entitlement, webhookEndpoints: endpoints.map(({ secret: _s, ...rest }) => rest), auditLog };
+      return { billingAccount, entitlement, webhookEndpoints: endpoints.map(({ secret: _s, ...rest }) => rest), auditLog, ...(await shipExportOrg(orgId)) };
     },
     async deleteOrgData(orgId) {
+      await shipDeleteOrg(orgId);
       const d = await db();
       await d.collection("billing_accounts").deleteOne({ _id: orgId as never });
       await d.collection("entitlements").deleteOne({ _id: orgId as never });
@@ -224,5 +229,6 @@ export async function ensureIndexes(uri: string, dbName: string) {
   await d.collection("member").createIndex({ organizationId: 1, userId: 1 }, { unique: true });
   await d.collection("organization").createIndex({ slug: 1 }, { unique: true });
   await d.collection("apikey").createIndex({ key: 1 });
+  await ensureShipIndexes(d);
   return DELIVERY_TTL_DAYS;
 }

@@ -30,3 +30,10 @@
    - `{{cap}}`: liability cap in `src/content/legal/terms.ts`.
    - `{{company page URL}}`, `{{confirm min version}}`, `{{confirm offer}}` (3 months free on annual for Appflow teams): landing FAQ and migration section in `src/app/(marketing)/page.tsx`.
    - Have a lawyer review the legal pages before public launch.
+
+10. **R2 bucket for bundles (needed before the M2 deploy)**
+    - Create bucket `hotrail-bundles`: https://dash.cloudflare.com/?to=/:account/r2/new
+    - Create an R2 API token (Object Read & Write, that bucket only): https://dash.cloudflare.com/?to=/:account/r2/api-tokens. Put `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` in the Vercel project env.
+    - Connect custom domain `hotrail-cdn.buffersoltech.com` to the bucket (bucket Settings, Custom Domains) and set `R2_PUBLIC_BASE=https://hotrail-cdn.buffersoltech.com`. Without it, downloads go through `/api/v1/files`.
+    - Generate `SECRETS_KEK` (`openssl rand -base64 32`), store it in Vercel env and keep a copy in the owner's password manager: losing it makes managed signing keys unreadable.
+    - Run `npm run db:indexes` once with `MONGODB_URI` set (new unique indexes for apps, bundles, channels).
