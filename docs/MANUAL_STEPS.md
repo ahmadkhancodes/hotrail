@@ -24,3 +24,9 @@
 7. **Trademark clearance** for "Hotrail" (USPTO/UKIPO/CIPO classes 9 and 42) before public launch. Legal step; I can prepare the search sheet.
 
 8. **Stripe live mode + tax** at go live: https://dashboard.stripe.com/settings/tax (test mode is enough for the build; live keys are the owner's).
+
+9. **Legal and copy placeholders** (owner facts; flagged as `{{...}}` in the shipped pages until filled)
+   - `{{jurisdiction}}` and `{{registered address}}`: `src/config/product.ts` (`legal`), used by terms, privacy, DPA.
+   - `{{cap}}`: liability cap in `src/content/legal/terms.ts`.
+   - `{{company page URL}}`, `{{confirm min version}}`, `{{confirm offer}}` (3 months free on annual for Appflow teams): landing FAQ and migration section in `src/app/(marketing)/page.tsx`.
+   - Have a lawyer review the legal pages before public launch.

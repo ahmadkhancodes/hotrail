@@ -48,7 +48,7 @@ test("magic link sign-in, org, billing state, api key, cron guard", async ({ pag
 
 test("public pages render with metadata and no horizontal overflow at 375px", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
-  for (const path of ["/", "/pricing", "/docs", "/legal/privacy", "/sign-in"]) {
+  for (const path of ["/", "/pricing", "/compare/capgo", "/docs", "/docs/quickstart", "/legal/privacy", "/sign-in"]) {
     const res = await page.goto(path);
     expect(res?.status(), path).toBe(200);
     await expect(page.locator("title")).not.toBeEmpty();
@@ -56,5 +56,18 @@ test("public pages render with metadata and no horizontal overflow at 375px", as
   }
   expect((await page.goto("/nope-404"))?.status()).toBe(404);
   expect((await page.request.get("/api/health")).ok()).toBeTruthy();
-  expect(await (await page.request.get("/llms.txt")).text()).toContain("Postslot");
+  expect(await (await page.request.get("/llms.txt")).text()).toContain("Hotrail by BufferSol");
+});
+
+test("landing shows the mimic panel, the init command and the dated Appflow note", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Fix your Capacitor app today");
+  await expect(page.getByRole("img", { name: /signal box panel/i }).first()).toBeAttached();
+  await expect(page.getByText("npx @buffersol/hotrail init").first()).toBeVisible();
+  await expect(page.getByText("31 Dec 2027").first()).toBeVisible();
+  await page.goto("/pricing");
+  await expect(page.getByText("Talk to us").first()).toBeVisible();
+  await page.goto("/compare/capgo");
+  await expect(page.getByText(/Last checked 3 Nov 2026/)).toBeVisible();
+  expect((await page.request.get("/compare/web3forms")).status()).toBe(404);
 });

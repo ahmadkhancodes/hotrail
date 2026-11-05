@@ -2,7 +2,7 @@ import type { MeterId } from "@/config/product";
 import type { Db } from "@/lib/db/types";
 import { effectivePlan, limitFor } from "./entitlement";
 
-// Metering hooks (MAU, mailboxes, devices, submissions...). Period = calendar month UTC.
+// Metering hooks (MAU, mailboxes, devices, build minutes...). Period = calendar month UTC.
 export const periodOf = (d = new Date()) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 
 export interface UsageState {

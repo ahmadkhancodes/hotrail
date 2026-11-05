@@ -10,7 +10,7 @@ export const dpa: LegalDoc = {
       id: "scope",
       title: "Scope and roles",
       body: [
-        `This addendum applies when ${p.legal.entity} processes personal data in form submissions on your behalf. You are the controller and we are the processor. It forms part of the terms of service.`,
+        `This addendum applies when ${p.legal.entity} processes personal data about the devices that run your apps on your behalf. You are the controller and we are the processor. It forms part of the terms of service.`,
       ],
     },
     {
@@ -19,10 +19,10 @@ export const dpa: LegalDoc = {
       body: [
         {
           list: [
-            "Subject matter: receiving, storing, filtering and delivering form submissions.",
+            "Subject matter: answering update checks, storing update events and storing and serving your bundles.",
             "Duration: while your account is open, plus the deletion period in the privacy policy.",
-            "Data subjects: people who submit your forms.",
-            "Data types: whatever fields and files your forms collect, plus IP address and user agent for spam checks.",
+            "Data subjects: the end users of your apps, identified only by a random device ID.",
+            "Data types: random device ID, app version, OS, platform and update events. We do not store device IP addresses.",
           ],
         },
       ],
