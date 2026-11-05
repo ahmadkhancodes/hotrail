@@ -71,7 +71,10 @@ export function withApi<C = unknown>(handler: Handler<C>, opts: { csrf?: boolean
       if (opts.csrf !== false) assertSameOrigin(req);
       return await handler(req, ctx);
     } catch (e) {
-      if (e instanceof HttpError) return json({ error: e.code, ...(e.details ? { details: e.details } : {}) }, e.status);
+      if (e instanceof HttpError) {
+        const hint = (e.details as { hint?: unknown } | undefined)?.hint;
+        return json({ error: e.code, ...(typeof hint === "string" ? { hint } : {}), ...(e.details ? { details: e.details } : {}) }, e.status);
+      }
       log.error("server_error", { route: opts.route ?? new URL(req.url).pathname, message: (e as Error)?.message });
       return json({ error: "server_error" }, 500);
     }

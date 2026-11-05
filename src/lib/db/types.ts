@@ -85,7 +85,7 @@ export interface Suppression {
   at: Date;
 }
 
-export interface Db {
+export interface Db extends ShipDb {
   readonly app: string;
 
   // billing
@@ -137,3 +137,180 @@ export interface Db {
 }
 
 export const DELIVERY_TTL_DAYS = 90;
+
+// ---- Ship path (M2): apps, bundles, channels, releases, devices, overrides, events ----
+// Every document carries orgId; services check `doc.orgId === principal.orgId` before returning anything.
+
+export type Platform = "ios" | "android";
+
+export interface AppDoc {
+  id: string;
+  app: string;
+  orgId: string;
+  /** Capacitor appId (com.example.ordering). Unique across the product: the hot path only receives this string. */
+  bundleId: string;
+  name: string;
+  signingMode: "managed" | "customer";
+  /** Ed25519 public key, base64 raw. Null until the first customer-signed upload registers it. */
+  signingPublicKey: string | null;
+  /** Managed mode only: pkcs8 private key sealed with the KEK (src/lib/crypto/secretbox.ts). */
+  signingKeyEnc: string | null;
+  compatMode: "native" | "capgo_plugin";
+  defaultChannelIds: Partial<Record<Platform, string>>;
+  /** Default failure-rate threshold for auto-pause (0..1) and minimum events before it can fire. */
+  autopauseThreshold: number;
+  minSample: number;
+  bundleSeq: number;
+  createdAt: Date;
+}
+
+export interface BundleDelta {
+  baseVersion: string | null;
+  changedFiles: number;
+  uploadBytes: number;
+  totalBytes: number;
+  uploadRatio: number;
+}
+
+export interface BundleDoc {
+  id: string;
+  app: string;
+  orgId: string;
+  appId: string;
+  version: string;
+  headcode: string;
+  nativeFingerprint: string;
+  manifestKey: string;
+  zipKey: string;
+  zipSha256: string;
+  sizeBytes: number;
+  fileCount: number;
+  signed: boolean;
+  allowedNativeBuilds: string[];
+  delta: BundleDelta;
+  createdBy: string;
+  state: "active" | "softDeleted";
+  createdAt: Date;
+}
+
+export interface ChannelDoc {
+  id: string;
+  app: string;
+  orgId: string;
+  appId: string;
+  name: string;
+  platform: "all" | Platform;
+  currentBundleId: string | null;
+  previousBundleId: string | null;
+  rolloutPercent: number;
+  autopauseThreshold: number;
+  minSample: number;
+  paused: boolean;
+  pausedReason: string | null;
+  protected: boolean;
+  allowSelfAssign: boolean;
+  /** Optimistic concurrency counter: a release carrying a stale rev is refused (409 channel_busy). */
+  rev: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type ReleaseAction = "release" | "percent" | "rollback" | "pause" | "resume" | "autopause";
+
+export interface ReleaseDoc {
+  id: string;
+  app: string;
+  orgId: string;
+  appId: string;
+  channelId: string;
+  channelName: string;
+  action: ReleaseAction;
+  bundleId: string | null;
+  fromBundleId: string | null;
+  percent: number;
+  actor: string;
+  cause: string | null;
+  at: Date;
+}
+
+export interface DeviceDoc {
+  app: string;
+  appId: string;
+  deviceId: string;
+  platform: string;
+  bundleVersion: string | null;
+  versionBuild: string | null;
+  channelId: string | null;
+  lastSeenAt: Date;
+}
+
+export interface OverrideDoc {
+  app: string;
+  appId: string;
+  deviceId: string;
+  channelId: string;
+  at: Date;
+}
+
+export type EventAction = "download" | "applied" | "failed" | "rolledBack" | "other";
+
+export interface EventDoc {
+  id: string;
+  app: string;
+  appId: string;
+  ts: Date;
+  deviceId: string;
+  bundleVersion: string | null;
+  channelId: string | null;
+  action: EventAction;
+  cause: string;
+  /** TTL (Date). */
+  expiresAt: Date;
+}
+
+export interface ShipDb {
+  createApp(a: Omit<AppDoc, "app" | "bundleSeq" | "createdAt"> & { createdAt?: Date }): Promise<AppDoc>;
+  getAppByBundleId(bundleId: string): Promise<AppDoc | null>;
+  listApps(orgId: string): Promise<AppDoc[]>;
+  updateApp(id: string, patch: Partial<Pick<AppDoc, "signingPublicKey" | "defaultChannelIds" | "autopauseThreshold" | "minSample" | "name">>): Promise<void>;
+  /** Atomically returns the previous counter value and increments it (0 for the first bundle). */
+  nextBundleSeq(appId: string): Promise<number>;
+
+  /** Throws `duplicate_version` when (appId, version) exists. */
+  createBundle(b: Omit<BundleDoc, "app">): Promise<BundleDoc>;
+  getBundle(appId: string, id: string): Promise<BundleDoc | null>;
+  getBundleByVersion(appId: string, version: string): Promise<BundleDoc | null>;
+  getBundleByHeadcode(appId: string, headcode: string): Promise<BundleDoc | null>;
+  listBundles(appId: string, limit?: number): Promise<BundleDoc[]>;
+
+  createChannel(c: Omit<ChannelDoc, "app" | "rev" | "createdAt" | "updatedAt">): Promise<ChannelDoc>;
+  getChannel(appId: string, id: string): Promise<ChannelDoc | null>;
+  getChannelByName(appId: string, name: string): Promise<ChannelDoc | null>;
+  listChannels(appId: string): Promise<ChannelDoc[]>;
+  /** Compare-and-set on `rev` when expectRev is given. Returns the new doc, or null when the rev was stale or the channel is gone. */
+  updateChannel(
+    appId: string, id: string,
+    patch: Partial<Pick<ChannelDoc, "currentBundleId" | "previousBundleId" | "rolloutPercent" | "autopauseThreshold" | "minSample" | "paused" | "pausedReason" | "allowSelfAssign">>,
+    expectRev?: number,
+  ): Promise<ChannelDoc | null>;
+
+  appendRelease(r: Omit<ReleaseDoc, "app">): Promise<void>;
+  listReleases(appId: string, limit?: number): Promise<ReleaseDoc[]>;
+
+  /** Device registry keeps last-seen only, one document per (appId, deviceId). */
+  touchDevice(d: Omit<DeviceDoc, "app">): Promise<void>;
+  getDevice(appId: string, deviceId: string): Promise<DeviceDoc | null>;
+  countDevices(appId: string, since?: Date): Promise<number>;
+  /** Device counts grouped by bundle version or channel (devices seen since `since`). */
+  deviceCounts(appId: string, by: "bundleVersion" | "channelId", since?: Date): Promise<Record<string, number>>;
+
+  setOverride(o: Omit<OverrideDoc, "app" | "at">): Promise<void>;
+  deleteOverride(appId: string, deviceId: string): Promise<void>;
+  getOverride(appId: string, deviceId: string): Promise<OverrideDoc | null>;
+  listOverrides(appId: string, limit?: number): Promise<OverrideDoc[]>;
+
+  appendEvent(e: Omit<EventDoc, "app">): Promise<void>;
+  listEvents(appId: string, opts?: { since?: Date; channelId?: string; bundleVersion?: string; limit?: number }): Promise<EventDoc[]>;
+}
+
+export const EVENT_TTL_DAYS = 7;

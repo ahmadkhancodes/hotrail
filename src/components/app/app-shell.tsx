@@ -14,7 +14,7 @@ import { OrgSwitcher } from "./org-switcher";
 type IconType = typeof User;
 interface NavItem { href: string; label: string; icon: IconType }
 
-const MAIN: NavItem[] = [{ href: "/app", label: "Overview", icon: SquaresFour }];
+const MAIN: NavItem[] = [{ href: "/app", label: "Line", icon: SquaresFour }];
 const SETTINGS: NavItem[] = [
   { href: "/app/settings/profile", label: "Profile", icon: User },
   { href: "/app/settings/security", label: "Security", icon: ShieldCheck },

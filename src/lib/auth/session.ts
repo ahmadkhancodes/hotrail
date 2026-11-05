@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { adminEmails } from "@/lib/env";
 import { HttpError } from "@/lib/http";
+import { scopeFromMetadata, type KeyScope } from "@/lib/ship/guard";
 import { getAuth } from "./index";
 import { can, type OrgRole } from "./roles";
 import type { statements } from "./roles";
@@ -77,12 +78,12 @@ export function requirePermission(ctx: OrgContext, resource: keyof typeof statem
 
 export const isFounderAdmin = (email: string | null | undefined) => !!email && adminEmails().includes(email.toLowerCase());
 
-/** API key auth for /api/v1/* (x-api-key or Bearer). Returns the owning org id. */
-export async function authApiKey(req: Request): Promise<{ orgId: string; keyId: string }> {
+/** API key auth for /api/v1/* (x-api-key or Bearer). Returns the owning org id and the key's scope. */
+export async function authApiKey(req: Request): Promise<{ orgId: string; keyId: string; scope: KeyScope }> {
   const raw = req.headers.get("x-api-key") ?? req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!raw) throw new HttpError(401, "missing_api_key");
   const auth = await getAuth();
-  const r = (await auth.api.verifyApiKey({ body: { key: raw } })) as { valid: boolean; key?: { id: string; referenceId?: string; userId?: string } | null };
+  const r = (await auth.api.verifyApiKey({ body: { key: raw } })) as { valid: boolean; key?: { id: string; referenceId?: string; userId?: string; metadata?: unknown } | null };
   if (!r.valid || !r.key) throw new HttpError(401, "invalid_api_key");
-  return { orgId: r.key.referenceId ?? r.key.userId ?? "", keyId: r.key.id };
+  return { orgId: r.key.referenceId ?? r.key.userId ?? "", keyId: r.key.id, scope: scopeFromMetadata(r.key.metadata) };
 }

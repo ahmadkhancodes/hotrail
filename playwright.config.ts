@@ -4,7 +4,11 @@ const PORT = 3100;
 export default defineConfig({
   testDir: "tests/e2e",
   timeout: 60_000,
-  use: { baseURL: process.env.BASE_URL ?? `http://localhost:${PORT}` },
+  use: {
+    baseURL: process.env.BASE_URL ?? `http://localhost:${PORT}`,
+    // PW_CHROMIUM lets CI or a sandbox point at a system Chromium when Playwright's own download is absent.
+    launchOptions: process.env.PW_CHROMIUM ? { executablePath: process.env.PW_CHROMIUM } : undefined,
+  },
   webServer: process.env.BASE_URL
     ? undefined
     : {

@@ -117,14 +117,15 @@ async function upload(io: Io, flags: Record<string, string | true>): Promise<voi
 
   const files = entries.map((e) => ({ path: e.path, data: new Uint8Array(readFileSync(e.abs)) }));
   const manifest = await buildManifest({ appId: cfg.appId, version, nativeFingerprint: await fingerprintOf(io.cwd), files });
-  let signed: SignedManifest | { manifest: typeof manifest; signature: null };
+  let signed: (SignedManifest | { manifest: typeof manifest; signature: null }) & { publicKey?: string };
   if (flags.unsigned === true) {
     signed = { manifest, signature: null };
     io.err("Warning: uploading unsigned. Devices with signature checking on will reject this bundle.");
   } else {
-    const key = readJson<{ privateKey: string }>(join(io.cwd, ".hotrail", "signing-key.json"));
+    const key = readJson<{ privateKey: string; publicKey?: string }>(join(io.cwd, ".hotrail", "signing-key.json"));
     if (!key) throw new ApiError(0, "No signing key found.", "Run `npx @buffersol/hotrail init`, or pass --unsigned.");
-    signed = await signManifest(manifest, key.privateKey);
+    // The public key is sent so the server can register it on the first signed upload and verify every later one.
+    signed = { ...(await signManifest(manifest, key.privateKey)), publicKey: key.publicKey };
   }
 
   const plan = await api.post<PlanResponse>("/api/v1/upload/plan", { appId: cfg.appId, version, ...signed });
@@ -171,7 +172,7 @@ async function status(io: Io): Promise<void> {
   const api = makeApi(io, cfg);
   const res = await api.get<{ channels: { name: string; headcode: string | null; percent: number; paused: boolean }[] }>(`/api/v1/channels?appId=${encodeURIComponent(cfg.appId)}`);
   if (res.channels.length === 0) io.out("No trains on this line yet. Run `npx @buffersol/hotrail upload`.");
-  for (const c of res.channels) io.out(`${c.name.padEnd(12)} ${(c.headcode ?? "none").padEnd(6)} ${String(c.percent).padStart(3)}%  ${c.paused ? "■ R paused" : c.percent < 100 ? "▲ A rolling out" : "● G live"}`);
+  for (const c of res.channels) io.out(`${c.name.padEnd(12)} ${(c.headcode ?? "none").padEnd(6)} ${String(c.percent).padStart(3)}%  ${c.headcode === null ? "○ idle" : c.paused ? "■ R paused" : c.percent < 100 ? "▲ A rolling out" : "● G live"}`);
 }
 
 export async function main(argv: string[], io: Io): Promise<number> {

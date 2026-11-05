@@ -1,55 +1,70 @@
 import Link from "next/link";
-import { Meter } from "@/components/app/meter";
-import { METERS_SHOWN } from "@/components/app/labels";
-import { PageHeader, Panel } from "@/components/app/page-header";
+import { PageHeader } from "@/components/app/page-header";
+import { CopyButton } from "@/components/app/copy-button";
 import { buttonClass } from "@/components/ui/button";
-import { Badge, EmptyState } from "@/components/ui/states";
+import { EmptyState } from "@/components/ui/states";
+import { cn } from "@/components/ui/cn";
+import { can } from "@/lib/auth/roles";
 import { requireOrg } from "@/lib/auth/session";
-import { effectivePlan } from "@/lib/billing/entitlement";
-import { currentUsage } from "@/lib/billing/usage";
-import { getDb } from "@/lib/db";
+import { buildLine, type LineView as LineData } from "@/lib/ship/line";
+import { shipDeps } from "@/lib/ship/context";
+import { LineView } from "./line-view";
 
-export const metadata = { title: "Overview" };
+export const metadata = { title: "Line" };
+export const dynamic = "force-dynamic";
 
-export default async function OverviewPage() {
+export default async function LinePage({ searchParams }: { searchParams: Promise<{ app?: string }> }) {
   const ctx = await requireOrg({ page: true });
-  const db = await getDb();
-  const ent = await db.getEntitlement(ctx.org.id);
-  const plan = effectivePlan(ent);
-  const usage = await currentUsage(db, ctx.org.id, METERS_SHOWN);
+  const { app: wanted } = await searchParams;
+  const deps = await shipDeps();
+  const apps = await deps.db.listApps(ctx.org.id);
+
+  if (apps.length === 0) {
+    const cmd = "npx @buffersol/hotrail init";
+    return (
+      <>
+        <PageHeader title="Line" description={`${ctx.org.name}: every channel is a track, every release is a train.`} />
+        <EmptyState
+          title="No trains on this line yet."
+          body={<>Run the CLI in your Capacitor project. It finds your app, creates a signing key, and uploads your first bundle.<br /><code className="mt-2 inline-block">{cmd}</code></>}
+          action={
+            <div className="flex flex-wrap gap-2">
+              <CopyButton value={cmd} label="Copy command" />
+              <Link href="/app/settings/api-keys" className={buttonClass("secondary", "sm")}>Create an API key</Link>
+              <Link href="/docs/quickstart" className={buttonClass("tertiary", "sm")}>Read the quickstart</Link>
+            </div>
+          }
+        />
+      </>
+    );
+  }
+
+  const current = apps.find((a) => a.bundleId === wanted) ?? apps[0]!;
+  const canWrite = can(ctx.role, "data", "write");
+  let initial: LineData | null = null;
+  try {
+    initial = await buildLine(deps, { orgId: ctx.org.id, scope: "read", actor: `user:${ctx.user.id}` }, current.bundleId);
+  } catch {
+    initial = null; // the client shows the error state with a retry
+  }
   return (
     <>
-      <PageHeader title={ctx.org.name} description={`Signed in as ${ctx.user.email}.`} />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <section aria-labelledby="plan-h" className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-6">
-          <div className="flex items-center justify-between gap-2">
-            <h2 id="plan-h" className="title-4 text-text-subtle">Current plan</h2>
-            {ent?.status === "past_due" ? <Badge tone="warning">Payment failed</Badge> : ent?.cancelAtPeriodEnd ? <Badge tone="warning">Ends soon</Badge> : <Badge tone="success">Active</Badge>}
-          </div>
-          <p className="heading-4 text-text">{plan.name}</p>
-          <p className="body-6 text-text-subtle">{plan.tagline}</p>
-          <Link href="/app/billing" className={buttonClass("secondary", "md", "self-start")}>
-            {plan.id === "free" ? "See plans" : "Manage plan"}
-          </Link>
-        </section>
-        <section aria-labelledby="usage-h" className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-6 lg:col-span-2">
-          <h2 id="usage-h" className="title-4 text-text-subtle">Usage</h2>
-          <div className="flex flex-col gap-6">
-            {usage.map((u) => <Meter key={u.meter} state={u} />)}
-          </div>
-        </section>
+      <PageHeader title="Line" description={`${current.bundleId} · signing ${current.signingMode === "managed" ? "managed by Hotrail" : "with your own key"}`} />
+      {apps.length > 1 ? (
+        <nav aria-label="Apps" className="-mt-4 flex flex-wrap gap-6 border-b border-border pb-0 pt-0 body-6">
+          {apps.map((a) => (
+            <Link
+              key={a.id} href={`/app?app=${encodeURIComponent(a.bundleId)}`} aria-current={a.id === current.id ? "page" : undefined}
+              className={cn("py-3 text-text-subtle focus-visible:focus-ring", a.id === current.id && "font-bold text-text shadow-[inset_0_-3px_0_var(--focus)]")}
+            >
+              {a.name}
+            </Link>
+          ))}
+        </nav>
+      ) : null}
+      <div className={apps.length > 1 ? "pt-4" : undefined}>
+        <LineView key={current.bundleId} bundleId={current.bundleId} initial={initial} canWrite={canWrite} />
       </div>
-      <Panel title="Workspace" description="Where your product's main screen lives.">
-        <EmptyState
-          title="Your product's main screen goes here"
-          body={
-            <>
-              This page is the signed-in home. Replace <code>src/app/app/page.tsx</code> with the screen people use every day, and keep the plan and usage cards above it or move them to the sidebar. Start with the one task a new member must finish to get value, and teach it here before they see anything else.
-            </>
-          }
-          action={<Link href="/app/settings/members" className={buttonClass("primary")}>Invite a teammate</Link>}
-        />
-      </Panel>
     </>
   );
 }

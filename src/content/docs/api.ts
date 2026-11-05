@@ -21,6 +21,35 @@ export const api: DocPage = {
       },
     },
     {
+      heading: "Key scopes",
+      body: [
+        "Each key has a scope, chosen when you create it. All can upload, release and roll back. Upload only can upload bundles and nothing else, which is what a CI job needs. Read only can list apps, bundles and channels. A key used outside its scope gets 403 with the code insufficient_scope.",
+      ],
+    },
+    {
+      heading: "Upload and release endpoints",
+      body: [
+        "POST /api/v1/bundles?appId=com.example.app&version=1.2.3 takes a zip as the request body, checks it against the native file and archive size policy, signs the manifest with the app's key and returns the new bundle and its headcode. Only files the app has not stored before are written. The CLI uses POST /api/v1/upload/plan, a direct PUT for each missing file, then POST /api/v1/upload/finalize, so an unchanged build sends almost nothing.",
+        "POST /api/v1/channels/release with appId, channel, bundle (a headcode) or version, and percent points a channel at a bundle. POST /api/v1/channels/rollback, /pause and /resume take appId and channel. GET /api/v1/channels?appId= lists channels, GET /api/v1/bundles?appId= lists bundles, and GET /api/v1/line?appId= returns everything the console shows.",
+      ],
+      code: {
+        lang: "json",
+        code: `{
+  "headcode": "1A01",
+  "version": "2.14.1",
+  "percent": 25,
+  "channel": "production",
+  "action": "release"
+}`,
+      },
+    },
+    {
+      heading: "Device endpoints for the updater plugin",
+      body: [
+        "Point @capgo/capacitor-updater at POST /api/v1/updates/check (updateUrl), POST /api/v1/updates/stats (statsUrl) and /api/v1/updates/channel (channelUrl). These need no API key. The check endpoint always answers HTTP 200: an update object with version, url and checksum, or a message saying no new version is available.",
+      ],
+    },
+    {
       heading: "Errors",
       body: [
         "Errors use a matching HTTP status and a JSON body with a stable snake case code. Match on the code, not on the status text.",
