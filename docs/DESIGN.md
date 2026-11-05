@@ -18,38 +18,41 @@ For Capacitor teams who are stuck waiting 1 to 3 days on store review to fix a b
 | Railway (adjacent, loved) | "Ship software peacefully" | Real product canvas in a night-sky scene | Dusk purple, serif display + sans | Medium, real UI | Deploy |
 | Linear (adjacent, loved) | Product development system | Real product UI | Near-black, restrained, one accent | High, precise | Sign up |
 
-**Category cliches (avoid):** centered headline over a dark field with a blue/indigo accent; abstract hero art (map, floating tiles, gradients) with no product in it; pill badge above the H1; logo walls; Inter. **Nobody shows the actual release control surface in the hero**, and nobody has a visual identity of its own. **The gap we own:** a distinctive physical metaphor (railway signal box) that is also the real UI, in a green and enamel palette none of the three use.
+**Category cliches (avoid):** centered headline over a dark field with a blue/indigo accent; abstract hero art (map, floating tiles, gradients) with no product in it; pill badge above the H1; logo walls; Inter. **Nobody shows the actual release control surface in the hero**, and nobody has a visual identity of its own. **The gap we own:** a distinctive physical metaphor (railway signal box) that is also the real UI, in a navy and amber enamel palette none of the three use.
 
 ## 4. Direction
 - **Concept:** a railway signal box mimic panel. Channels are tracks, bundles are trains carrying a 4 character headcode (2K47) on an enamel plate, devices are stations, rollout percentage is a signal, rollback is a train reversing into a siding. Mood: dependable, mechanical, legible, calm, exact.
-- **Differs from the three closest competitors on four axes:** palette (railway green on warm paper vs azure/indigo/black), type (condensed railway display + hyperlegible body vs Inter/Manrope), layout (left-aligned, product-first, hero is the live panel vs centered text over art), imagery (schematic track drawings vs maps/tiles/logos).
+- **Differs from the three closest competitors on four axes:** palette (signal navy and amber on warm paper vs azure/indigo/black), type (condensed railway display + hyperlegible body vs Inter/Manrope), layout (left-aligned, product-first, hero is the live panel vs centered text over art), imagery (schematic track drawings vs maps/tiles/logos).
 - **Signature move:** the hero is the live mimic panel itself (animated SVG/CSS, static fallback): a bundle "train" travels the channel track as the rollout signal steps red, amber, green. The same component is the console's Line view, so marketing shows the real product.
 - **Density:** high in the app (32 px rows, tables one click away), medium on marketing (left aligned, long measure, hairlines).
 - **Voice:** a calm senior release engineer. Short sentences, real numbers, sparing dry railway humor, US English, no exclamation marks, sentence case.
 
-## 5. Palette (CSS variables, two layers: raw then role; components use roles only)
-Light (default) / Dark "night shift" (follows OS, `[data-theme=dark]` override):
+## 5. Palette: "signal navy and amber" (revised 5 Nov after orchestrator review)
+Change from the first draft: the railway green on warm paper was too close to DockCrate's dock green on warm paper, and all 50 BufferSol products are shown side by side. The primary family is now deep signal navy (blue black) with signal amber as the only highlight. The workbook's green stays only as the "go" lamp. Roles are unchanged, so this was a one file token swap.
+
+Two layers: raw then role; components use roles only. Light (default) / Dark "night shift" (follows OS, `[data-theme=dark]` override):
 
 | Role token | Light | Dark | Notes |
 |---|---|---|---|
-| `--bg` | #F6F7F4 | #0F1412 | page |
-| `--surface` | #FFFFFF | #18201C | cards, panels |
-| `--soft` | #EAF1EC | #1F2924 | tinted wells, table zebra |
-| `--ink` | #16201B | #E6ECE8 | text (AA on bg: 15.9:1 / 14.2:1) |
-| `--ink-muted` | #4F5D55 | #9AA89F | secondary (AA: 6.4:1 / 7.0:1) |
-| `--border` | #D3DAD5 | #2A3530 | hairline 1 px |
-| `--track` | #2B3530 | #5D6B63 | rails, 3 px |
-| `--primary` | #1E5B3F | #4FB585 | the one accent: actions, links, selected |
-| `--primary-hover` | #174A33 | #6AC79B | |
-| `--on-primary` | #FFFFFF | #0F1412 | white on #1E5B3F = 8.2:1 |
+| `--bg` | #F6F5F0 | #0A101B | page |
+| `--surface` | #FFFFFF | #121B2B | cards, panels |
+| `--soft` | #ECEFF4 | #182338 | tinted wells, rails |
+| `--ink` | #0F1B2D | #E7ECF4 | text (AA, about 16:1 / 15:1) |
+| `--ink-muted` | #4A5668 | #9AA7BA | secondary (AA) |
+| `--border` | #D5DAE2 | #243148 | hairline 1 px |
+| `--track` | #1C2B44 | #5A6B87 | rails, 3 px |
+| `--panel` | #0F1B2D | #0B1422 | the signal box board, dark in both themes |
+| `--primary` | #14284B | #E7ECF4 | the one accent family: buttons, links (dark mode inverts to pale enamel) |
+| `--primary-hover` | #0E1D38 | #FFFFFF | |
+| `--on-primary` | #FFFFFF | #0A101B | white on #14284B is about 14:1 |
+| `--focus` (signal amber) | #E0A21B | #F0B93A | 3 px focus ring, selected tab underline, prompt `$` |
 | `--lamp-green` | #2E9E5B | #3DBB73 | state only |
-| `--lamp-amber` | #E0A21B | #F0B93A | never carries white text; dark ink on amber |
-| `--lamp-red` | #C8372D | #E4574D | |
-| `--lamp-white` | #F4F1E6 | #F4F1E6 | route set on dark track |
+| `--lamp-amber` | #E0A21B | #F0B93A | state only; dark ink on amber, never white text |
+| `--lamp-red` | #C8372D | #E4574D | state only |
+| `--plate` | #F4F1E6 | #F4F1E6 | headcode enamel plate |
 | `--info` | #2C6E91 | #5FA8CF | |
-| `--focus` | #E0A21B | #F0B93A | 3 px ring, offset 2 |
 
-Rules: one accent (primary green, about 55% saturation). Lamps are state only and always pair colour + glyph + text (G ● / A ▲ / R ■). Dark lamps glow `0 0 8px currentColor` at 40%. Flat backgrounds, no background gradients, no hero text gradient (flat ink; simpler and more legible). Dark backgrounds use the workbook's own palette (override of the skill's six-value list, logged in DECISIONS.md).
+Rules: navy is the action colour, amber marks focus and selection, lamps are state only and always pair colour + glyph + text (G ● / A ▲ / R ■). Flat backgrounds, no gradients, no hero text gradient. Differs from Capgo's bright azure on near black, Capawesome's indigo and DockCrate's green. Dark backgrounds use this palette (override of the skill's six-value list, logged in DECISIONS.md).
 
 ## 6. Type
 - Display: **Barlow Condensed** 500/600 (railway signage lineage, tight, tall). Body/UI: **Atkinson Hyperlegible** 400/700 (designed for legibility; fits "legible under pressure"). Data, headcodes, CLI, tabular figures: **Red Hat Mono** 400/500.
@@ -79,4 +82,4 @@ Do: left align; show real UI with believable odd numbers (2K47, 38.6%, 12,408 de
 Don't: purple/blue gradients, glow blobs, glassmorphism (the nav is a flat translucent bar at most), rockets/clouds, emoji, sparkle icons, identical rounded card grids, cream plus terracotta, Inter/Space Grotesk/Roboto, Capgo's azure/teal/slate palette, layout, logo or the phrase "Release Control Room", fake logos/testimonials/stats, "blazing fast", "supercharge", exclamation marks.
 
 ## 12. Why this fits the ICP better
-Developers under incident pressure trust legibility and precision over decoration. Capgo and Capawesome look like generic dev-tool marketing and hide the product; OtaKit is clean but anonymous. Hotrail leads with the thing the buyer actually fears (a bad bundle on live devices) drawn as a signal box they can read in two seconds, in a palette and typeface that nobody in the category uses, so it is recognisable in a screenshot and credible as a calm, engineered tool. Accessibility (triple-coded status, hyperlegible body, AA contrast, keyboard release flow) is a visible trust signal for the security reviewer.
+Developers under incident pressure trust legibility and precision over decoration. Capgo and Capawesome look like generic dev-tool marketing and hide the product; OtaKit is clean but anonymous. Hotrail leads with the thing the buyer actually fears (a bad bundle on live devices) drawn as a signal box they can read in two seconds, in a navy and amber palette and a typeface that nobody in the category uses, so it is recognisable in a screenshot and credible as a calm, engineered tool. Accessibility (triple-coded status, hyperlegible body, AA contrast, keyboard release flow) is a visible trust signal for the security reviewer.
