@@ -30,7 +30,7 @@ export function UsageBanner({ usage, entitlement }: { usage: UsageState[]; entit
         >
           You have used {fmt(worst.used)} of {fmt(worst.limit)} {METER_LABELS[worst.meter].plural}
           {METER_LABELS[worst.meter].period ? ` ${METER_LABELS[worst.meter].period}` : ""}.
-          {worst.meter === "submissions" ? " Over-limit submissions are held, not dropped." : ""}
+          {worst.meter === "mau" ? " New downloads pause at the limit; installed apps keep their current version." : ""}
         </Notice>
       ) : null}
     </div>

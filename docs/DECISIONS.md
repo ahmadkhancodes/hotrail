@@ -14,3 +14,5 @@ Standing decisions are in docs/factory/BATCH1_PLAN.md (Mongo instead of Postgres
 9. **Plugin e2e** runs in GitHub Actions (macOS runner + Android emulator) because there is no Mac farm.
 10. **Oddities resolved:** Free plan has 2 apps, paid unlimited; "annual = 2 months free" is NOT used in copy (real saving is about 14%, state the dollar figure instead); no GBP/CAD prices until Stripe currency options are configured; no testimonials or logos until real ones exist.
 11. **Palette revised (5 Nov, orchestrator review):** primary family changed from railway green to deep signal navy with amber as the highlight, to avoid looking like DockCrate (dock green on warm paper) in the public side by side. Green remains only as the go lamp. Tokens in DESIGN.md section 5; mock and screenshots regenerated.
+
+- 2026-11-05 (M1-A): Moved from pnpm to npm workspaces (`packages/*`) because the kit uses npm; pnpm lockfile and workspace file removed. PlanId is free/solo/maker/team, MeterId is mau/storage_gib/event_days/build_min; Scale is sales-assisted and not a Stripe plan. Added a display font variable (Barlow Condensed) in layout.tsx.

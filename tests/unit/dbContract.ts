@@ -16,7 +16,7 @@ export function dbContract(name: string, make: () => Promise<Db>) {
 
     it("entitlements round trip", async () => {
       const db = await make();
-      const e = { ...NONE(1), isPaid: true, status: "active" as const, plan: "pro" as const };
+      const e = { ...NONE(1), isPaid: true, status: "active" as const, plan: "maker" as const };
       await db.setEntitlement("org_e", e);
       expect(await db.getEntitlement("org_e")).toEqual(e);
     });
@@ -33,9 +33,9 @@ export function dbContract(name: string, make: () => Promise<Db>) {
     it("usage counters increment atomically per period", async () => {
       const db = await make();
       const org = `org_u${Math.random()}`;
-      expect(await db.incUsage(org, "submissions", "2026-11")).toBe(1);
-      expect(await db.incUsage(org, "submissions", "2026-11", 4)).toBe(5);
-      expect(await db.getUsage(org, "submissions", "2026-12")).toBe(0);
+      expect(await db.incUsage(org, "mau", "2026-11")).toBe(1);
+      expect(await db.incUsage(org, "mau", "2026-11", 4)).toBe(5);
+      expect(await db.getUsage(org, "mau", "2026-12")).toBe(0);
     });
 
     it("sliding-window rate limit drops old hits", async () => {
