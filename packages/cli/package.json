@@ -1,0 +1,11 @@
+{
+  "name": "@buffersol/hotrail",
+  "version": "0.1.0",
+  "description": "Hotrail by BufferSol CLI: init, upload, release, rollback, status for Capacitor live updates.",
+  "license": "MIT",
+  "type": "module",
+  "bin": { "hotrail": "./src/bin.ts" },
+  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
+  "dependencies": { "@buffersol/hotrail-core": "workspace:*" },
+  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0", "vitest": "^2.1.0" }
+}
