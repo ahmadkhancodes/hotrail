@@ -117,3 +117,21 @@ describe("CLI against the in-process API (memory store)", () => {
     expect(rd.err.join("\n")).toContain("insufficient_scope");
   });
 });
+
+describe("CLI native build registration", () => {
+  it("records the store build, then release names the builds that will not get the bundle", async () => {
+    const h = harness();
+    const cwd = project();
+    const cli = runner(cwd, h);
+    expect(await cli.run("init")).toBe(0);
+    expect(await cli.run("upload")).toBe(0);
+    expect(await cli.run("native", "register", "--build", "41")).toBe(0);
+    expect(cli.out.at(-1)).toMatch(/^Recorded store build 41 with native fingerprint [0-9a-f]{16}\.$/);
+    // an older store build whose package.json had no camera plugin
+    await h.deps.db.recordNativeBuild({ appId: (await h.deps.db.getAppByBundleId(APP))!.id, versionBuild: "38", fingerprint: "old", info: { capacitor: "8.0.0", plugins: {} }, platform: "all", recordedAt: new Date() });
+    expect(await cli.run("release", "--channel", "production", "--bundle", "1A00")).toBe(0);
+    expect(cli.out.at(-1)).toBe("Not offered to store build 38: build 38 lacks @capacitor/camera.");
+    expect(await cli.run("native", "register")).toBe(1);
+    expect(await cli.run("native", "bogus")).toBe(1);
+  });
+});

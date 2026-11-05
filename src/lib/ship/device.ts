@@ -5,7 +5,7 @@ import { getJson } from "@/lib/storage/types";
 import type { BundleStore } from "@/lib/storage/types";
 import { publishPointers, MAX_OVERRIDES } from "./pointers";
 import { evaluateAutopause } from "./release";
-import { EVENT_TTL_DAYS } from "@/lib/db/types";
+import { BUCKET_TTL_DAYS, EVENT_TTL_DAYS } from "@/lib/db/types";
 import { uuidv7 } from "@/lib/ids";
 import type { ShipDeps } from "./types";
 
@@ -20,6 +20,7 @@ export interface StatsBeacon {
   version_name?: string;
   version_build?: string;
   platform?: string;
+  custom_id?: string;
 }
 
 /** Map the plugin's free-form action names (public protocol docs) to the few outcomes we count. */
@@ -44,7 +45,7 @@ export async function ingestStats(deps: ShipDeps, b: StatsBeacon): Promise<{ sto
   const r = await resolveChannel(reader, { app_id: b.app_id, device_id: b.device_id, platform: b.platform });
   const now = deps.now();
   await deps.db.touchDevice({
-    appId: app.id, deviceId: b.device_id, platform: b.platform ?? "unknown",
+    appId: app.id, deviceId: b.device_id, platform: b.platform ?? "unknown", customId: b.custom_id ? String(b.custom_id).slice(0, 128) : null,
     bundleVersion: b.version_name ?? null, versionBuild: b.version_build ?? null, channelId: r.channelId, lastSeenAt: now,
   });
   const action = classifyAction(b.action);
@@ -53,6 +54,8 @@ export async function ingestStats(deps: ShipDeps, b: StatsBeacon): Promise<{ sto
     id: uuidv7(), appId: app.id, ts: now, deviceId: b.device_id, bundleVersion: b.version_name ?? null, channelId: r.channelId,
     action, cause: String(b.action).slice(0, 64), expiresAt: new Date(now.getTime() + EVENT_TTL_DAYS * 864e5),
   });
+  // The adoption bucket counts exactly the events stored above (one increment per stored event), so charts match raw counts.
+  await deps.db.bumpBucket({ appId: app.id, at: now, channelId: r.channelId, bundleVersion: b.version_name ?? null, action, expiresAt: new Date(now.getTime() + BUCKET_TTL_DAYS * 864e5) });
   if ((action === "failed" || action === "rolledBack") && r.channelId) await evaluateAutopause(deps, app, r.channelId);
   return { stored: true };
 }

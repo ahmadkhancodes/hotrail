@@ -1,0 +1,24 @@
+{
+  "_note": "Shapes the stock @capgo/capacitor-updater reads from a self hosted updateUrl, written from the public self hosted docs (clean room). An update needs string version and url (checksum string when the zip is checked, session_key only for encrypted bundles). Anything else is read as 'no update' via message.",
+  "update": { "version": "2.14.1", "url": "https://cdn.example/zips/x.zip", "checksum": "0000000000000000000000000000000000000000000000000000000000000000" },
+  "noUpdate": { "message": "no_new_version_available" },
+  "allowedKeys": ["version", "url", "checksum", "session_key", "message", "error", "major", "manifest"],
+  "statsRequest": {
+    "action": "set",
+    "app_id": "com.example.ordering",
+    "device_id": "5f1c2d3e-1111-4222-8333-444455556666",
+    "version_name": "2.14.1",
+    "old_version_name": "builtin",
+    "version_build": "41",
+    "version_code": "41",
+    "version_os": "17.4",
+    "plugin_version": "6.14.0",
+    "platform": "ios",
+    "custom_id": "user-8841",
+    "is_prod": true,
+    "is_emulator": false
+  },
+  "statsActions": ["set", "download_complete", "update_fail", "download_fail", "reset", "delete", "ping", "app_moved_to_foreground"],
+  "channelGet": { "channel": "production", "status": "default", "allowSet": false },
+  "channelSetOk": { "status": "ok" }
+}

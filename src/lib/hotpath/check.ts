@@ -27,6 +27,7 @@ export interface PointerLike {
   limited?: boolean;
   sessionKey?: string;
   allowedNativeBuilds?: string[];
+  enforceNativeBuilds?: boolean;
 }
 
 const indexKey = (bundleId: string) => `ptr/${bundleId}/index.json`;

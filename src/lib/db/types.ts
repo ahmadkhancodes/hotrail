@@ -180,6 +180,8 @@ export interface BundleDoc {
   version: string;
   headcode: string;
   nativeFingerprint: string;
+  /** Capacitor + plugin versions the bundle was built against (CLI sends it). Lets the console say why a build is refused. */
+  nativeInfo?: { capacitor: string; plugins: Record<string, string> } | null;
   manifestKey: string;
   zipKey: string;
   zipSha256: string;
@@ -233,10 +235,38 @@ export interface ReleaseDoc {
   at: Date;
 }
 
+/** A store build of the native app (what `version_build` carries), with its native fingerprint. */
+export interface NativeBuildDoc {
+  app: string;
+  appId: string;
+  versionBuild: string;
+  fingerprint: string;
+  info: { capacitor: string; plugins: Record<string, string> };
+  platform: "all" | Platform;
+  recordedAt: Date;
+}
+
+/** Adoption bucket: counts of outcomes per five minutes, channel and bundle version. Matches raw events one to one. */
+export interface UsageBucketDoc {
+  app: string;
+  appId: string;
+  /** Start of the five minute window. */
+  bucket: Date;
+  channelId: string | null;
+  bundleVersion: string | null;
+  counts: { download: number; applied: number; failed: number; rolledBack: number };
+  expiresAt: Date;
+}
+
+export const BUCKET_MS = 5 * 60_000;
+export const bucketStart = (d: Date) => new Date(Math.floor(d.getTime() / BUCKET_MS) * BUCKET_MS);
+
 export interface DeviceDoc {
   app: string;
   appId: string;
   deviceId: string;
+  /** The app's own id for the device (Capgo `custom_id`), searchable in the console. */
+  customId?: string | null;
   platform: string;
   bundleVersion: string | null;
   versionBuild: string | null;
@@ -271,6 +301,7 @@ export interface EventDoc {
 export interface ShipDb {
   createApp(a: Omit<AppDoc, "app" | "bundleSeq" | "createdAt"> & { createdAt?: Date }): Promise<AppDoc>;
   getAppByBundleId(bundleId: string): Promise<AppDoc | null>;
+  getAppById(id: string): Promise<AppDoc | null>;
   listApps(orgId: string): Promise<AppDoc[]>;
   updateApp(id: string, patch: Partial<Pick<AppDoc, "signingPublicKey" | "defaultChannelIds" | "autopauseThreshold" | "minSample" | "name">>): Promise<void>;
   /** Atomically returns the previous counter value and increments it (0 for the first bundle). */
@@ -281,12 +312,16 @@ export interface ShipDb {
   getBundle(appId: string, id: string): Promise<BundleDoc | null>;
   getBundleByVersion(appId: string, version: string): Promise<BundleDoc | null>;
   getBundleByHeadcode(appId: string, headcode: string): Promise<BundleDoc | null>;
+  /** Marks a bundle softDeleted (it disappears from lists and lookups). Callers must run the live-channel guard first. */
+  softDeleteBundle(appId: string, id: string): Promise<boolean>;
   listBundles(appId: string, limit?: number): Promise<BundleDoc[]>;
 
   createChannel(c: Omit<ChannelDoc, "app" | "rev" | "createdAt" | "updatedAt">): Promise<ChannelDoc>;
   getChannel(appId: string, id: string): Promise<ChannelDoc | null>;
   getChannelByName(appId: string, name: string): Promise<ChannelDoc | null>;
   listChannels(appId: string): Promise<ChannelDoc[]>;
+  /** Channels with a live bundle that are not paused, across all apps (the auto-pause sweep). */
+  listLiveChannels(limit?: number): Promise<ChannelDoc[]>;
   /** Compare-and-set on `rev` when expectRev is given. Returns the new doc, or null when the rev was stale or the channel is gone. */
   updateChannel(
     appId: string, id: string,
@@ -300,9 +335,10 @@ export interface ShipDb {
   /** Device registry keeps last-seen only, one document per (appId, deviceId). */
   touchDevice(d: Omit<DeviceDoc, "app">): Promise<void>;
   getDevice(appId: string, deviceId: string): Promise<DeviceDoc | null>;
+  getDeviceByCustomId(appId: string, customId: string): Promise<DeviceDoc | null>;
   countDevices(appId: string, since?: Date): Promise<number>;
   /** Device counts grouped by bundle version or channel (devices seen since `since`). */
-  deviceCounts(appId: string, by: "bundleVersion" | "channelId", since?: Date): Promise<Record<string, number>>;
+  deviceCounts(appId: string, by: "bundleVersion" | "channelId" | "versionBuild", since?: Date): Promise<Record<string, number>>;
 
   setOverride(o: Omit<OverrideDoc, "app" | "at">): Promise<void>;
   deleteOverride(appId: string, deviceId: string): Promise<void>;
@@ -310,7 +346,17 @@ export interface ShipDb {
   listOverrides(appId: string, limit?: number): Promise<OverrideDoc[]>;
 
   appendEvent(e: Omit<EventDoc, "app">): Promise<void>;
-  listEvents(appId: string, opts?: { since?: Date; channelId?: string; bundleVersion?: string; limit?: number }): Promise<EventDoc[]>;
+  listEvents(appId: string, opts?: { since?: Date; channelId?: string; bundleVersion?: string; deviceId?: string; limit?: number }): Promise<EventDoc[]>;
+
+  /** Adds one outcome to its five minute bucket (upsert + increment). */
+  bumpBucket(b: { appId: string; at: Date; channelId: string | null; bundleVersion: string | null; action: "download" | "applied" | "failed" | "rolledBack"; expiresAt: Date }): Promise<void>;
+  listBuckets(appId: string, opts: { since: Date; until?: Date }): Promise<UsageBucketDoc[]>;
+
+  /** One row per store build; re-recording the same build replaces it. */
+  recordNativeBuild(b: Omit<NativeBuildDoc, "app">): Promise<void>;
+  listNativeBuilds(appId: string): Promise<NativeBuildDoc[]>;
 }
 
 export const EVENT_TTL_DAYS = 7;
+/** Five minute buckets are tiny, so they outlive raw events. */
+export const BUCKET_TTL_DAYS = 30;

@@ -1,7 +1,7 @@
 "use client";
 import { hardNavigate } from "./api";
 import {
-  ClipboardText, CreditCard, Gauge, Key, List, ShieldCheck, SignOut, SquaresFour, User, UsersThree, WebhooksLogo, X,
+  ClipboardText, CreditCard, DeviceMobile, Gauge, Key, List, ShieldCheck, SignOut, SquaresFour, User, UsersThree, WebhooksLogo, X,
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,7 +14,10 @@ import { OrgSwitcher } from "./org-switcher";
 type IconType = typeof User;
 interface NavItem { href: string; label: string; icon: IconType }
 
-const MAIN: NavItem[] = [{ href: "/app", label: "Line", icon: SquaresFour }];
+const MAIN: NavItem[] = [
+  { href: "/app", label: "Line", icon: SquaresFour },
+  { href: "/app/devices", label: "Devices", icon: DeviceMobile },
+];
 const SETTINGS: NavItem[] = [
   { href: "/app/settings/profile", label: "Profile", icon: User },
   { href: "/app/settings/security", label: "Security", icon: ShieldCheck },

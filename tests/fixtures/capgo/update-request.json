@@ -1,0 +1,13 @@
+{
+  "platform": "ios",
+  "app_id": "com.example.ordering",
+  "device_id": "5f1c2d3e-1111-4222-8333-444455556666",
+  "version_name": "builtin",
+  "version_build": "41",
+  "version_code": "41",
+  "version_os": "17.4",
+  "plugin_version": "6.14.0",
+  "custom_id": "user-8841",
+  "is_prod": true,
+  "is_emulator": false
+}

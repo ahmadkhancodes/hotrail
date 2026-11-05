@@ -1,6 +1,7 @@
 import type { ChannelPointer } from "@buffersol/hotrail-core";
 import type { AppDoc } from "@/lib/db/types";
 import { putJson } from "@/lib/storage/types";
+import { pointerCompat } from "./native";
 import { keys, type ShipDeps } from "./types";
 
 /** Capped like docs/ARCHITECTURE.md section 2: larger sets would need per device objects. */
@@ -31,6 +32,7 @@ const POINTER_CACHE = "public, max-age=5";
 export async function publishPointers(deps: ShipDeps, app: AppDoc): Promise<void> {
   const channels = await deps.db.listChannels(app.id);
   const overrides = await deps.db.listOverrides(app.id, MAX_OVERRIDES);
+  const builds = await deps.db.listNativeBuilds(app.id);
   for (const ch of channels) {
     if (!ch.currentBundleId) continue;
     const b = await deps.db.getBundle(app.id, ch.currentBundleId);
@@ -43,7 +45,7 @@ export async function publishPointers(deps: ShipDeps, app: AppDoc): Promise<void
       checksum: b.zipSha256,
       rolloutPercent: ch.rolloutPercent,
       paused: ch.paused,
-      allowedNativeBuilds: b.allowedNativeBuilds,
+      ...pointerCompat(b, builds),
       headcode: b.headcode,
       signed: b.signed,
     };

@@ -1,0 +1,77 @@
+name: plugin-ci
+on:
+  push:
+    paths: ["packages/plugin/**", ".github/workflows/plugin-ci.yml"]
+  pull_request:
+    paths: ["packages/plugin/**", ".github/workflows/plugin-ci.yml"]
+
+concurrency:
+  group: plugin-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run typecheck
+        working-directory: packages/plugin
+      - run: npm test
+        working-directory: packages/plugin
+
+  android:
+    # The native sources were written without an Android SDK. This job is their first compile and test run.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.9" }
+      - run: npm ci
+      # No gradle wrapper is committed for the library. Build it inside a throwaway host project that
+      # provides :capacitor-android from node_modules, which is how a real Capacitor app consumes it.
+      - name: Create Gradle host project
+        run: |
+          H="$RUNNER_TEMP/android-host"
+          mkdir -p "$H"
+          CAP="$GITHUB_WORKSPACE/node_modules/@capacitor/android/capacitor"
+          test -d "$CAP" || { echo "installing @capacitor/android"; npm install --no-save @capacitor/android@^6.2.0; }
+          cat > "$H/settings.gradle" <<EOF
+          pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
+          include ':capacitor-android'
+          project(':capacitor-android').projectDir = new File('$CAP')
+          include ':hotrail-updater'
+          project(':hotrail-updater').projectDir = new File('$GITHUB_WORKSPACE/packages/plugin/android')
+          EOF
+          cat > "$H/build.gradle" <<EOF
+          ext { compileSdkVersion = 34; minSdkVersion = 22; targetSdkVersion = 34; junitVersion = '4.13.2'; androidxAppCompatVersion = '1.7.0'; kotlin_version = '1.9.25' }
+          EOF
+          echo "android.useAndroidX=true" > "$H/gradle.properties"
+          echo "sdk.dir=$ANDROID_HOME" > "$H/local.properties"
+          echo "HOST=$H" >> "$GITHUB_ENV"
+      - name: Build and unit test
+        working-directory: ${{ env.HOST }}
+        run: gradle --no-daemon :hotrail-updater:assembleDebug :hotrail-updater:testDebugUnitTest
+
+  ios:
+    # The Swift sources were written without Xcode. This job is their first compile and test run.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test via Swift package on an iOS simulator
+        working-directory: packages/plugin
+        run: |
+          xcodebuild test -scheme BuffersolHotrailUpdater \
+            -destination 'platform=iOS Simulator,name=iPhone 15' \
+            -skipPackagePluginValidation | xcpretty || xcodebuild test -scheme BuffersolHotrailUpdater -destination 'platform=iOS Simulator,name=iPhone 15'
+      - name: Lint podspec
+        working-directory: packages/plugin
+        continue-on-error: true
+        run: pod lib lint HotrailUpdater.podspec --allow-warnings

@@ -5,6 +5,7 @@ import { ConfirmDialog } from "@/components/app/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { EmptyState, ErrorState, Notice, Skeleton } from "@/components/ui/states";
+import { AdoptionChart } from "./adoption-chart";
 import type { Lamp, LineBundle, LineChannel, LineView as LineData } from "@/lib/ship/line";
 
 const POLL_MS = 5000;
@@ -17,6 +18,8 @@ const ERRORS: Record<string, string> = {
   insufficient_scope: "This key or role cannot change releases.",
   forbidden: "Your role does not allow releasing. Ask an owner or admin.",
   bundle_not_found: "That bundle no longer exists.",
+  bundle_live: "This bundle is live on a channel. Release another bundle there first.",
+  bundle_rollback_target: "This bundle is the reverse target of a channel. Release another bundle there first.",
 };
 
 const LAMP: Record<Lamp, { glyph: string; letter: string; word: string; cls: string }> = {
@@ -108,18 +111,19 @@ function Inspector({
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const live = bundle ? data.channels.filter((c) => c.headcode === bundle.headcode) : [];
   const ch = live[0] ?? null;
   const target = ch ?? data.channels.find((c) => c.name === "production") ?? data.channels[0] ?? null;
 
-  async function act(label: string, path: string, body: Record<string, unknown>) {
+  async function act(label: string, path: string, body: Record<string, unknown>, method = "POST") {
     setBusy(label);
     setError(null);
     try {
-      const res = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ appId: data.app.bundleId, ...body }), credentials: "same-origin" });
+      const res = await fetch(path, { method, headers: { "content-type": "application/json" }, body: method === "DELETE" ? undefined : JSON.stringify({ appId: data.app.bundleId, ...body }), credentials: "same-origin" });
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(ERRORS[j.error ?? ""] ?? "That did not go through. Check the line and try again.");
+        const j = (await res.json().catch(() => ({}))) as { error?: string; details?: { hint?: string } };
+        setError(j.details?.hint ?? ERRORS[j.error ?? ""] ?? "That did not go through. Check the line and try again.");
       } else onChanged();
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
@@ -152,6 +156,15 @@ function Inspector({
           </div>
         </div>
       ) : null}
+      {bundle.incompatible.length > 0 ? (
+        <div data-testid="incompatible" className="rounded-sm border border-lamp-amber p-3 body-6">
+          <b className="text-lamp-amber">▲</b> Not offered to {bundle.incompatible.length} store {bundle.incompatible.length === 1 ? "build" : "builds"}:
+          <ul className="m-0 mt-1 list-disc pl-5">
+            {bundle.incompatible.map((i) => <li key={i.build}>{i.reasons.join("; ")}</li>)}
+          </ul>
+          <span className="text-text-subtle">Those users keep their current bundle until they update the app from the store.</span>
+        </div>
+      ) : null}
       {ch?.paused ? (
         <div role="alert" className="rounded-sm border border-lamp-red p-3 body-6">
           <b className="text-lamp-red">■ R</b> {ch.pausedReason === "manual" ? "Paused by hand." : ch.pausedReason ?? "Paused."} Devices keep what they have and get nothing new until you resume or reverse.
@@ -174,6 +187,7 @@ function Inspector({
               Release to {target.name} at 10%
             </Button>
           ) : null}
+          {!ch ? <Button variant="secondary" disabled={busy !== null} onClick={() => setConfirmDelete(true)}>Delete bundle</Button> : null}
           {ch ? (
             <Button variant="secondary" disabled={busy !== null || !ch.previousHeadcode} onClick={() => setConfirm(true)}>
               {ch.previousHeadcode ? `Reverse to ${ch.previousHeadcode}` : "Reverse to previous"}
@@ -181,6 +195,12 @@ function Inspector({
           ) : null}
         </div>
       )}
+      <ConfirmDialog
+        open={confirmDelete} title={`Delete bundle ${bundle.headcode}?`} confirmLabel="Delete" busy={busy === "delete"} error={error}
+        onConfirm={() => act("delete", `/api/v1/bundles?appId=${encodeURIComponent(data.app.bundleId)}&bundle=${bundle.headcode}`, {}, "DELETE").then(() => setConfirmDelete(false))} onClose={() => setConfirmDelete(false)}
+      >
+        {bundle.version} is removed from this list and can no longer be released. Bundles that are live on a channel, or are a channel&apos;s reverse target, cannot be deleted. This is recorded in the audit log.
+      </ConfirmDialog>
       {ch ? (
         <ConfirmDialog
           open={confirm} title={`Reverse ${ch.name} to ${ch.previousHeadcode}?`} confirmLabel="Reverse" busy={busy === "rollback"} error={error}
@@ -308,6 +328,7 @@ export function LineView({ bundleId, initial, canWrite }: { bundleId: string; in
         <div className="flex min-w-0 flex-col gap-6">
           <Tracks channels={data.channels} selected={bundle ? data.channels.find((c) => c.headcode === bundle.headcode && (selectedChannel ? c.id === selectedChannel : true))?.id ?? null : null} onSelect={(c) => { setSelectedChannel(c.id); setSelectedBundle(null); }} />
           <BundlesTable bundles={data.bundles} selected={bundle?.id ?? null} onSelect={(b) => { setSelectedBundle(b.id); setSelectedChannel(null); }} />
+          <AdoptionChart bundleId={data.app.bundleId} />
           {data.releases.length ? (
             <section aria-labelledby="rel-h">
               <h2 id="rel-h" className="title-4 pb-2 text-text-subtle">Recent release actions</h2>

@@ -1,0 +1,23 @@
+{
+  "name": "@buffersol/hotrail-mcp",
+  "version": "0.1.0",
+  "description": "Hotrail by BufferSol MCP server: upload, release, rollback and stats for Capacitor live updates, over stdio.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "hotrail-mcp": "./src/bin.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  }
+}

@@ -1,5 +1,5 @@
 import type { Collection, Document } from "mongodb";
-import type { AppDoc, BundleDoc, ChannelDoc, DeviceDoc, EventDoc, OverrideDoc, ReleaseDoc, ShipDb } from "./types";
+import { bucketStart, type AppDoc, type BundleDoc, type ChannelDoc, type DeviceDoc, type EventDoc, type NativeBuildDoc, type OverrideDoc, type ReleaseDoc, type ShipDb, type UsageBucketDoc } from "./types";
 
 type Col = <T extends Document>(name: string) => Promise<Collection<T>>;
 type Row<T> = T & { _id: string };
@@ -21,6 +21,8 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
   const devices = () => col<Row<DeviceDoc>>("devices");
   const overrides = () => col<Row<OverrideDoc>>("device_overrides");
   const events = () => col<Row<EventDoc>>("events");
+  const buckets = () => col<Row<UsageBucketDoc>>("usage_buckets");
+  const nativeBuilds = () => col<Row<NativeBuildDoc>>("native_builds");
   const dk = (appId: string, deviceId: string) => `${appId}|${deviceId}`;
 
   return {
@@ -31,6 +33,9 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
     },
     async getAppByBundleId(bundleId) {
       return strip<AppDoc>(await (await apps()).findOne({ app, bundleId }));
+    },
+    async getAppById(id) {
+      return strip<AppDoc>(await (await apps()).findOne({ _id: id, app }));
     },
     async listApps(orgId) {
       return stripAll<AppDoc>(await (await apps()).find({ app, orgId }).sort({ createdAt: 1 }).toArray());
@@ -58,6 +63,10 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
     async getBundleByHeadcode(appId, headcode) {
       return strip<BundleDoc>(await (await bundles()).findOne({ app, appId, headcode, state: "active" }));
     },
+    async softDeleteBundle(appId, id) {
+      const r = await (await bundles()).updateOne({ _id: id, app, appId, state: "active" }, { $set: { state: "softDeleted" } });
+      return r.modifiedCount === 1;
+    },
     async listBundles(appId, limit = 50) {
       return stripAll<BundleDoc>(await (await bundles()).find({ app, appId, state: "active" }).sort({ createdAt: -1, headcode: -1 }).limit(limit).toArray());
     },
@@ -76,6 +85,9 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
     },
     async listChannels(appId) {
       return stripAll<ChannelDoc>(await (await channels()).find({ app, appId }).sort({ createdAt: 1, name: 1 }).toArray());
+    },
+    async listLiveChannels(limit = 1000) {
+      return stripAll<ChannelDoc>(await (await channels()).find({ app, currentBundleId: { $ne: null }, paused: false }).limit(limit).toArray());
     },
     async updateChannel(appId, id, patch, expectRev) {
       const filter: Document = { _id: id, app, appId };
@@ -96,6 +108,9 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
     },
     async getDevice(appId, deviceId) {
       return strip<DeviceDoc>(await (await devices()).findOne({ _id: dk(appId, deviceId), app }));
+    },
+    async getDeviceByCustomId(appId, customId) {
+      return strip<DeviceDoc>(await (await devices()).findOne({ app, appId, customId }));
     },
     async countDevices(appId, since) {
       return (await devices()).countDocuments({ app, appId, ...(since ? { lastSeenAt: { $gte: since } } : {}) });
@@ -124,12 +139,33 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
     async appendEvent(e) {
       await (await events()).insertOne({ _id: e.id, ...e, app });
     },
-    async listEvents(appId, { since, channelId, bundleVersion, limit = 1000 } = {}) {
+    async listEvents(appId, { since, channelId, bundleVersion, deviceId, limit = 1000 } = {}) {
       const q: Document = { app, appId };
+      if (deviceId) q.deviceId = deviceId;
       if (since) q.ts = { $gte: since };
       if (channelId) q.channelId = channelId;
       if (bundleVersion) q.bundleVersion = bundleVersion;
       return stripAll<EventDoc>(await (await events()).find(q).sort({ ts: -1 }).limit(limit).toArray());
+    },
+
+    async bumpBucket(b) {
+      const start = bucketStart(b.at);
+      await (await buckets()).updateOne(
+        { _id: `${b.appId}|${start.getTime()}|${b.channelId}|${b.bundleVersion}` },
+        { $inc: { [`counts.${b.action}`]: 1 }, $setOnInsert: { app, appId: b.appId, bucket: start, channelId: b.channelId, bundleVersion: b.bundleVersion, expiresAt: b.expiresAt } },
+        { upsert: true },
+      );
+    },
+    async listBuckets(appId, { since, until }) {
+      return stripAll<UsageBucketDoc>(await (await buckets()).find({ app, appId, bucket: { $gte: since, ...(until ? { $lt: until } : {}) } }).sort({ bucket: 1 }).toArray())
+        .map((x) => ({ ...x, counts: Object.assign({ download: 0, applied: 0, failed: 0, rolledBack: 0 }, x.counts) }));
+    },
+
+    async recordNativeBuild(b) {
+      await (await nativeBuilds()).replaceOne({ _id: `${b.appId}|${b.versionBuild}` }, { ...b, app }, { upsert: true });
+    },
+    async listNativeBuilds(appId) {
+      return stripAll<NativeBuildDoc>(await (await nativeBuilds()).find({ app, appId }).sort({ recordedAt: 1 }).toArray());
     },
 
     async deleteOrg(orgId) {
@@ -141,6 +177,8 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
         await (await devices()).deleteMany({ app, appId: { $in: appIds } });
         await (await overrides()).deleteMany({ app, appId: { $in: appIds } });
         await (await events()).deleteMany({ app, appId: { $in: appIds } });
+        await (await buckets()).deleteMany({ app, appId: { $in: appIds } });
+        await (await nativeBuilds()).deleteMany({ app, appId: { $in: appIds } });
       }
       await (await apps()).deleteMany({ app, orgId });
     },
@@ -172,5 +210,11 @@ export async function ensureShipIndexes(d: import("mongodb").Db) {
   await d.collection("device_overrides").createIndex({ appId: 1 });
   await d.collection("events").createIndex({ appId: 1, ts: -1 });
   await d.collection("events").createIndex({ appId: 1, channelId: 1, ts: -1 });
+  await d.collection("events").createIndex({ appId: 1, deviceId: 1, ts: -1 });
+  await d.collection("devices").createIndex({ appId: 1, customId: 1 }, { sparse: true });
+  await d.collection("channels").createIndex({ app: 1, paused: 1, currentBundleId: 1 });
+  await d.collection("usage_buckets").createIndex({ appId: 1, bucket: 1 });
+  await d.collection("usage_buckets").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  await d.collection("native_builds").createIndex({ appId: 1 });
   await d.collection("events").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 }

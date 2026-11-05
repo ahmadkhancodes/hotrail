@@ -1,5 +1,6 @@
 import type { BundleDoc, ChannelDoc, ReleaseDoc } from "@/lib/db/types";
 import { requireApp, requireScope } from "./guard";
+import { compatibilityOf, type Incompatible } from "./native";
 import type { Principal, ShipDeps } from "./types";
 
 export type Lamp = "green" | "amber" | "red" | "idle";
@@ -33,6 +34,8 @@ export interface LineBundle {
   failureRate: number; // 0..1, last 24 h
   channels: string[]; // channel names where this is the live bundle
   uploadRatio: number;
+  /** Recorded store builds that will NOT be offered this bundle, each with the plain reason. */
+  incompatible: Incompatible[];
 }
 
 export interface LineRelease { id: string; channel: string; action: ReleaseDoc["action"]; headcode: string | null; percent: number; actor: string; cause: string | null; at: string }
@@ -42,6 +45,8 @@ export interface LineView {
   channels: LineChannel[];
   bundles: LineBundle[];
   releases: LineRelease[];
+  /** Store builds the server knows (native fingerprints). Empty until `hotrail native register` runs. */
+  nativeBuilds: { versionBuild: string; fingerprint: string; devices: number }[];
   totals: { devices: number };
   generatedAt: string;
 }
@@ -58,13 +63,15 @@ export async function buildLine(deps: ShipDeps, p: Principal, bundleId: string):
   requireScope(p, "read");
   const app = await requireApp(deps, p, bundleId);
   const now = deps.now();
-  const [channels, bundles, releases, byVersion, byChannel, events] = await Promise.all([
+  const [channels, bundles, releases, byVersion, byChannel, events, nativeBuilds, byBuild] = await Promise.all([
     deps.db.listChannels(app.id),
     deps.db.listBundles(app.id, 50),
     deps.db.listReleases(app.id, 12),
     deps.db.deviceCounts(app.id, "bundleVersion", new Date(now.getTime() - 30 * DAY)),
     deps.db.deviceCounts(app.id, "channelId", new Date(now.getTime() - 30 * DAY)),
     deps.db.listEvents(app.id, { since: new Date(now.getTime() - DAY), limit: 5000 }),
+    deps.db.listNativeBuilds(app.id),
+    deps.db.deviceCounts(app.id, "versionBuild", new Date(now.getTime() - 30 * DAY)),
   ]);
   const byId = new Map<string, BundleDoc>(bundles.map((b) => [b.id, b]));
   const total = Object.values(byVersion).reduce((n, x) => n + x, 0);
@@ -94,7 +101,7 @@ export async function buildLine(deps: ShipDeps, p: Principal, bundleId: string):
     id: b.id, headcode: b.headcode, version: b.version, nativeFingerprint: b.nativeFingerprint, signed: b.signed, sizeBytes: b.sizeBytes,
     createdAt: b.createdAt.toISOString(), devices: byVersion[b.version] ?? 0, adoption: total === 0 ? 0 : (byVersion[b.version] ?? 0) / total,
     failureRate: rate((e) => e.bundleVersion === b.version), channels: channels.filter((c) => c.currentBundleId === b.id).map((c) => c.name),
-    uploadRatio: b.delta.uploadRatio,
+    uploadRatio: b.delta.uploadRatio, incompatible: compatibilityOf(b, nativeBuilds).incompatible,
   }));
   const lineReleases: LineRelease[] = releases.map((r) => ({
     id: r.id, channel: r.channelName, action: r.action, headcode: r.bundleId ? byId.get(r.bundleId)?.headcode ?? null : null,
@@ -102,6 +109,7 @@ export async function buildLine(deps: ShipDeps, p: Principal, bundleId: string):
   }));
   return {
     app: { bundleId: app.bundleId, name: app.name, signingMode: app.signingMode, autopauseThreshold: app.autopauseThreshold },
-    channels: lineChannels, bundles: lineBundles, releases: lineReleases, totals: { devices: total }, generatedAt: now.toISOString(),
+    channels: lineChannels, bundles: lineBundles, releases: lineReleases,
+    nativeBuilds: nativeBuilds.map((b) => ({ versionBuild: b.versionBuild, fingerprint: b.fingerprint, devices: byBuild[b.versionBuild] ?? 0 })), totals: { devices: total }, generatedAt: now.toISOString(),
   };
 }
