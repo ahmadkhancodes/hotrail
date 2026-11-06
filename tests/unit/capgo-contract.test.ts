@@ -9,7 +9,7 @@ import { writeZip } from "@/lib/ship/zip";
 // migration only changes updateUrl, statsUrl and channelUrl. Fixtures live in tests/fixtures/capgo (public docs, clean room).
 const fx = <T,>(f: string) => JSON.parse(readFileSync(new URL(`../fixtures/capgo/${f}`, import.meta.url), "utf8")) as T;
 const request = fx<Record<string, unknown>>("update-request.json");
-const spec = fx<{ update: Record<string, string>; noUpdate: Record<string, string>; allowedKeys: string[]; statsRequest: Record<string, unknown>; statsActions: string[]; channelGet: Record<string, unknown>; channelSetOk: Record<string, string> }>("responses.json");
+const spec = fx<{ deltaKeys: string[]; update: Record<string, string>; noUpdate: Record<string, string>; allowedKeys: string[]; statsRequest: Record<string, unknown>; statsActions: string[]; channelGet: Record<string, unknown>; channelSetOk: Record<string, string> }>("responses.json");
 
 const APP = "com.example.ordering";
 async function live(version = "2.14.1") {
@@ -38,7 +38,10 @@ describe("update API response shape equals what @capgo/capacitor-updater reads",
     const h = await live();
     const res = (await checkUpdate(storePointerReader(h.deps.store), request as never)) as Record<string, unknown>;
     assertCapgoShape(res);
-    expect(Object.keys(res).sort()).toEqual(Object.keys(spec.update).sort());
+    // Hotrail adds the optional delta fields; everything else is exactly the stock shape.
+    expect(Object.keys(res).filter((k) => !spec.deltaKeys.includes(k)).sort()).toEqual(Object.keys(spec.update).sort());
+    expect(res.manifest_url).toMatch(/\/manifests\//);
+    expect(res.files_url).toMatch(/\/blobs\//);
     expect(res.version).toBe("2.14.1");
     expect(res.checksum).toMatch(/^[0-9a-f]{64}$/);
   });

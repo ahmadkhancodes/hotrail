@@ -7,6 +7,10 @@ import { can } from "@/lib/auth/roles";
 import { assertSameOrigin, HttpError } from "@/lib/http";
 import { enforceRateLimit, RULES } from "@/lib/security/ratelimit";
 import { getStore } from "@/lib/storage";
+import { sendMail } from "@/lib/mail";
+import { log } from "@/lib/logger";
+import { createNotifier } from "@/lib/notify";
+import { authRecipients } from "@/lib/notify/recipients";
 import { emitEvent } from "@/lib/webhooks/outbound";
 import type { Authenticate, RouterOptions } from "./router";
 import type { Principal, ShipDeps } from "./types";
@@ -23,6 +27,7 @@ export async function shipDeps(): Promise<ShipDeps> {
     now: () => new Date(),
     uploadSecret: process.env.BETTER_AUTH_SECRET ?? "dev-upload-secret",
     baseUrl: appUrl(),
+    notify: createNotifier({ db, recipients: authRecipients, send: (m) => sendMail(m), baseUrl: appUrl(), log: (m, meta) => log.warn(m, meta) }),
   };
 }
 

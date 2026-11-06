@@ -21,6 +21,8 @@ export interface ShipDeps {
   /** HMAC secret for the API's own signed blob upload URLs. */
   uploadSecret: string;
   baseUrl: string;
+  /** Usage and release emails (never throws into the caller). Optional so tests can omit it. */
+  notify?: import("@/lib/notify").Notifier;
 }
 
 export const MAX_BUNDLE_BYTES = 150 * 1024 * 1024; // what one function invocation assembles in memory
@@ -38,4 +40,4 @@ export const keys = {
 };
 
 /** Only these prefixes are served by the public files route. */
-export const PUBLIC_PREFIXES = ["zips/", "manifests/"];
+export const PUBLIC_PREFIXES = ["zips/", "manifests/", "blobs/"];

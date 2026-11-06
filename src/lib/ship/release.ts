@@ -74,6 +74,7 @@ export async function releaseBundle(deps: ShipDeps, p: Principal, input: Release
   await recordAudit(deps, p, `channel.${action === "percent" ? "percent_changed" : "released"}`, `${app.bundleId}:${ch.name}`, { headcode: bundle.headcode, version: bundle.version, percent, from: ch.rolloutPercent });
   await publishPointers(deps, app);
   await deps.emit(p.orgId, "release.created", { app: app.bundleId, channel: ch.name, headcode: bundle.headcode, version: bundle.version, percent, action }).catch(() => undefined);
+  await deps.notify?.channel(p.orgId, "release", { app: app.bundleId, channel: ch.name, version: bundle.version, headcode: bundle.headcode, percent });
   return { headcode: bundle.headcode, version: bundle.version, percent, channel: ch.name, action, incompatible: await incompatibleFor(deps, app, bundle) };
 }
 
@@ -93,6 +94,7 @@ export async function rollbackChannel(deps: ShipDeps, p: Principal, input: { app
   await recordAudit(deps, p, "channel.rolled_back", `${app.bundleId}:${ch.name}`, { to: prev.headcode, from: from?.headcode ?? null });
   await publishPointers(deps, app);
   await deps.emit(p.orgId, "release.rolled_back", { app: app.bundleId, channel: ch.name, headcode: prev.headcode, version: prev.version, from: from?.headcode ?? null }).catch(() => undefined);
+  await deps.notify?.channel(p.orgId, "rollback", { app: app.bundleId, channel: ch.name, version: prev.version, headcode: prev.headcode });
   return { headcode: prev.headcode, version: prev.version, percent: 100, channel: ch.name, action: "rollback", incompatible: await incompatibleFor(deps, app, prev) };
 }
 
@@ -110,6 +112,7 @@ export async function setChannelPaused(deps: ShipDeps, p: Principal, input: { ap
   return { channel: ch.name, paused: input.paused };
 }
 
+const SPIKE_COOLDOWN_MS = 30 * 60_000;
 export const AUTOPAUSE_WINDOW_MS = 10 * 60_000; // two five minute buckets
 
 /**
@@ -131,6 +134,15 @@ export async function evaluateAutopause(deps: ShipDeps, app: AppDoc, channelId: 
   }
   const sample = failed + ok;
   const rate = sample === 0 ? 0 : failed / sample;
+  // Early warning: signed `channel.failure_spike` event once the failure rate reaches half the pause threshold (at most every 30 minutes per channel).
+  if (sample >= ch.minSample && rate > 0 && rate >= ch.autopauseThreshold / 2) {
+    const key = `spike:${ch.id}`;
+    const last = Number(await deps.db.getOrgFlag(app.orgId, key)) || 0;
+    if (deps.now().getTime() - last >= SPIKE_COOLDOWN_MS) {
+      await deps.db.setOrgFlag(app.orgId, key, String(deps.now().getTime()));
+      await deps.emit(app.orgId, "channel.failure_spike", { app: app.bundleId, channel: ch.name, headcode: bundle.headcode, rate, sample, threshold: ch.autopauseThreshold }).catch(() => undefined);
+    }
+  }
   if (sample < ch.minSample || rate <= ch.autopauseThreshold) return { paused: false, rate, sample };
   const cause = `autopause: ${(rate * 100).toFixed(1)}% failures over ${sample} outcomes (limit ${(ch.autopauseThreshold * 100).toFixed(1)}%)`;
   const updated = await deps.db.updateChannel(app.id, ch.id, { paused: true, pausedReason: cause }, ch.rev);
@@ -139,5 +151,6 @@ export async function evaluateAutopause(deps: ShipDeps, app: AppDoc, channelId: 
   await deps.db.appendAudit({ orgId: app.orgId, actorId: null, action: "channel.autopaused", target: `${app.bundleId}:${ch.name}`, meta: { headcode: bundle.headcode, rate: Number(rate.toFixed(4)), sample }, at: deps.now() });
   await publishPointers(deps, app);
   await deps.emit(app.orgId, "channel.paused", { app: app.bundleId, channel: ch.name, headcode: bundle.headcode, cause, rate, sample }).catch(() => undefined);
+  await deps.notify?.channel(app.orgId, "autopause", { app: app.bundleId, channel: ch.name, version: bundle.version, headcode: bundle.headcode, percent: ch.rolloutPercent, detail: `${(rate * 100).toFixed(1)}% failures` });
   return { paused: true, rate, sample };
 }

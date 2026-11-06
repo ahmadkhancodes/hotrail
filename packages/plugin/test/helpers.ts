@@ -14,6 +14,7 @@ export class FakeNative implements NativeBridge {
   downloads: string[] = [];
   nativeRevert: string | null = null;
   failDownloadTimes = 0;
+  decryptFile?: (path: string, keyBase64: string, ivBase64: string) => Promise<void>;
   device: DeviceInfo = {
     deviceId: "dev-1", platform: "android", versionBuild: "42", versionOs: "14", isEmulator: false, isProd: true,
     pluginVersion: "0.1.0", bundlesRoot: "/b", builtinDir: null,

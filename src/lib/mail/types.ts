@@ -9,6 +9,8 @@ export interface MailMessage {
   headers?: Record<string, string>;
   /** Suppression scope; "transactional" mail (sign-in links) ignores marketing unsubscribes. */
   category?: "transactional" | "notification" | "marketing";
+  /** Suppression scope when different from the category (per notification kind, e.g. "notify:release"). */
+  scope?: string;
   tags?: Record<string, string>;
 }
 

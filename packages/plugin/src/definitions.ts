@@ -10,6 +10,8 @@ export interface HotrailUpdaterNative {
   unzip(opts: { src: string; dest: string }): Promise<void>;
   hashFile(opts: { path: string }): Promise<{ sha256: string | null }>;
   copyFile(opts: { src: string; dest: string }): Promise<void>;
+  /** Encrypted bundles: decrypt a file in place (AES-CBC/PKCS7). Not implemented in the Swift and Kotlin sources yet, so the call rejects and the update is refused with `decrypt_fail`. */
+  decryptFile?(opts: { path: string; key: string; iv: string }): Promise<void>;
   removePath(opts: { path: string }): Promise<void>;
   /** setServerBasePath-style switch. path null = built-in bundle. */
   setBundle(opts: { path: string | null; trial: boolean; previous: string | null; version: string }): Promise<void>;

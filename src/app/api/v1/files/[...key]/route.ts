@@ -14,7 +14,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ key: string[] 
   const zip = key.endsWith(".zip");
   return new Response(data as BodyInit, {
     headers: {
-      "content-type": zip ? "application/zip" : "application/json",
+      "content-type": zip ? "application/zip" : key.startsWith("blobs/") ? "application/octet-stream" : "application/json",
       "cache-control": "public, max-age=31536000, immutable",
       "x-content-type-options": "nosniff",
     },

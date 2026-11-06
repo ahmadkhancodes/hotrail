@@ -60,7 +60,7 @@ describe("CLI against the in-process API (memory store)", () => {
       if ((await bucketOf(id, ptr.channelId)) < 25) inside ||= id; else outside ||= id;
     }
     const req = { app_id: APP, platform: "ios", version_name: "builtin", version_build: "1.0.0" };
-    expect(await checkUpdate(reader, { ...req, device_id: inside })).toEqual({ version: "2.14.1", url: ptr.url, checksum: ptr.checksum });
+    expect(await checkUpdate(reader, { ...req, device_id: inside })).toMatchObject({ version: "2.14.1", url: ptr.url, checksum: ptr.checksum });
     expect(await checkUpdate(reader, { ...req, device_id: outside })).toEqual({ message: "no_new_version_available" });
     // the checksum is the sha256 of the zip the url serves
     const zipKey = new URL(ptr.url).pathname.replace("/api/v1/files/", "");

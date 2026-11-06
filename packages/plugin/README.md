@@ -108,6 +108,22 @@ The check/stats wire format is the same public protocol, so only the URLs change
 `channelUrl` at Hotrail. Keep your app's `notifyAppReady()` call. Signing keys are Hotrail Ed25519 keys; zip bundles
 without `publicKey` keep working with checksum verification.
 
+## Encrypted bundles (`session_key`)
+
+If an update response carries `session_key`, the zip is encrypted with AES-CBC and the key is wrapped for your app:
+`session_key = <iv base64>:<RSA-OAEP SHA-256 wrapped AES key base64>`. Set `privateKey` (RSA, PKCS#8, PEM or base64) in the
+plugin config. The TypeScript layer unwraps the key (WebCrypto), asks the native bridge to decrypt the downloaded zip in
+place (`decryptFile`), checks `checksum` against the **decrypted** zip, extracts it, and with a `publicKey` also checks every
+extracted file against the signed manifest. Delta is not used for encrypted bundles. Without `privateKey`, or when the native
+bridge has no `decryptFile`, the update is refused and a `decrypt_fail` beacon is sent. The server and CLI do not produce
+encrypted bundles yet.
+
+## What remains native only
+
+- `decryptFile` (AES-CBC/PKCS7, in place) in Swift and Kotlin: not written yet, so encrypted bundles cannot install on a device.
+- Everything under "Native layer" below is written but **not compiled or run**: the CI workflow has not run green yet.
+- Real device behaviour of `setServerBasePath` and the crash guard.
+
 ## Native layer
 
 Everything file related (download, unzip with zip-slip protection, SHA-256, atomic moves, persistent trial state,

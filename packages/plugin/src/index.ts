@@ -7,6 +7,7 @@ import { Updater } from "./updater";
 export * from "./types";
 export * from "./definitions";
 export { Updater } from "./updater";
+export { decryptBytes, parseSessionKey, SessionKeyError, unwrapSessionKey } from "./session-key";
 export { nativeToBridge, nativeToStorage, systemClock } from "./adapter";
 
 const native = registerPlugin<HotrailUpdaterNative>("HotrailUpdater", {

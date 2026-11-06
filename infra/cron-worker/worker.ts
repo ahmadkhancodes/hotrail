@@ -5,7 +5,7 @@
  */
 export interface Env { APP_URL: string; CRON_SECRET: string; JOBS?: string }
 
-export const DEFAULT_JOBS = "autopause-sweep,webhook-retries";
+export const DEFAULT_JOBS = "autopause-sweep,limits-sweep,webhook-retries";
 
 export const jobsOf = (env: Pick<Env, "JOBS">): string[] => (env.JOBS ?? DEFAULT_JOBS).split(",").map((s) => s.trim()).filter(Boolean);
 

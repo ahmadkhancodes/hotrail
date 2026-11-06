@@ -6,7 +6,7 @@ import { WebhooksClient } from "./webhooks-client";
 export const metadata = { title: "Webhooks" };
 
 /** Event names offered in the create form. A product adds its own events here. */
-const EVENTS = ["*", "billing.updated", "member.invited", "test.ping"];
+const EVENTS = ["*", "release.created", "release.rolled_back", "channel.paused", "channel.failure_spike", "bundle.uploaded", "billing.updated", "test.ping"];
 
 export default async function WebhooksPage() {
   const ctx = await requireOrg({ page: true });
