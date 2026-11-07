@@ -86,13 +86,16 @@ describe("download integrity and retries", () => {
     expect(f.actions()).toEqual(["download_fail"]);
     expect(u.getCurrent().pending).toBeNull();
   });
-  it("rejects checksum mismatch, does not retry, never re-downloads that version", async () => {
+  it("rejects checksum mismatch, retries on later syncs, blacklists after 3 failures", async () => {
     await offerZip("1.1.0", undefined, "0".repeat(64));
     const u = mk({ strategy: "immediate" });
     await u.sync(); await u.flush();
     expect(n.active).toBeNull();
     expect(f.actions()).toEqual(["checksum_fail"]);
     expect(n.downloads.length).toBe(1);
+    expect((await u.check()).available).toBe(true); // transient: still offered
+    await u.sync(); await u.sync();
+    expect(n.downloads.length).toBe(3);
     n.downloads.length = 0;
     expect((await u.check()).available).toBe(false);
     await u.sync();

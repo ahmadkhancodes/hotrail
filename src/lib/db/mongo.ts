@@ -10,9 +10,12 @@ declare global {
   var __kitMongo: { uri: string; client: Promise<MongoClient> } | undefined;
 }
 
+/** Fail fast: a Mongo outage must not hang the console for 8 s per request. */
+export const MONGO_CLIENT_OPTIONS = { maxPoolSize: 10, serverSelectionTimeoutMS: 3000, connectTimeoutMS: 3000, socketTimeoutMS: 10000, appName: "buffersol-kit" } as const;
+
 export function mongoClient(uri: string): Promise<MongoClient> {
   if (globalThis.__kitMongo?.uri === uri) return globalThis.__kitMongo.client;
-  const client = new MongoClient(uri, { maxPoolSize: 10, serverSelectionTimeoutMS: 8000, appName: "buffersol-kit" }).connect();
+  const client = new MongoClient(uri, { ...MONGO_CLIENT_OPTIONS }).connect();
   globalThis.__kitMongo = { uri, client };
   client.catch(() => {
     if (globalThis.__kitMongo?.client === client) globalThis.__kitMongo = undefined;
