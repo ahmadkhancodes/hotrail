@@ -211,7 +211,17 @@ export class Updater {
     } catch (e) {
       try { if (dir) await bridge.removePath(dir); } catch { /* ignore */ }
       const code = e instanceof IntegrityError ? e.code : "download_fail";
-      if (e instanceof IntegrityError) { this.markFailed(u.version); await this.save().catch(() => {}); }
+      if (e instanceof IntegrityError) {
+        // signature/manifest failures are deliberate tampering signals: blacklist now. Transient ones
+        // (captive portal, truncated transfer, full disk) are retried on later checks, up to 3 times.
+        if (e.code === "signature_fail" || e.code === "manifest_fail") this.markFailed(u.version);
+        else {
+          const a = (this.st.attempts ??= {});
+          a[u.version] = (a[u.version] ?? 0) + 1;
+          if (a[u.version] >= 3) this.markFailed(u.version);
+        }
+        await this.save().catch(() => {});
+      }
       this.beacon(code, u.version);
       this.emit("downloadFailed", { version: u.version, error: code });
       this.setState("idle");

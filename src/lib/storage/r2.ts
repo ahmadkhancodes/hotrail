@@ -9,6 +9,8 @@ export interface R2Config {
   publicBase?: string;
   fallbackBase?: string;
   fetchImpl?: typeof fetch;
+  /** Timeout for GET/HEAD reads (device hot path). Default 4000 ms. */
+  readTimeoutMs?: number;
   /** Override for tests. */
   endpoint?: string;
 }
@@ -18,6 +20,7 @@ export function createR2Store(c: R2Config): BundleStore {
   const f = c.fetchImpl ?? fetch;
   const endpoint = (c.endpoint ?? `https://${c.accountId}.r2.cloudflarestorage.com`).replace(/\/$/, "");
   const urlFor = (key: string) => `${endpoint}/${c.bucket}/${uriEncode(assertKey(key), true)}`;
+  const readTimeout = c.readTimeoutMs ?? 4000;
   const base = { region: "auto", service: "s3", credentials: c.credentials };
 
   return {
@@ -35,7 +38,7 @@ export function createR2Store(c: R2Config): BundleStore {
     async get(key) {
       const url = urlFor(key);
       const headers = await signRequest({ ...base, method: "GET", url, headers: { "x-amz-content-sha256": await sha256Hex("") }, payloadHash: await sha256Hex("") });
-      const res = await f(url, { method: "GET", headers });
+      const res = await f(url, { method: "GET", headers, signal: AbortSignal.timeout(readTimeout) });
       if (res.status === 404) return null;
       if (!res.ok) throw new Error(`r2 get failed: ${res.status}`);
       return new Uint8Array(await res.arrayBuffer());
@@ -43,7 +46,7 @@ export function createR2Store(c: R2Config): BundleStore {
     async has(key) {
       const url = urlFor(key);
       const headers = await signRequest({ ...base, method: "HEAD", url, headers: { "x-amz-content-sha256": await sha256Hex("") }, payloadHash: await sha256Hex("") });
-      const res = await f(url, { method: "HEAD", headers });
+      const res = await f(url, { method: "HEAD", headers, signal: AbortSignal.timeout(readTimeout) });
       if (res.status === 404) return false;
       if (!res.ok) throw new Error(`r2 head failed: ${res.status}`);
       return true;
