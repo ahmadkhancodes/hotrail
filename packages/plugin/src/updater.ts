@@ -83,6 +83,7 @@ export class Updater {
   async onLaunch(): Promise<void> {
     try {
       await this.load();
+      if (await this.resetOnNativeChange()) return;
       const nativeReverted = await this.deps.bridge.consumeNativeRevert().catch(() => null);
       if (nativeReverted && this.st.trial) {
         const t = this.st.trial;
@@ -102,6 +103,30 @@ export class Updater {
       }
       if (this.st.pending) await this.apply();
     } catch { /* never throw into the host */ }
+  }
+
+  /**
+   * A store update replaced the native layer: bundles downloaded under the old build were made for the old native code
+   * (plugins, Capacitor version), so keep none of them and go back to the built-in web assets of the new build.
+   * Returns true when it reset (and reloaded).
+   */
+  private async resetOnNativeChange(): Promise<boolean> {
+    const build = (await this.info()).versionBuild;
+    const was = this.st.nativeBuild;
+    if (was === build) return false;
+    if (was === undefined) { this.st.nativeBuild = build; await this.save(); return false; }
+    const active = this.st.trial?.version ?? this.st.current?.version ?? null;
+    this.cancelTimer?.(); this.cancelTimer = null;
+    for (const ref of Object.values(this.st.bundles)) await this.deps.bridge.removePath(ref.path).catch(() => {});
+    this.st = { ...empty(), nativeBuild: build };
+    await this.save();
+    if (!active) return false;
+    await this.deps.bridge.setBundle(null, { trial: false, previous: null, version: "builtin" });
+    // Not a failure: `classifyAction` maps this to "other", so it never counts toward auto-pause.
+    this.beacon("reset_native_change", active);
+    this.setState("reverted"); this.emit("reverted", { version: active, reason: "native_build_changed" });
+    await this.deps.bridge.reload();
+    return true;
   }
 
   /** Host calls this when the app goes to background: background strategy applies the pending bundle now. */

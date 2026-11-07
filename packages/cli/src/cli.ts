@@ -57,7 +57,18 @@ function loadConfig(io: Io): HotrailConfig {
 function makeApi(io: Io, cfg: HotrailConfig): Api {
   const apiKey = io.env.HOTRAIL_API_KEY;
   if (!apiKey) throw new ApiError(0, "HOTRAIL_API_KEY is not set.", "Create a key in Settings, API keys, then export HOTRAIL_API_KEY.");
-  return createApi({ baseUrl: io.env.HOTRAIL_API_URL ?? cfg.apiUrl ?? "https://hotrail.buffersoltech.com", apiKey, fetchImpl: io.fetchImpl });
+  return createApi({ baseUrl: safeApiUrl(io.env.HOTRAIL_API_URL ?? cfg.apiUrl ?? "https://hotrail.buffersoltech.com"), apiKey, fetchImpl: io.fetchImpl });
+}
+
+/** The API key is sent to this URL, and hotrail.json is a repo file anyone can edit: https only (plain http for localhost). */
+export function safeApiUrl(raw: string): string {
+  let u: URL;
+  try { u = new URL(raw); } catch { throw new ApiError(0, `API URL "${raw}" is not a valid URL.`); }
+  const local = u.hostname === "localhost" || u.hostname === "127.0.0.1" || u.hostname === "[::1]";
+  if (u.protocol !== "https:" && !(u.protocol === "http:" && local)) {
+    throw new ApiError(0, `Refusing to send your API key to ${u.origin}.`, "Use an https URL in hotrail.json or HOTRAIL_API_URL.");
+  }
+  return raw;
 }
 
 async function init(io: Io): Promise<void> {

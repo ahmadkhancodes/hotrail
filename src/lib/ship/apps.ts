@@ -5,7 +5,7 @@ import { seal } from "@/lib/crypto/secretbox";
 import { HttpError } from "@/lib/http";
 import { uuidv7 } from "@/lib/ids";
 import { recordAudit } from "./guard";
-import { publishPointers } from "./pointers";
+import { pointerNamespaceUsed, publishPointers } from "./pointers";
 import { DEFAULT_AUTOPAUSE_THRESHOLD, DEFAULT_MIN_SAMPLE, type Principal, type ShipDeps } from "./types";
 
 export const BUNDLE_ID_RE = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z0-9_-]+){1,8}$/;
@@ -22,6 +22,12 @@ export async function ensureApp(deps: ShipDeps, p: Principal, bundleId: string, 
   if (existing) {
     if (existing.orgId !== p.orgId) throw new HttpError(409, "app_id_taken");
     return existing;
+  }
+  // Pointers for this id exist although no app owns it: it belonged to a deleted org and devices may still ask for it.
+  if (await pointerNamespaceUsed(deps, bundleId)) {
+    const raced = await deps.db.getAppByBundleId(bundleId); // a parallel first upload of the same org just created it
+    if (raced && raced.orgId === p.orgId) return raced;
+    throw new HttpError(409, "app_id_taken", { hint: "This app id was used before. Contact support to release it." });
   }
   const ent = await deps.db.getEntitlement(p.orgId);
   if (effectivePlan(ent).id === "free" && (await deps.db.listApps(p.orgId)).length >= FREE_APP_LIMIT) {

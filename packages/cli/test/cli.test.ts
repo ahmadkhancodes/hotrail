@@ -147,3 +147,24 @@ describe("release, rollback, status", () => {
     expect(await main(["nope"], harness(project()).io)).toBe(2);
   });
 });
+
+describe("M5 review: secrets never leave the machine", () => {
+  it("refuses to send the API key over plain http (hotrail.json is a repo file anyone can edit)", async () => {
+    const { safeApiUrl } = await import("../src/cli");
+    expect(safeApiUrl("https://hotrail.buffersoltech.com")).toBe("https://hotrail.buffersoltech.com");
+    expect(safeApiUrl("http://localhost:3000")).toBe("http://localhost:3000");
+    expect(() => safeApiUrl("http://attacker.example")).toThrow(/Refusing to send your API key/);
+  });
+  it("walk skips symlinks, the signing key folder and env files", async () => {
+    const { symlinkSync } = await import("node:fs");
+    const { walk } = await import("../src/project");
+    const cwd = project();
+    const dist = join(cwd, "dist");
+    mkdirSync(join(dist, ".hotrail")); writeFileSync(join(dist, ".hotrail", "signing-key.json"), "{\"privateKey\":\"x\"}");
+    writeFileSync(join(dist, ".env.production"), "SECRET=1");
+    writeFileSync(join(cwd, "outside.txt"), "secret");
+    symlinkSync(join(cwd, "outside.txt"), join(dist, "link.txt"));
+    mkdirSync(join(dist, ".well-known")); writeFileSync(join(dist, ".well-known", "assetlinks.json"), "[]");
+    expect(walk(dist).map((e) => e.path)).toEqual([".well-known/assetlinks.json", "app.js", "index.html"]);
+  });
+});

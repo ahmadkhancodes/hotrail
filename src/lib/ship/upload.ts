@@ -214,7 +214,9 @@ export async function uploadZipBundle(deps: ShipDeps, p: Principal, input: ZipUp
   }
   const priv = await openSecret(app.signingKeyEnc, await deps.kek(), app.id);
   const signed = await signManifest(manifest, priv, await keyIdOf(app.signingPublicKey ?? ""));
-  return commitBundle(deps, p, app, { version: input.version, manifest, signature: signed.signature, zip: input.zip, uploadBytes, nativeBuilds: input.nativeBuilds ?? [], native: input.native });
+  // Devices download a zip we wrote from the inspected entries, never the customer's bytes: a crafted archive can hide
+  // local entries (native binaries, `../` names, symlinks) from the central directory that a device unzipper would extract.
+  return commitBundle(deps, p, app, { version: input.version, manifest, signature: signed.signature, zip: writeZip(files), uploadBytes, nativeBuilds: input.nativeBuilds ?? [], native: input.native });
 }
 
 interface Commit { version: string; manifest: Manifest; signature: string | null; zip: Uint8Array; uploadBytes: number; nativeBuilds: string[]; native?: NativeInfo | null }

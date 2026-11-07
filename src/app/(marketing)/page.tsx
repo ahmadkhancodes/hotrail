@@ -55,13 +55,13 @@ const benefits = [
 const faq: FaqItem[] = [
   { q: "Is over the air allowed by Apple and Google?", a: "For the web layer, generally yes. Apple Guideline 2.5.2 and the Developer Program License Agreement carve out interpreted JavaScript run by WebKit that does not change the app's primary purpose. Google Play's Device and Network Abuse policy exempts JavaScript in a webview. Native changes still go through the stores, and we block native files at upload. Read the current rules yourself, this is not legal advice." },
   { q: "Can I self host the plugin for free?", a: "The plugin is MIT today (coming with the update API). The Free plan plus export covers most side projects. A self host edge worker is on the roadmap." },
-  { q: "Will you be around in two years?", a: `${product.name} is built by ${product.company}. Company page: {{company page URL}}.` },
+  { q: "Will you be around in two years?", a: `${product.name} is built by ${product.company}.` },
   { q: "Do you have SOC 2?", a: "Not yet. See the security page, the DPA and our penetration test plan." },
   { q: "What happens when I hit my limit?", a: "Your app keeps running its current version. We pause new downloads and ask you to upgrade." },
   { q: "Who owns the account if my agency leaves?", a: "Org transfer and export are v1 features. Today you can export bundles, manifests and events." },
   { q: "Why about half the price?", a: "Our own edge code, object storage with no egress fees, and deltas that send fewer bytes." },
   { q: "What does it not do?", a: "React Native, Flutter, native code changes and store publishing, for now." },
-  { q: "Which Capacitor versions?", a: "Capacitor 5 and up. {{confirm min version}}" },
+  { q: "Which Capacitor versions?", a: "The Hotrail plugin needs Capacitor 6 or later. In migration mode you keep @capgo/capacitor-updater, so you keep the Capacitor versions it supports." },
   { q: "What do you collect from devices?", a: "A random device ID, app version, OS and platform. No IP address is stored." },
 ];
 
@@ -154,7 +154,7 @@ export default function HomePage() {
           </div>
           <div className="flex flex-col items-start gap-4">
             <h2 className="heading-5 md:heading-3 text-text">Coming from Ionic Appflow?</h2>
-            <p className="body-3 text-text-subtle">Access ends 31 Dec 2027 (<a className={linkClass} rel="noopener noreferrer" href={APPFLOW_SOURCE}>Ionic announcement</a>). Import guide coming. Offer for Appflow teams: 3 months free on annual plans. {"{{confirm offer}}"}</p>
+            <p className="body-3 text-text-subtle">Access ends 31 Dec 2027 (<a className={linkClass} rel="noopener noreferrer" href={APPFLOW_SOURCE}>Ionic announcement</a>). Import guide coming.</p>
           </div>
         </div>
       </Section>

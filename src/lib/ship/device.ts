@@ -83,6 +83,8 @@ export async function selfAssignChannel(deps: ShipDeps, q: DeviceChannelRequest)
   const ch = await deps.db.getChannelByName(app.id, q.channel);
   if (!ch) throw new HttpError(404, "channel_not_found");
   if (!ch.allowSelfAssign) throw new HttpError(403, "self_assign_not_allowed", { message: "This channel does not allow devices to choose it." });
+  // Unauthenticated endpoint: a repeat must not cost a full pointer republish.
+  if ((await deps.db.getOverride(app.id, q.device_id))?.channelId === ch.id) return { status: "ok", channel: ch.name };
   await setOverride(deps, app, q.device_id, ch.id);
   return { status: "ok", channel: ch.name };
 }
@@ -91,6 +93,7 @@ export async function clearDeviceChannel(deps: ShipDeps, q: DeviceChannelRequest
   if (!q.app_id || !q.device_id) throw new HttpError(400, "invalid_input");
   const app = await deps.db.getAppByBundleId(q.app_id);
   if (!app) throw new HttpError(404, "app_not_found");
+  if (!(await deps.db.getOverride(app.id, q.device_id))) return { status: "ok" }; // nothing to clear, nothing to republish
   await deps.db.deleteOverride(app.id, q.device_id);
   await publishPointers(deps, app);
   return { status: "ok" };

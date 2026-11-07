@@ -38,7 +38,7 @@ npx @buffersol/hotrail release --channel production --bundle 2K47 --percent 100`
     {
       heading: "Failures that count",
       body: [
-        "Devices report download, checksum, signature, manifest and unzip failures, and crash reverts, through the stats beacon. Failures are stored in full. Successes are sampled at 10 percent.",
+        "Devices report download, checksum, signature, manifest and unzip failures, and crash reverts, through the stats beacon. Every outcome is stored in full (failures and successes); there is no sampling.",
       ],
     },
   ],

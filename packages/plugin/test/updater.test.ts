@@ -265,3 +265,30 @@ describe("beacons and robustness", () => {
     expect((await u.check()).available).toBe(false);
   });
 });
+
+describe("store update (native build change)", () => {
+  it("drops OTA bundles made for the old native build and goes back to the built-in assets", async () => {
+    await offerZip();
+    const u = mk({ strategy: "immediate" }); await u.onLaunch(); await u.sync();
+    const a = mk(); await a.onLaunch(); await a.notifyAppReady(); await a.flush();
+    expect(n.active).toBe("/b/1.1.0");
+    f.posts.length = 0; const reloads = n.reloads;
+    n.device = { ...n.device, versionBuild: "43" }; // the user installed a new store build
+    const b = mk(); await b.onLaunch(); await b.flush();
+    expect(n.active).toBeNull();
+    expect(n.reloads).toBe(reloads + 1);
+    expect(b.getCurrent()).toMatchObject({ version: "builtin", builtin: true, pending: null, trial: false });
+    expect([...n.files.keys()].some((k) => k.startsWith("/b/1.1.0"))).toBe(false);
+    expect(f.actions()).toEqual(["reset_native_change"]);
+    expect(classify("reset_native_change")).toBe("other"); // never counted as a failure for auto-pause
+    // the same version can be offered again on the new build (it was not blacklisted)
+    expect((await b.check()).available).toBe(true);
+  });
+  it("first launch with an older plugin state just records the build, no reset", async () => {
+    await offerZip();
+    await mk({ strategy: "immediate" }).sync();
+    const st = JSON.parse((await s.get("hotrail.state.v1"))!); delete st.nativeBuild; await s.set("hotrail.state.v1", JSON.stringify(st));
+    const u = mk(); await u.onLaunch();
+    expect(n.active).toBe("/b/1.1.0"); expect(u.getCurrent().trial).toBe(true);
+  });
+});

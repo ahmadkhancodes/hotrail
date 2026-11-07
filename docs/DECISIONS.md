@@ -48,3 +48,22 @@ Standing decisions are in docs/factory/BATCH1_PLAN.md (Mongo instead of Postgres
 - M4: **Encrypted bundles, TS half only.** `session_key = <iv b64>:<RSA-OAEP-SHA256 wrapped AES key b64>`; the plugin unwraps with WebCrypto using a configured `privateKey`, asks the bridge to `decryptFile` (native, not written), checks `checksum` on the decrypted zip, and with a `publicKey` verifies each extracted file against the signed manifest. No delta for encrypted bundles. Server and CLI do not produce encrypted bundles. This is our own scheme (the Capgo plugin's is not copied).
 - M4: **Bundle delete frees storage:** zip, manifest and blobs not listed in any remaining bundle's manifest are deleted (best effort; failure is recorded as `filesDeleted: -1` in the audit entry).
 - M4: **Not done:** HTTP `/api/mcp` endpoint (needs the SDK's Streamable HTTP transport plus per request key auth; not small enough to ship without a network to try it), release dialog, status page, abuse rules, backups drill, Postfix. `package-lock.json`: `npm install --package-lock-only` ran against the registry and changed nothing, so the lock is already consistent. No new dependencies were added.
+
+- 2026-11-07 (M5 review): **Findings live in `docs/REVIEW.md`.** All 9 P0s are fixed with tests; the open P1s and P2s are listed there with fixes.
+- M5: **Devices only ever download a zip the server wrote.** The zip upload path stores `writeZip(inspected entries)`, never the customer's bytes. The CLI path already did this. Zip checksums therefore differ from the uploaded file. That is intended, and the manifest is still over the same file contents.
+- M5: **A Capacitor app id is never handed to a second org.**
+  - Account deletion retires the app's pointers first. A tombstone index means devices get no update, and the channel pointers are deleted.
+  - `ensureApp` refuses any app id whose pointer index already exists in the store (409 `app_id_taken`, "contact support"). The pointer namespace is the thing that controls installed devices, so it is the reservation record. No DB change was needed.
+  - Releasing an id is a manual support action: delete `ptr/<appId>/index.json` after checking the old owner's consent.
+- M5: **Pointer publishing re-checks after writing.** `publishPointers` writes, recomputes and writes again if the state changed (max 5 passes, else it throws `pointer_publish_unstable`). This avoids a lock service. It costs one extra round of reads per publish.
+- M5: **Plugin resets on a new store build.** It keeps `nativeBuild` in its state. When `versionBuild` changes, every downloaded bundle is dropped and the built-in assets load (one reload). The beacon `reset_native_change` is "other" for metering, and the version is not blacklisted. Native Swift/Kotlin should get the same check before load (REVIEW P1-12).
+- M5: **Production refuses a volatile bundle store next to a real DB** (`storeFromEnv` throws). The all-memory demo and an explicit `BUNDLE_STORE=memory` stay allowed. The equivalent DB guard is deferred because `next build` runs as production without a DB (REVIEW P1-18).
+- M5: **Copy changes without asking the owner:**
+  - SSO is labelled "coming in v1".
+  - The unconfirmed "3 months free for Appflow teams" offer is removed.
+  - The Capacitor answer now states the plugin's real peer range (6 or later).
+  - Overage is described as reported, not charged.
+  - The 10% sampling claim is removed.
+  - The legal placeholders stay owner items (MANUAL_STEPS 9).
+- M5: **API key roles.** Owner and admin get `apiKey:create/update/delete` because Better Auth's api-key plugin checks those actions. Members only read, and viewers have no access.
+- M5: **`/api/health`** does one indexed read with a 2 s timeout and returns 503 when the DB fails. The update check stays independent of the DB.

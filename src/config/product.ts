@@ -107,7 +107,7 @@ export const product = {
       tagline: "For studios and apps with a large install base",
       prices: [price("team", "month", 4999), price("team", "year", 50388)],
       limits: { mau: 100000, storage_gib: 10240, event_days: 90, build_min: 1200 },
-      highlights: ["100,000 monthly active users", "SSO and priority email", "10 TB fair use storage", "90 day event history", "1,200 build minutes a month (coming in v1)"],
+      highlights: ["100,000 monthly active users", "Priority email (SSO coming in v1)", "10 TB fair use storage", "90 day event history", "1,200 build minutes a month (coming in v1)"],
       cta: "Choose Team",
       trialDays: 0,
     },

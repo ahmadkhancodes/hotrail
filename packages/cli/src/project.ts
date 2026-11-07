@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { nativeFingerprint, type NativeInfo } from "@buffersol/hotrail-core";
 
@@ -61,13 +61,17 @@ export function nativeInfo(cwd: string): NativeInfo {
 
 export const fingerprintOf = (cwd: string) => nativeFingerprint(nativeInfo(cwd));
 
+/** Never shipped in a bundle: the signing key folder, VCS data and env files (a bundle is public on the CDN). */
+const SECRET_NAMES = /^(\.hotrail|\.git|\.env(\..*)?|\.npmrc)$/;
+
 export function walk(dir: string): { path: string; abs: string }[] {
   const out: { path: string; abs: string }[] = [];
   const rec = (d: string) => {
     for (const e of readdirSync(d)) {
-      if (e === ".DS_Store") continue;
+      if (e === ".DS_Store" || SECRET_NAMES.test(e)) continue;
       const abs = join(d, e);
-      const st = statSync(abs);
+      // lstat: a symlink is skipped, never followed (it could point outside the build folder or loop).
+      const st = lstatSync(abs);
       if (st.isDirectory()) rec(abs);
       else if (st.isFile()) out.push({ path: relative(dir, abs).split("\\").join("/"), abs });
     }

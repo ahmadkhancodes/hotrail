@@ -36,6 +36,8 @@ export interface PersistedState {
   trial: Trial | null;
   failed: string[];
   bundles: Record<string, BundleRef>;
+  /** Store build (`versionBuild`) the downloaded bundles were installed under. A different build resets to built-in. */
+  nativeBuild?: string;
 }
 
 export interface DeviceInfo {

@@ -26,9 +26,9 @@ export const migratingFromCapgo: DocPage = {
       ],
       code: {
         lang: "text",
-        code: `updateUrl:  ${p.url}/api/updates
-statsUrl:   ${p.url}/api/stats
-channelUrl: ${p.url}/api/channel`,
+        code: `updateUrl:  ${p.url}/api/v1/updates/check
+statsUrl:   ${p.url}/api/v1/updates/stats
+channelUrl: ${p.url}/api/v1/updates/channel`,
       },
     },
     {
