@@ -1,4 +1,5 @@
 import { planUpload, verifyManifest, type SignedManifest } from "@buffersol/hotrail-core";
+import { b64encode, SessionKeyError, unwrapSessionKey, type SessionKey } from "./session-key";
 import type {
   BundleRef, CheckResult, Clock, DeviceInfo, DownloadResult, FetchLike, HotrailConfig, KVStorage, Listener, NativeBridge,
   PersistedState, UpdateInfo, UpdaterEvent, UpdaterState,
@@ -173,7 +174,8 @@ export class Updater {
       dir = join(d.bundlesRoot, safeName(u.version));
       this.setState("downloading");
       await bridge.removePath(dir);
-      if (u.manifest_url || this.cfg.publicKey) await this.downloadManifestBundle(u, dir, d);
+      if (u.session_key) await this.downloadEncryptedBundle(u, dir);
+      else if (u.manifest_url || this.cfg.publicKey) await this.downloadManifestBundle(u, dir, d);
       else await this.downloadZipBundle(u, dir);
       const ref: BundleRef = { version: u.version, path: dir };
       this.st.bundles[u.version] = ref; this.st.pending = ref;
@@ -216,8 +218,8 @@ export class Updater {
     } finally { await b.removePath(zip).catch(() => {}); }
   }
 
-  private async downloadManifestBundle(u: UpdateInfo, dir: string, d: DeviceInfo): Promise<void> {
-    const b = this.deps.bridge;
+  /** Fetch the manifest, verify the signature when a public key is configured, and check it matches the update. */
+  private async loadManifest(u: UpdateInfo): Promise<SignedManifest> {
     if (!u.manifest_url) throw new IntegrityError("signature_fail", "signed bundle required but no manifest offered");
     const signed = await this.retry(async () => {
       const r = await this.deps.fetch(u.manifest_url!);
@@ -230,6 +232,40 @@ export class Updater {
     const m = signed.manifest;
     if (m.appId !== this.cfg.appId || m.version !== u.version) throw new IntegrityError("manifest_fail", "manifest does not match update");
     for (const f of m.files) if (f.path.startsWith("/") || f.path.split("/").some((s) => s === ".." || s === "")) throw new IntegrityError("manifest_fail", "unsafe path");
+    return signed;
+  }
+
+  /**
+   * Encrypted bundle (`session_key` present): the full zip is downloaded, decrypted natively, then verified. Delta is not
+   * used for encrypted bundles. With a public key the signed manifest is fetched and every extracted file is checked
+   * against it; without one the decrypted zip must match `checksum`.
+   */
+  private async downloadEncryptedBundle(u: UpdateInfo, dir: string): Promise<void> {
+    const b = this.deps.bridge;
+    if (!this.cfg.privateKey) throw new IntegrityError("decrypt_fail", "encrypted bundle but no privateKey configured");
+    if (!b.decryptFile) throw new IntegrityError("decrypt_fail", "native bridge cannot decrypt files");
+    let sk: SessionKey;
+    try { sk = await unwrapSessionKey(u.session_key!, this.cfg.privateKey); }
+    catch (e) { throw new IntegrityError("decrypt_fail", e instanceof SessionKeyError ? e.message : "session key error"); }
+    const signed = this.cfg.publicKey ? await this.loadManifest(u) : null;
+    const zip = `${dir}.zip`;
+    try {
+      await this.retry(() => b.download(u.url, zip));
+      try { await b.decryptFile(zip, b64encode(sk.key), b64encode(sk.iv)); } catch { throw new IntegrityError("decrypt_fail", "decryption failed"); }
+      this.setState("verifying");
+      const h = await b.hashFile(zip);
+      if (!h || h.toLowerCase() !== u.checksum.toLowerCase()) throw new IntegrityError("checksum_fail", "decrypted zip checksum mismatch");
+      try { await b.unzip(zip, dir); } catch { throw new IntegrityError("unzip_fail", "unzip failed"); }
+      for (const f of signed?.manifest.files ?? []) {
+        if ((await b.hashFile(join(dir, f.path))) !== f.sha256) throw new IntegrityError("checksum_fail", `file hash mismatch: ${f.path}`);
+      }
+    } finally { await b.removePath(zip).catch(() => {}); }
+  }
+
+  private async downloadManifestBundle(u: UpdateInfo, dir: string, d: DeviceInfo): Promise<void> {
+    const b = this.deps.bridge;
+    const signed = await this.loadManifest(u);
+    const m = signed.manifest;
 
     // Delta: find which files are already on the device (current bundle first, then built-in), verify by hash.
     const sources = [this.st.current?.path, d.builtinDir].filter((x): x is string => !!x);

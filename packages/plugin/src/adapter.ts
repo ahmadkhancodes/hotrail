@@ -7,6 +7,7 @@ export const nativeToBridge = (n: HotrailUpdaterNative): NativeBridge => ({
   unzip: (src, dest) => n.unzip({ src, dest }),
   hashFile: async (path) => (await n.hashFile({ path })).sha256,
   copyFile: (src, dest) => n.copyFile({ src, dest }),
+  ...(n.decryptFile ? { decryptFile: (path: string, key: string, iv: string) => n.decryptFile!({ path, key, iv }) } : {}),
   removePath: (path) => n.removePath({ path }),
   setBundle: (path, o) => n.setBundle({ path, ...o }),
   reload: () => n.reload(),

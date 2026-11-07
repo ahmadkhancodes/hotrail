@@ -9,6 +9,8 @@ export interface HotrailConfig {
   channelUrl?: string;
   /** Ed25519 public key, raw 32 bytes, base64. When set, only signed manifests are installed. */
   publicKey?: string;
+  /** RSA private key (PKCS#8, PEM or base64) that unwraps `session_key` for encrypted bundles. Without it an encrypted update is refused. */
+  privateKey?: string;
   strategy?: Strategy; // default "background"
   appReadyTimeoutMs?: number; // default 10000
   maxRetries?: number; // default 3 (retries after the first attempt)
@@ -60,6 +62,8 @@ export interface NativeBridge {
   /** SHA-256 hex of a file, or null if it does not exist. */
   hashFile(path: string): Promise<string | null>;
   copyFile(src: string, dest: string): Promise<void>;
+  /** Decrypt a file in place with AES-CBC/PKCS7 (key and iv base64). Optional: a bridge without it cannot install encrypted bundles. */
+  decryptFile?(path: string, keyBase64: string, ivBase64: string): Promise<void>;
   removePath(path: string): Promise<void>;
   /**
    * Switch the web root (setServerBasePath) and persist it as the active bundle. null = built-in.
@@ -110,7 +114,7 @@ export interface CheckResult {
 export interface DownloadResult {
   ok: boolean;
   version?: string;
-  error?: "download_fail" | "checksum_fail" | "signature_fail" | "unzip_fail" | "manifest_fail";
+  error?: "download_fail" | "checksum_fail" | "signature_fail" | "unzip_fail" | "manifest_fail" | "decrypt_fail";
 }
 
 export type UpdaterEvent = "stateChanged" | "updateAvailable" | "updateReady" | "downloadFailed" | "applied" | "confirmed" | "reverted" | "killed";

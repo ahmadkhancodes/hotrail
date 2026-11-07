@@ -299,6 +299,14 @@ export interface EventDoc {
 }
 
 export interface ShipDb {
+  /** Every app (cron sweeps only). */
+  listAllApps(limit?: number): Promise<AppDoc[]>;
+  /** One row per (org, key). With `ifAbsent` it only writes when the key is new and returns whether it wrote (once per period notices). */
+  setOrgFlag(orgId: string, key: string, value: string, opts?: { ifAbsent?: boolean }): Promise<boolean>;
+  getOrgFlag(orgId: string, key: string): Promise<string | null>;
+  /** Records a device as active in a billing period. Returns true the first time (that is one new MAU). */
+  markActiveDevice(d: { appId: string; orgId: string; period: string; deviceId: string; expiresAt: Date }): Promise<boolean>;
+
   createApp(a: Omit<AppDoc, "app" | "bundleSeq" | "createdAt"> & { createdAt?: Date }): Promise<AppDoc>;
   getAppByBundleId(bundleId: string): Promise<AppDoc | null>;
   getAppById(id: string): Promise<AppDoc | null>;

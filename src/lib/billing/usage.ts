@@ -30,5 +30,12 @@ export async function meter(db: Db, orgId: string, m: MeterId, by = 1, now = new
 export async function currentUsage(db: Db, orgId: string, meters: MeterId[], now = new Date()): Promise<UsageState[]> {
   const ent = await db.getEntitlement(orgId);
   const plan = effectivePlan(ent, now.getTime());
-  return Promise.all(meters.map(async (m) => usageState(m, await db.getUsage(orgId, m, periodOf(now)), plan.limits[m])));
+  // event_days is a retention setting, not something that is consumed.
+  return Promise.all(meters.filter((m) => m !== "event_days").map(async (m) => {
+    if (m === "storage_gib") {
+      const { bytes: _b, ...state } = await (await import("./limits")).storageState(db, orgId, now);
+      return state;
+    }
+    return usageState(m, await db.getUsage(orgId, m, periodOf(now)), plan.limits[m]);
+  }));
 }

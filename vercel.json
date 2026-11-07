@@ -3,6 +3,7 @@
   "framework": "nextjs",
   "crons": [
     { "path": "/api/cron/webhook-retries", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/autopause-sweep", "schedule": "30 3 * * *" }
+    { "path": "/api/cron/autopause-sweep", "schedule": "30 3 * * *" },
+    { "path": "/api/cron/limits-sweep", "schedule": "45 3 * * *" }
   ]
 }

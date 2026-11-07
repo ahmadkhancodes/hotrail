@@ -2,7 +2,8 @@
   "_note": "Shapes the stock @capgo/capacitor-updater reads from a self hosted updateUrl, written from the public self hosted docs (clean room). An update needs string version and url (checksum string when the zip is checked, session_key only for encrypted bundles). Anything else is read as 'no update' via message.",
   "update": { "version": "2.14.1", "url": "https://cdn.example/zips/x.zip", "checksum": "0000000000000000000000000000000000000000000000000000000000000000" },
   "noUpdate": { "message": "no_new_version_available" },
-  "allowedKeys": ["version", "url", "checksum", "session_key", "message", "error", "major", "manifest"],
+  "deltaKeys": ["manifest_url", "files_url"],
+  "allowedKeys": ["version", "url", "checksum", "session_key", "message", "error", "major", "manifest", "manifest_url", "files_url"],
   "statsRequest": {
     "action": "set",
     "app_id": "com.example.ordering",

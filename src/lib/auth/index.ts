@@ -9,6 +9,7 @@ import { appName, appUrl, dbDriver, env, isProd } from "@/lib/env";
 import { sendMail } from "@/lib/mail";
 import { inviteEmail, magicLinkEmail } from "@/lib/mail/templates";
 import { isDisposableEmail } from "@/lib/security/disposable";
+import { auditHook } from "./audit-hook";
 import { ac, roles } from "./roles";
 
 // Better Auth: magic link, passkeys, TOTP, orgs + roles, API keys (hashed, prefix shown).
@@ -77,6 +78,7 @@ export function createAuth(db: BetterAuthOptions["database"]) {
       additionalFields: { analyticsConsent: { type: "boolean", required: false, defaultValue: false, input: true } },
     },
     account: { accountLinking: { enabled: true, trustedProviders: ["google"] } },
+    hooks: { after: auditHook },
     databaseHooks: {
       user: {
         create: {

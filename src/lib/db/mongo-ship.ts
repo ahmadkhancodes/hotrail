@@ -23,9 +23,31 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
   const events = () => col<Row<EventDoc>>("events");
   const buckets = () => col<Row<UsageBucketDoc>>("usage_buckets");
   const nativeBuilds = () => col<Row<NativeBuildDoc>>("native_builds");
+  const orgFlags = () => col<Row<{ app: string; orgId: string; key: string; value: string }>>("org_flags");
+  const activeDevices = () => col<Row<{ app: string; orgId: string; appId: string; period: string; deviceId: string; expiresAt: Date }>>("active_devices");
   const dk = (appId: string, deviceId: string) => `${appId}|${deviceId}`;
 
   return {
+    async listAllApps(limit = 5000) {
+      return stripAll<AppDoc>(await (await apps()).find({ app }).limit(limit).toArray());
+    },
+    async setOrgFlag(orgId, key, value, opts) {
+      const _id = `${app}|${orgId}|${key}`;
+      if (opts?.ifAbsent) {
+        try { await (await orgFlags()).insertOne({ _id, app, orgId, key, value }); return true; } catch (e) { if (isDup(e)) return false; throw e; }
+      }
+      await (await orgFlags()).updateOne({ _id }, { $set: { app, orgId, key, value } }, { upsert: true });
+      return true;
+    },
+    async getOrgFlag(orgId, key) {
+      return (await (await orgFlags()).findOne({ _id: `${app}|${orgId}|${key}` }))?.value ?? null;
+    },
+    async markActiveDevice(d) {
+      try {
+        await (await activeDevices()).insertOne({ _id: `${app}|${d.orgId}|${d.period}|${d.appId}|${d.deviceId}`, app, orgId: d.orgId, appId: d.appId, period: d.period, deviceId: d.deviceId, expiresAt: d.expiresAt });
+        return true;
+      } catch (e) { if (isDup(e)) return false; throw e; }
+    },
     async createApp(a) {
       const doc: AppDoc = { ...a, app, bundleSeq: 0, createdAt: a.createdAt ?? new Date() };
       try { await (await apps()).insertOne({ _id: doc.id, ...doc }); } catch (e) { if (isDup(e)) throw new Error("duplicate_app"); throw e; }
@@ -170,6 +192,8 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
 
     async deleteOrg(orgId) {
       const appIds = (await (await apps()).find({ app, orgId }, { projection: { _id: 1 } }).toArray()).map((a) => a._id);
+      await (await orgFlags()).deleteMany({ app, orgId });
+      await (await activeDevices()).deleteMany({ app, orgId });
       await (await bundles()).deleteMany({ app, orgId });
       await (await channels()).deleteMany({ app, orgId });
       await (await releases()).deleteMany({ app, orgId });
@@ -198,6 +222,9 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
 export async function ensureShipIndexes(d: import("mongodb").Db) {
   await d.collection("apps").createIndex({ app: 1, bundleId: 1 }, { unique: true });
   await d.collection("apps").createIndex({ app: 1, orgId: 1 });
+  await d.collection("active_devices").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+  await d.collection("active_devices").createIndex({ app: 1, orgId: 1, period: 1 });
+  await d.collection("org_flags").createIndex({ app: 1, orgId: 1 });
   await d.collection("bundles").createIndex({ appId: 1, version: 1 }, { unique: true });
   await d.collection("bundles").createIndex({ appId: 1, headcode: 1 }, { unique: true });
   await d.collection("bundles").createIndex({ app: 1, orgId: 1 });

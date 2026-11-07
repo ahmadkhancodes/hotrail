@@ -8,5 +8,5 @@ export const METER_LABELS: Record<MeterId, { singular: string; plural: string; p
   build_min: { singular: "build minute", plural: "build minutes", period: "this month" },
 };
 
-export const METERS_SHOWN: MeterId[] = ["mau"];
+export const METERS_SHOWN: MeterId[] = ["mau", "storage_gib"];
 export const fmt = (n: number) => new Intl.NumberFormat("en").format(n);

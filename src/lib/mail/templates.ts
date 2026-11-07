@@ -55,3 +55,28 @@ export function noticeEmail(opts: { title: string; body: string; actionUrl?: str
 ${opts.actionUrl ? button(opts.actionUrl, opts.actionLabel ?? "Open") : ""}`);
   return { subject: opts.title, text, html };
 }
+
+const fmtN = (n: number) => new Intl.NumberFormat("en").format(n);
+
+/** Usage threshold email (50, 70, 90 and 100% of the plan's monthly active users). */
+export function usageEmail(o: { percent: number; used: number; limit: number; plan: string; period: string; billingUrl: string; limited: boolean }) {
+  const title = o.percent >= 100 ? `Your app has reached ${fmtN(o.limit)} MAU` : `Your app is at ${o.percent}% of ${fmtN(o.limit)} MAU`;
+  const body = o.percent >= 100
+    ? `${fmtN(o.used)} devices checked for updates in ${o.period}, which is the ${o.plan} plan limit of ${fmtN(o.limit)}. ${o.limited ? "New downloads are paused until the month ends or you upgrade. " : ""}Apps that are already installed keep working on the version they have.`
+    : `${fmtN(o.used)} devices checked for updates in ${o.period}, ${o.percent}% of the ${o.plan} plan limit of ${fmtN(o.limit)}. At 100% new downloads pause; installed apps keep their current version. You can upgrade or set an overage cap at any time.`;
+  return noticeEmail({ title, body, actionUrl: o.billingUrl, actionLabel: "See usage and plans" });
+}
+
+/** Release, rollback and auto-pause notifications to subscribed members. */
+export function channelEmail(o: { kind: "release" | "rollback" | "autopause"; app: string; channel: string; version: string; headcode: string; percent?: number; detail?: string; url: string }) {
+  const where = `${o.app} / ${o.channel}`;
+  const title =
+    o.kind === "release" ? `Released ${o.headcode} to ${where}${o.percent !== undefined && o.percent < 100 ? ` at ${o.percent}%` : ""}`
+    : o.kind === "rollback" ? `Rolled back ${where} to ${o.headcode}`
+    : `Rollout of ${o.headcode} paused${o.percent !== undefined ? ` at ${o.percent}%` : ""}: ${o.detail ?? "failure rate above the limit"}`;
+  const body =
+    o.kind === "release" ? `Version ${o.version} is now live on ${where}.`
+    : o.kind === "rollback" ? `${where} now serves version ${o.version} (${o.headcode}) at 100%.`
+    : `Hotrail by BufferSol paused ${where} on version ${o.version}. Devices keep the version they have; no new devices get it until you resume or roll back.`;
+  return noticeEmail({ title, body, actionUrl: o.url, actionLabel: "Open the Line" });
+}

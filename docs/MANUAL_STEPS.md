@@ -43,3 +43,12 @@
     - Cloudflare Worker cron: `cd infra/cron-worker && npx wrangler secret put CRON_SECRET && npx wrangler deploy` (https://dash.cloudflare.com/?to=/:account/workers). `JOBS` now defaults to `autopause-sweep,webhook-retries`.
     - npm token to publish `@buffersol/hotrail`, `@buffersol/hotrail-core`, `@buffersol/hotrail-updater`, `@buffersol/hotrail-mcp`: https://www.npmjs.com/settings/~/tokens (add as repo secret `NPM_TOKEN`).
     - Run `.github/workflows/plugin-ci.yml` once on GitHub (macOS runner) and fix whatever the first native build reports; no native code has been compiled yet.
+
+12. **M4 deploy extras** (nothing was deployed in M4)
+    - Run `npm run db:indexes` again: new collections `active_devices` (TTL on `expiresAt`) and `org_flags`.
+    - Cloudflare Worker: redeploy so the new default `JOBS` (`autopause-sweep,limits-sweep,webhook-retries`) takes effect: `cd infra/cron-worker && npx wrangler deploy`. The per-minute `limits-sweep` is what picks up month rollovers and plan expiry; Vercel Cron also runs it once a day (`vercel.json`).
+    - Stripe webhook endpoint must keep sending `customer.subscription.*`, `invoice.*`, `checkout.session.completed`, `charge.refunded`: a plan change republishes the org's pointers from that webhook (limit state reaches devices within the pointer cache, 5 s).
+    - Set `R2_PUBLIC_BASE` (item 10) before relying on delta: `files_url` and `manifest_url` point at the CDN host only when it is set; otherwise they point at `/api/v1/files/...` on Vercel, which works but costs bandwidth. Make sure the custom domain exposes the `blobs/` prefix as well as `zips/` and `manifests/` (the bucket is read through one public host, so no extra rule is needed unless you restrict prefixes).
+    - Email: usage and channel emails use `MAIL_PROVIDER`/`RESEND_API_KEY` like the rest. Without a provider they go to the console transport (nothing is sent).
+    - Workflow change not made (not allowed in M4): `ci-templates/plugin-ci.yml` still has to be copied to `.github/workflows/plugin-ci.yml` and run once on GitHub. The "native written but not compiled" claim stays in the docs until that run is green.
+    - Overage billing: usage above the plan is reported at $0.0015 per MAU but nothing is charged. To charge it, create a metered Stripe price with lookup key `hotrail_overage_mau` and report usage at period end (not built).

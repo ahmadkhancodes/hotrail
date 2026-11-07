@@ -13,6 +13,13 @@ export const webhooks: DocPage = {
       ],
     },
     {
+      heading: "Events",
+      body: [
+        "Subscribe to any of these: release.created, release.rolled_back, channel.paused, bundle.uploaded, billing.updated and channel.failure_spike.",
+        "A manual pause or an auto-pause is delivered as channel.paused, with a cause of manual or autopause followed by the reason. channel.failure_spike is an early warning: it is delivered when the failure rate of a live bundle reaches half the channel's auto-pause threshold (with at least the minimum sample), at most once every 30 minutes per channel. It carries rate, sample and threshold, so you can alert before the pause happens.",
+      ],
+    },
+    {
       heading: "Headers",
       body: [
         "Every delivery carries three headers. x-webhook-id is a unique ID for the event, so you can deduplicate. x-webhook-event is the event name. x-webhook-signature proves the request came from us.",

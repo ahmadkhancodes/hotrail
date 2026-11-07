@@ -9,6 +9,7 @@ import { hmacSha256Hex, safeEqual, uuidv7 } from "@/lib/ids";
 import { getJson, putJson } from "@/lib/storage/types";
 import { ensureApp } from "./apps";
 import { recordAudit, requireScope } from "./guard";
+import { assertStorageWithin } from "./metering";
 import { BLOB_URL_TTL_S, keys, MAX_BUNDLE_BYTES, type Principal, type ShipDeps } from "./types";
 import { checkZip, readEntry, ZipError, writeZip } from "./zip";
 
@@ -93,6 +94,7 @@ export async function planBundle(deps: ShipDeps, p: Principal, input: PlanInput)
   requireScope(p, "upload");
   validateManifest(input);
   const app = await ensureApp(deps, p, input.appId, "customer");
+  await assertStorageWithin(deps, p.orgId, input.manifest.files.reduce((n, f) => n + f.size, 0));
   assertVersionFree(await deps.db.getBundleByVersion(app.id, input.version), input.version);
 
   const registered = app.signingPublicKey;
@@ -168,6 +170,7 @@ export async function uploadZipBundle(deps: ShipDeps, p: Principal, input: ZipUp
   if (!isSemver(input.version)) throw new HttpError(400, "invalid_version");
   if (input.zip.byteLength > MAX_BUNDLE_BYTES) throw new HttpError(413, "bundle_too_large", { limit: MAX_BUNDLE_BYTES });
   const app = await ensureApp(deps, p, input.appId, "managed");
+  await assertStorageWithin(deps, p.orgId, input.zip.byteLength);
   if (app.signingMode !== "managed" || !app.signingKeyEnc) {
     throw new HttpError(409, "customer_signed_app", { hint: "This app signs bundles with your own key. Use `npx @buffersol/hotrail upload`." });
   }

@@ -3,6 +3,8 @@ import { handleStripeWebhook } from "@/lib/billing/webhook";
 import { getStripe } from "@/lib/billing/stripe";
 import { getDb } from "@/lib/db";
 import { env } from "@/lib/env";
+import { shipDeps } from "@/lib/ship/context";
+import { syncOrgLimits } from "@/lib/ship/metering";
 import { json } from "@/lib/http";
 import { log } from "@/lib/logger";
 
@@ -22,6 +24,8 @@ export async function POST(req: Request) {
       secret,
       onChange: async (orgId, type) => {
         const ent = await db.getEntitlement(orgId);
+        // Plan changes reach devices right away: pointers are republished with the new limit state.
+        await syncOrgLimits(await shipDeps(), orgId).catch((e) => log.error("limits_sync_failed", { message: (e as Error).message }));
         await emitEvent(orgId, "billing.updated", { stripeEvent: type, plan: ent?.plan, status: ent?.status }, { db }).catch(() => []);
       },
     });

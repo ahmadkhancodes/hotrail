@@ -7,6 +7,10 @@ export interface ChannelPointer {
   url: string; // zip (compat) or manifest URL on the CDN host
   checksum: string; // sha256
   sessionKey?: string;
+  /** Signed manifest on the CDN host. With `filesUrl` it enables delta downloads; absent means full zip only. */
+  manifestUrl?: string;
+  /** Base URL of the bundle's content-addressed files (`<filesUrl>/<sha256>`). */
+  filesUrl?: string;
   rolloutPercent: number;
   paused: boolean;
   limited?: boolean; // plan limit reached: new downloads paused
@@ -30,7 +34,7 @@ export interface UpdateRequest {
 }
 
 export type UpdateResponse =
-  | { version: string; url: string; checksum: string; session_key?: string }
+  | { version: string; url: string; checksum: string; session_key?: string; manifest_url?: string; files_url?: string }
   | { message: string; error?: string };
 
 export const NO_UPDATE: UpdateResponse = { message: "no_new_version_available" };
@@ -48,7 +52,10 @@ export async function decideUpdate(pointer: ChannelPointer | null | undefined, r
     if ((pointer.enforceNativeBuilds || (allowed && allowed.length > 0)) && (!req.version_build || !(allowed ?? []).includes(req.version_build))) return NO_UPDATE;
     if (!(await inRollout(req.device_id, pointer.channelId, pointer.rolloutPercent))) return NO_UPDATE;
     const res: UpdateResponse = { version: pointer.bundleVersion, url: pointer.url, checksum: pointer.checksum };
-    if (pointer.sessionKey) (res as { session_key?: string }).session_key = pointer.sessionKey;
+    const out = res as { session_key?: string; manifest_url?: string; files_url?: string };
+    if (pointer.sessionKey) out.session_key = pointer.sessionKey;
+    // Delta fields are optional and additive: stock Capgo clients ignore them, our plugin falls back to the zip without them.
+    if (pointer.manifestUrl && pointer.filesUrl) { out.manifest_url = pointer.manifestUrl; out.files_url = pointer.filesUrl; }
     return res;
   } catch {
     return NO_UPDATE;

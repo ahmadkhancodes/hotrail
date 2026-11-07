@@ -26,6 +26,8 @@ export interface PointerLike {
   paused: boolean;
   limited?: boolean;
   sessionKey?: string;
+  manifestUrl?: string;
+  filesUrl?: string;
   allowedNativeBuilds?: string[];
   enforceNativeBuilds?: boolean;
 }

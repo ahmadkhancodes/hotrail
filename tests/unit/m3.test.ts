@@ -154,7 +154,7 @@ describe("bundle delete guard", () => {
     expect((await del(b1)).body.error).toBe("bundle_rollback_target");
     expect((await del(b3, "read")).status).toBe(403);
     expect((await del(b3, "other")).status).toBe(404);
-    expect((await del(b3)).body).toEqual({ deleted: b3 });
+    expect((await del(b3)).body).toMatchObject({ deleted: b3 });
     expect((await del(b3)).status).toBe(404);
     const list = (await h.call("all", "GET", `bundles?appId=${APP}`)).body.bundles.map((b: { headcode: string }) => b.headcode);
     expect(list).not.toContain(b3);
@@ -222,7 +222,7 @@ describe("auto-pause sweep", () => {
 
 describe("cloudflare cron worker entry", () => {
   it("calls every job with the bearer secret, defaults to the autopause sweep first, isolates failures", async () => {
-    expect(jobsOf({})).toEqual(["autopause-sweep", "webhook-retries"]);
+    expect(jobsOf({})).toEqual(["autopause-sweep", "limits-sweep", "webhook-retries"]);
     expect(jobsOf({ JOBS: " a, ,b " })).toEqual(["a", "b"]);
     const calls: { url: string; auth: string | null; method: string }[] = [];
     const fake = (async (url: string, init: RequestInit) => {
@@ -231,8 +231,8 @@ describe("cloudflare cron worker entry", () => {
       return new Response("{}", { status: 200 });
     }) as unknown as typeof fetch;
     const res = await runJobs({ APP_URL: "https://x.test", CRON_SECRET: "s3cret" }, fake);
-    expect(res).toEqual({ "autopause-sweep": 200, "webhook-retries": 0 });
+    expect(res).toEqual({ "autopause-sweep": 200, "limits-sweep": 200, "webhook-retries": 0 });
     expect(calls[0]).toEqual({ url: "https://x.test/api/cron/autopause-sweep", auth: "Bearer s3cret", method: "POST" });
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(3);
   });
 });

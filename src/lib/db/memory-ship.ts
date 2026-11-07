@@ -11,10 +11,30 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
   const events: EventDoc[] = [];
   const buckets = new Map<string, UsageBucketDoc>();
   const nativeBuilds = new Map<string, NativeBuildDoc>();
+  const flags = new Map<string, string>();
+  const active = new Set<string>();
   const clone = <T>(x: T): T => structuredClone(x);
   const dk = (appId: string, deviceId: string) => `${appId}|${deviceId}`;
 
   return {
+    async listAllApps(limit = 5000) {
+      return [...apps.values()].slice(0, limit).map(clone);
+    },
+    async setOrgFlag(orgId, key, value, opts) {
+      const k = `${orgId}|${key}`;
+      if (opts?.ifAbsent && flags.has(k)) return false;
+      flags.set(k, value);
+      return true;
+    },
+    async getOrgFlag(orgId, key) {
+      return flags.get(`${orgId}|${key}`) ?? null;
+    },
+    async markActiveDevice(d) {
+      const k = `${d.orgId}|${d.period}|${d.appId}|${d.deviceId}`;
+      if (active.has(k)) return false;
+      active.add(k);
+      return true;
+    },
     async createApp(a) {
       if ([...apps.values()].some((x) => x.bundleId === a.bundleId)) throw new Error("duplicate_app");
       const doc: AppDoc = { ...clone(a), app, bundleSeq: 0, createdAt: a.createdAt ?? new Date() };
@@ -179,6 +199,8 @@ export function createMemoryShip(app: string): ShipDb & { deleteOrg(orgId: strin
     },
 
     deleteOrg(orgId) {
+      for (const k of [...flags.keys()]) if (k.startsWith(`${orgId}|`)) flags.delete(k);
+      for (const k of [...active]) if (k.startsWith(`${orgId}|`)) active.delete(k);
       const appIds = new Set([...apps.values()].filter((a) => a.orgId === orgId).map((a) => a.id));
       for (const id of appIds) apps.delete(id);
       for (const [k, b] of bundles) if (b.orgId === orgId) bundles.delete(k);

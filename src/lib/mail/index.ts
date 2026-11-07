@@ -35,14 +35,15 @@ export async function unsubscribeUrl(email: string, scope: string) {
 export async function sendMail(msg: MailMessage, transport: MailTransport = transportFromEnv()): Promise<SendResult> {
   const db = await getDb();
   const category = msg.category ?? "transactional";
-  const scope = category === "transactional" ? "transactional" : category;
+  const scope = category === "transactional" ? "transactional" : (msg.scope ?? category);
   if (category !== "transactional" && (await db.isSuppressed(msg.to, scope)))
     return { id: "", provider: transport.name, accepted: false, suppressed: true };
+  const { scope: _scope, ...wire } = msg;
   const headers = { ...msg.headers };
   if (category !== "transactional") {
     const url = await unsubscribeUrl(msg.to, scope);
     headers["List-Unsubscribe"] = `<${url}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
-  return transport.send({ ...msg, headers, from: msg.from ?? env().MAIL_FROM ?? product.mailFrom });
+  return transport.send({ ...wire, headers, from: msg.from ?? env().MAIL_FROM ?? product.mailFrom });
 }

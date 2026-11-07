@@ -1,6 +1,7 @@
 import type { ChannelPointer } from "@buffersol/hotrail-core";
 import type { AppDoc } from "@/lib/db/types";
 import { putJson } from "@/lib/storage/types";
+import { orgLimited } from "@/lib/billing/limits";
 import { pointerCompat } from "./native";
 import { keys, type ShipDeps } from "./types";
 
@@ -10,6 +11,8 @@ export const MAX_OVERRIDES = 500;
 export interface PointerDoc extends ChannelPointer {
   headcode: string;
   manifestUrl: string;
+  /** Base of the bundle's content-addressed files on the CDN host (`<filesUrl>/<sha256>`). */
+  filesUrl: string;
   signed: boolean;
 }
 
@@ -33,6 +36,7 @@ export async function publishPointers(deps: ShipDeps, app: AppDoc): Promise<void
   const channels = await deps.db.listChannels(app.id);
   const overrides = await deps.db.listOverrides(app.id, MAX_OVERRIDES);
   const builds = await deps.db.listNativeBuilds(app.id);
+  const limited = await orgLimited(deps.db, app.orgId, deps.now());
   for (const ch of channels) {
     if (!ch.currentBundleId) continue;
     const b = await deps.db.getBundle(app.id, ch.currentBundleId);
@@ -42,9 +46,11 @@ export async function publishPointers(deps: ShipDeps, app: AppDoc): Promise<void
       bundleVersion: b.version,
       url: deps.store.publicUrl(b.zipKey),
       manifestUrl: deps.store.publicUrl(b.manifestKey),
+      filesUrl: deps.store.publicUrl(`blobs/${app.id}`),
       checksum: b.zipSha256,
       rolloutPercent: ch.rolloutPercent,
       paused: ch.paused,
+      ...(limited ? { limited: true } : {}),
       ...pointerCompat(b, builds),
       headcode: b.headcode,
       signed: b.signed,

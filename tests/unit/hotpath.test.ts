@@ -27,7 +27,7 @@ describe("update hot path decisions", () => {
     expect(await check("d1")).toEqual(NO_UPDATE); // nothing released yet
     await release("1A00");
     const res = (await check("d1")) as { version: string; url: string; checksum: string };
-    expect(Object.keys(res).sort()).toEqual(["checksum", "url", "version"]);
+    expect(Object.keys(res).sort()).toEqual(["checksum", "files_url", "manifest_url", "url", "version"]);
     expect(res.version).toBe("1.0.0");
     expect(res.checksum).toMatch(/^[0-9a-f]{64}$/);
     expect(res.url).toContain("/api/v1/files/zips/");

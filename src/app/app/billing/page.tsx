@@ -3,9 +3,11 @@ import { PageHeader } from "@/components/app/page-header";
 import { planById } from "@/config/product";
 import { can } from "@/lib/auth/roles";
 import { requireOrg } from "@/lib/auth/session";
+import { OVERAGE_USD_PER_MAU, mauReport, overageCapUsd } from "@/lib/billing/limits";
 import { effectivePlan } from "@/lib/billing/entitlement";
 import { currentUsage } from "@/lib/billing/usage";
 import { getDb } from "@/lib/db";
+import { LimitsPanel } from "./limits-panel";
 import { BillingClient } from "./billing-client";
 
 export const metadata = { title: "Billing" };
@@ -20,6 +22,8 @@ export default async function BillingPage({ searchParams }: { searchParams: SP }
   const ent = await db.getEntitlement(ctx.org.id);
   const plan = effectivePlan(ent);
   const usage = await currentUsage(db, ctx.org.id, METERS_SHOWN);
+  const mau = await mauReport(db, ctx.org.id);
+  const apps = (await db.listApps(ctx.org.id)).length;
   const want = one(sp.plan);
   const wanted = want ? planById(want) : undefined;
   return (
@@ -37,6 +41,15 @@ export default async function BillingPage({ searchParams }: { searchParams: SP }
         preselect={wanted && wanted.id !== "free" ? { plan: wanted.id, interval: one(sp.interval) === "month" ? "month" : "year" } : null}
         returnedSession={one(sp.session_id) ?? null}
       />
+      <div className="pt-6">
+        <LimitsPanel
+          canManage={can(ctx.role, "billing", "manage")}
+          info={{
+            used: mau.used, included: mau.included, allowed: mau.allowed, overageUsd: mau.overageUsd, overageRate: OVERAGE_USD_PER_MAU, limited: mau.limited,
+            capUsd: await overageCapUsd(db, ctx.org.id), isPaid: plan.id !== "free", eventDays: plan.limits.event_days, buildMinutes: plan.limits.build_min, apps, period: mau.period,
+          }}
+        />
+      </div>
     </>
   );
 }

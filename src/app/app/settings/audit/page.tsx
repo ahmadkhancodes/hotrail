@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { DataTable, Td } from "@/components/app/data-table";
-import { formatDate } from "@/components/app/api";
 import { PageHeader } from "@/components/app/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { EmptyState, Notice } from "@/components/ui/states";
@@ -11,6 +10,8 @@ import { getDb } from "@/lib/db";
 export const metadata = { title: "Audit log" };
 
 const PAGE = 50;
+/** Server component: the client-side formatDate helper cannot be called here. */
+const utc = (d: Date) => `${d.toISOString().slice(0, 16).replace("T", " ")} UTC`;
 
 export default async function AuditPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const sp = await searchParams;
@@ -33,7 +34,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
   const last = shown[shown.length - 1];
   return (
     <>
-      <PageHeader title="Audit log" description="An append-only record of sensitive actions in this organization, newest first." />
+      <PageHeader title="Audit log" description="An append-only record of releases, rollbacks, keys, members and billing in this organization, newest first." actions={<a href="/api/audit/export" download className={buttonClass("secondary")}>Export CSV</a>} />
       {shown.length === 0 ? (
         <EmptyState
           title={before ? "Nothing older than this" : "No activity recorded yet"}
@@ -57,7 +58,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 <Td><code>{r.action}</code></Td>
                 <Td muted>{r.actorId ?? "System"}</Td>
                 <Td muted className="break-all">{r.target ?? "None"}</Td>
-                <Td muted><time dateTime={r.at.toISOString()}>{formatDate(r.at, true)}</time></Td>
+                <Td muted><time dateTime={r.at.toISOString()}>{utc(r.at)}</time></Td>
               </tr>
             ))}
           </DataTable>

@@ -4,8 +4,9 @@ import { HttpError } from "@/lib/http";
 import { getJson } from "@/lib/storage/types";
 import type { BundleStore } from "@/lib/storage/types";
 import { publishPointers, MAX_OVERRIDES } from "./pointers";
+import { eventRetentionDays } from "@/lib/billing/limits";
 import { evaluateAutopause } from "./release";
-import { BUCKET_TTL_DAYS, EVENT_TTL_DAYS } from "@/lib/db/types";
+import { BUCKET_TTL_DAYS } from "@/lib/db/types";
 import { uuidv7 } from "@/lib/ids";
 import type { ShipDeps } from "./types";
 
@@ -50,9 +51,11 @@ export async function ingestStats(deps: ShipDeps, b: StatsBeacon): Promise<{ sto
   });
   const action = classifyAction(b.action);
   if (action === "other") return { stored: false };
+  // Raw events are kept for as many days as the org's plan includes (7 Free, 30 Solo, 60 Maker, 90 Team).
+  const keepDays = await eventRetentionDays(deps.db, app.orgId, now);
   await deps.db.appendEvent({
     id: uuidv7(), appId: app.id, ts: now, deviceId: b.device_id, bundleVersion: b.version_name ?? null, channelId: r.channelId,
-    action, cause: String(b.action).slice(0, 64), expiresAt: new Date(now.getTime() + EVENT_TTL_DAYS * 864e5),
+    action, cause: String(b.action).slice(0, 64), expiresAt: new Date(now.getTime() + keepDays * 864e5),
   });
   // The adoption bucket counts exactly the events stored above (one increment per stored event), so charts match raw counts.
   await deps.db.bumpBucket({ appId: app.id, at: now, channelId: r.channelId, bundleVersion: b.version_name ?? null, action, expiresAt: new Date(now.getTime() + BUCKET_TTL_DAYS * 864e5) });
