@@ -25,10 +25,11 @@
 
 8. **Stripe live mode + tax** at go live: https://dashboard.stripe.com/settings/tax (test mode is enough for the build; live keys are the owner's).
 
-9. **Legal and copy placeholders** (owner facts; flagged as `{{...}}` in the shipped pages until filled)
+9. **Legal placeholders: LAUNCH BLOCKING** (owner facts; flagged as `{{...}}` in the shipped pages until filled; M5 removed the marketing ones)
    - `{{jurisdiction}}` and `{{registered address}}`: `src/config/product.ts` (`legal`), used by terms, privacy, DPA.
    - `{{cap}}`: liability cap in `src/content/legal/terms.ts`.
-   - `{{company page URL}}`, `{{confirm min version}}`, `{{confirm offer}}` (3 months free on annual for Appflow teams): landing FAQ and migration section in `src/app/(marketing)/page.tsx`.
+   - `{{refund policy}}` in `src/content/legal/terms.ts`.
+   - (Done in M5: the landing FAQ placeholders were removed. The Appflow "3 months free" offer was removed as unconfirmed. Add it back in `src/app/(marketing)/page.tsx` if you want to make that offer.)
    - Have a lawyer review the legal pages before public launch.
 
 10. **R2 bucket for bundles (needed before the M2 deploy)**
@@ -52,3 +53,10 @@
     - Email: usage and channel emails use `MAIL_PROVIDER`/`RESEND_API_KEY` like the rest. Without a provider they go to the console transport (nothing is sent).
     - Workflow change not made (not allowed in M4): `ci-templates/plugin-ci.yml` still has to be copied to `.github/workflows/plugin-ci.yml` and run once on GitHub. The "native written but not compiled" claim stays in the docs until that run is green.
     - Overage billing: usage above the plan is reported at $0.0015 per MAU but nothing is charged. To charge it, create a metered Stripe price with lookup key `hotrail_overage_mau` and report usage at period end (not built).
+
+13. **M5 review items for the owner** (see docs/REVIEW.md)
+    - Every Vercel environment needs `BETTER_AUTH_SECRET` (`openssl rand -base64 32`): https://vercel.com/ahmad-code/hotrail/settings/environment-variables . Production now refuses to sign upload URLs without it.
+    - Set `DB_DRIVER` explicitly on every Vercel environment. Use `memory` only for a throwaway demo, `mongo` with `MONGODB_URI`. With Mongo, the R2 variables (item 10) are now **required**: production refuses to start the bundle store without them.
+    - Point uptime probes at `/api/health`. It now returns 503 when the database is unreachable.
+    - App id release requests: if a former customer (deleted account) or a rightful owner asks for an app id back, delete `ptr/<appId>/index.json` in the `hotrail-bundles` bucket after checking ownership: https://dash.cloudflare.com/?to=/:account/r2/default/buckets/hotrail-bundles
+    - Copy decisions you may want to revisit: SSO is labelled "coming in v1" on the Team plan; the Appflow offer was removed; the hero line "same core features as Capgo" is still there and is a P1 in REVIEW (P1-22).

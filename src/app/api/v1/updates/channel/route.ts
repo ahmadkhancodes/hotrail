@@ -1,4 +1,5 @@
-import { HttpError, json } from "@/lib/http";
+import { clientIp, HttpError, json } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/security/ratelimit";
 import { clearDeviceChannel, getDeviceChannel, selfAssignChannel, type DeviceChannelRequest } from "@/lib/ship/device";
 import { shipDeps } from "@/lib/ship/context";
 
@@ -22,9 +23,19 @@ export async function GET(req: Request) {
     return json(await getDeviceChannel(await shipDeps(), q));
   } catch (e) { return fail(e); }
 }
+/** Writes republish pointers, so they are limited per client IP (devices change channel rarely). */
+const WRITE_LIMIT = { limit: 30, windowMs: 60_000 };
 export async function POST(req: Request) {
-  try { return json(await selfAssignChannel(await shipDeps(), await body(req))); } catch (e) { return fail(e); }
+  try {
+    const deps = await shipDeps();
+    await enforceRateLimit(`devchan:${clientIp(req)}`, WRITE_LIMIT, deps.db);
+    return json(await selfAssignChannel(deps, await body(req)));
+  } catch (e) { return fail(e); }
 }
 export async function DELETE(req: Request) {
-  try { return json(await clearDeviceChannel(await shipDeps(), await body(req))); } catch (e) { return fail(e); }
+  try {
+    const deps = await shipDeps();
+    await enforceRateLimit(`devchan:${clientIp(req)}`, WRITE_LIMIT, deps.db);
+    return json(await clearDeviceChannel(deps, await body(req)));
+  } catch (e) { return fail(e); }
 }

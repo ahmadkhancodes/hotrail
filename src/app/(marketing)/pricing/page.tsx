@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 const billingFaq = [
   { q: "What is a monthly active user?", a: "A distinct device that checks for an update in the calendar month (UTC). It is the only billing meter." },
-  { q: "What happens if I go over my limit?", a: "Your app keeps running its current version. We pause new downloads and ask you to upgrade. Extra MAU can be added at $0.0015 each with your confirmation." },
+  { q: "What happens if I go over my limit?", a: "Your app keeps running its current version. We pause new downloads and ask you to upgrade. On paid plans you can set a monthly overage cap so downloads keep flowing past the limit; extra MAU is shown at $0.0015 each and is not charged yet (metered billing is coming)." },
   { q: "Do I need a credit card for the Free plan?", a: "No. Start on Free with no card and move to a paid plan when you need more." },
   { q: "Can I pay monthly instead of yearly?", a: "Yes. Solo, Maker and Team can be billed monthly or yearly. The annual saving is shown in dollars on each plan." },
   { q: "When do build minutes start?", a: "Native cloud builds ship in v1. The minutes are listed so you can compare plans, but they are not available yet." },

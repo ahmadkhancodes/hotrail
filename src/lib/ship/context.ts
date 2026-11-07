@@ -15,6 +15,13 @@ import { emitEvent } from "@/lib/webhooks/outbound";
 import type { Authenticate, RouterOptions } from "./router";
 import type { Principal, ShipDeps } from "./types";
 
+/** Signs the API's own blob upload URLs. A guessable fallback would let anyone write blobs, so production requires the secret. */
+export function uploadSecret(e: Record<string, string | undefined> = process.env): string {
+  if (e.BETTER_AUTH_SECRET) return e.BETTER_AUTH_SECRET;
+  if (e.NODE_ENV === "production") throw new Error("BETTER_AUTH_SECRET is not set");
+  return "dev-upload-secret";
+}
+
 /** Real dependencies for the Node routes. Tests build their own ShipDeps (memory db and store, fixed clock). */
 export async function shipDeps(): Promise<ShipDeps> {
   const db = await getDb();
@@ -25,7 +32,7 @@ export async function shipDeps(): Promise<ShipDeps> {
     kek: () => (kek ??= kekFromEnv()),
     emit: (orgId, event, data) => emitEvent(orgId, event, data, { db }),
     now: () => new Date(),
-    uploadSecret: process.env.BETTER_AUTH_SECRET ?? "dev-upload-secret",
+    uploadSecret: uploadSecret(),
     baseUrl: appUrl(),
     notify: createNotifier({ db, recipients: authRecipients, send: (m) => sendMail(m), baseUrl: appUrl(), log: (m, meta) => log.warn(m, meta) }),
   };

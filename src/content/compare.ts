@@ -51,7 +51,7 @@ export const comparisons: CompareEntry[] = [
       { label: "Bandwidth meter", values: ["Yes", "No, fair use storage only"] },
       { label: "Device plugin license", values: ["MPL-2.0", "MIT"] },
       { label: "SOC 2 Type II and ISO 27001", values: [true, "Not yet"] },
-      { label: "SSO", values: ["Yes", "Team plan and up"] },
+      { label: "SSO", values: ["Yes", "Coming in v1 (not available yet)"] },
       { label: "Native cloud builds", values: [true, "Coming in v1"] },
       { label: "Works with the @capgo/capacitor-updater plugin", values: [true, "Yes, change three URLs"] },
     ],

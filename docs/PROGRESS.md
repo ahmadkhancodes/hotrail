@@ -34,3 +34,15 @@
   - **Housekeeping:** deleting a bundle deletes its stored files (shared blobs kept); `package-lock.json` already consistent (`npm install --package-lock-only` = no change); `/api/mcp` HTTP endpoint deferred.
   - **Docs:** `/docs` now has quickstart, migrating-from-capgo, channels, rollouts, rollback, signing, cli, plugin, mcp, limits, billing, webhooks, api; `llms.txt` lists them. They state what is uncompiled or untested on devices.
 - Left for **M5 (Opus review and launch):** deploy (MANUAL_STEPS 10-12), first green plugin CI run, HTTP `/api/mcp`, release dialog, status page and abuse rules, backups restore drill, compare pages beyond Capgo, Lighthouse and design scorecard, overage billing through Stripe, "3 months over" upgrade nudge, `docs/qa` refresh. The Playwright specs for M1-M3 were not re-run in M4.
+
+- 2026-11-07: **M5 pre-launch review done; code and docs only, not deployed.** Findings are in `docs/REVIEW.md`: 9 P0 (all fixed, each with a test that failed before the fix), 7 small P1 fixed, 15 P1 open, P2 listed. Fixed:
+  - Zip uploads now ship the server-rewritten zip, so hidden entries can't bypass the native-file policy.
+  - An app id can't be taken over after its org is deleted (pointer tombstones and namespace reservation).
+  - Concurrent pointer publishes can no longer undo a pause or rollback.
+  - The plugin resets to built-in assets after a store update to a new native build.
+  - Production refuses a memory bundle store next to Mongo.
+  - Migration docs now give the real update URLs; SSO is labelled "coming in v1"; FAQ placeholders and the unconfirmed Appflow offer are removed.
+  - `/api/health` checks the DB.
+  - Smaller fixes: device channel writes are rate limited and skip no-op republishes; admins can manage keys; the CLI requires https and skips symlinks and secrets; no dev upload secret in production; doc claims on sampling and overage corrected; `.env.example` app name fixed.
+  - Checks: lint (0 errors), typecheck (root and packages), `npm test` (app 141, cli 14, core 27, mcp 6, plugin 36), `next build`, Playwright 6/6 (QA screenshots refreshed).
+  - Next: the owner items in MANUAL_STEPS 9 (legal placeholders, launch blocking), 10-13; first plugin CI run; then the open P1s in REVIEW (MAU and beacon forgery, native-side reset, staged rollout previous bundle, hot path cache and timeout, Mongo timeouts, Better Auth indexes, focus and contrast tokens).

@@ -24,9 +24,9 @@ import { HotrailUpdater } from "@buffersol/hotrail-updater";
 
 await HotrailUpdater.configure({
   appId: "com.acme.app",
-  updateUrl: "${p.url}/api/updates",
-  statsUrl: "${p.url}/api/stats",
-  channelUrl: "${p.url}/api/channel",
+  updateUrl: "${p.url}/api/v1/updates/check",
+  statsUrl: "${p.url}/api/v1/updates/stats",
+  channelUrl: "${p.url}/api/v1/updates/channel",
   publicKey: "<Ed25519 public key, base64>",
   strategy: "background",
 });

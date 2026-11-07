@@ -8,6 +8,8 @@ import { getStripe } from "@/lib/billing/stripe";
 import { getDb } from "@/lib/db";
 import { clientIp, json, readJson, withApi } from "@/lib/http";
 import { enforceRateLimit, RULES } from "@/lib/security/ratelimit";
+import { shipDeps } from "@/lib/ship/context";
+import { retireAppPointers } from "@/lib/ship/pointers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -36,6 +38,9 @@ export const DELETE = withApi(async (req) => {
     if (!soleOwner) continue;
     const acct = await db.getBillingAccount(o.id);
     if (stripe && acct?.stripeCustomerId) await cancelAppSubscriptions(stripe, db.app, acct.stripeCustomerId);
+    // Stop updates and keep the app ids reserved before the app records go (see retireAppPointers).
+    const deps = await shipDeps();
+    for (const a of await db.listApps(o.id)) await retireAppPointers(deps, a);
     await db.deleteOrgData(o.id);
     await auth.api.deleteOrganization({ headers: h, body: { organizationId: o.id } });
     await audit({ orgId: o.id, actorId: user.id, action: "org.deleted", ip: clientIp(req) });

@@ -23,9 +23,9 @@ export const quickstart: DocPage = {
         code: `// capacitor.config.ts
 plugins: {
   CapacitorUpdater: {
-    updateUrl: "${p.url}/api/v1/updates/{{app id}}",
-    statsUrl: "${p.url}/api/v1/stats/{{app id}}",
-    channelUrl: "${p.url}/api/v1/channel/{{app id}}",
+    updateUrl: "${p.url}/api/v1/updates/check",
+    statsUrl: "${p.url}/api/v1/updates/stats",
+    channelUrl: "${p.url}/api/v1/updates/channel",
   },
 }`,
       },
