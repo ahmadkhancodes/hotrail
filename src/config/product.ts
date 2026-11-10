@@ -46,17 +46,17 @@ export const product = {
   companyUrl: "https://buffersoltech.com",
   host: "hotrail.buffersoltech.com",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "https://hotrail.buffersoltech.com",
-  supportEmail: "support@buffersoltech.com",
-  legalEmail: "legal@buffersoltech.com",
+  supportEmail: "contact@buffersoltech.com",
+  legalEmail: "contact@buffersoltech.com",
   mailFrom: "Hotrail <hello@hotrail.buffersoltech.com>",
   description:
     "Live updates for Capacitor apps. Push the web layer straight to installed apps with channels, staged rollouts, auto-pause and one-click rollback, with signing on by default and no third party in your update path.",
   tagline: "Fix your Capacitor app today. Not after review.",
   /** Legal entity details used by the legal templates. */
   legal: {
-    entity: "BufferSol Technologies",
-    jurisdiction: "{{jurisdiction}}",
-    address: "{{registered address}}",
+    entity: "BufferSol Technologies LLC",
+    jurisdiction: "the State of New York, United States",
+    address: "447 W Broadway, 2nd Floor Suite #1964, New York, NY 10013, United States",
     effectiveDate: "2026-11-05",
   },
   subProcessors: [
