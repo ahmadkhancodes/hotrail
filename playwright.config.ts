@@ -15,6 +15,6 @@ export default defineConfig({
         command: `npx next start -p ${PORT}`,
         port: PORT,
         reuseExistingServer: true,
-        env: { DB_DRIVER: "memory", E2E_OUTBOX: "1", NEXT_PUBLIC_APP_URL: `http://localhost:${PORT}`, MAIL_PROVIDER: "console", BETTER_AUTH_SECRET: "e2e-secret-e2e-secret-e2e-secret-0000", CRON_SECRET: "e2e-cron" },
+        env: { DB_DRIVER: "memory", BUNDLE_STORE: "memory", E2E_OUTBOX: "1", NEXT_PUBLIC_APP_URL: `http://localhost:${PORT}`, MAIL_PROVIDER: "console", BETTER_AUTH_SECRET: "e2e-secret-e2e-secret-e2e-secret-0000", CRON_SECRET: "e2e-cron" },
       },
 });

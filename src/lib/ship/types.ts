@@ -26,6 +26,9 @@ export interface ShipDeps {
 }
 
 export const MAX_BUNDLE_BYTES = 150 * 1024 * 1024; // what one function invocation assembles in memory
+/** Vercel functions reject request bodies above about 4.5 MB; a bigger limit arrives with object storage (R2). */
+export const MAX_REQUEST_BYTES = 4_500_000;
+export const REQUEST_LIMIT_HINT = "Uploads through the API are limited to 4.5 MB per file (per request) for now. A bigger limit arrives with object storage (R2).";
 export const BLOB_URL_TTL_S = 15 * 60;
 export const DEFAULT_AUTOPAUSE_THRESHOLD = 0.05;
 export const DEFAULT_MIN_SAMPLE = 20;
