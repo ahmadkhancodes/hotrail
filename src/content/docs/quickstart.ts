@@ -57,7 +57,7 @@ npx @buffersol/hotrail rollback --channel production`,
       ],
       code: {
         lang: "yaml",
-        code: `# .github/workflows/hotrail.yml (stub, not yet runnable; set APP_VERSION to your release version)
+        code: `# .github/workflows/hotrail.yml (set APP_VERSION to your release version)
 name: hotrail
 on: { push: { branches: [main] } }
 jobs:
@@ -77,7 +77,7 @@ jobs:
       body: ["Same steps in GitLab CI. Store the key as a masked CI/CD variable named HOTRAIL_API_KEY."],
       code: {
         lang: "yaml",
-        code: `# .gitlab-ci.yml (stub, not yet runnable; set APP_VERSION as a CI variable)
+        code: `# .gitlab-ci.yml (set APP_VERSION as a CI variable)
 hotrail:
   image: node:22
   script:

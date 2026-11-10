@@ -134,6 +134,26 @@ export const product = {
   ],
 } as const;
 
+/**
+ * Cadence of background work in production. Vercel Hobby runs scheduled jobs once a day, so the default is "daily".
+ * Flip to "minute" only when a faster scheduler (infra/cron-worker) is deployed; all public copy reads from here.
+ */
+export type CadenceMode = "daily" | "minute";
+export const CADENCE_MODE: CadenceMode = "daily";
+export const cadenceCopy: Record<CadenceMode, { autopause: string; retries: string; retriesShort: string }> = {
+  daily: {
+    autopause: "Auto-pause is evaluated the moment a device reports a failed update, and a daily sweep double-checks every channel.",
+    retries: "A failed delivery is retried by our background run at least once a day, up to 8 attempts in total, and you can replay it from the dashboard at any time.",
+    retriesShort: "retried at least once a day",
+  },
+  minute: {
+    autopause: "Auto-pause is evaluated the moment a device reports a failed update, and an evaluator sweeps every channel every minute.",
+    retries: "Failed deliveries are retried with backoff at 30 seconds, 2 minutes, 10 minutes, 30 minutes, 1 hour, 3 hours, 6 hours and 12 hours. That is up to 8 attempts. After the last attempt the delivery is marked failed, and you can replay it from the dashboard.",
+    retriesShort: "retried with backoff",
+  },
+};
+export const cadence = cadenceCopy[CADENCE_MODE];
+
 export type Product = typeof product;
 export const plans: readonly Plan[] = product.plans;
 export const planById = (id: string): Plan | undefined => plans.find((p) => p.id === id);

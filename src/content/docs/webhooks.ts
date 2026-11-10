@@ -1,4 +1,4 @@
-import { product as p } from "@/config/product";
+import { product as p, cadence } from "@/config/product";
 import type { DocPage } from "./types";
 
 export const webhooks: DocPage = {
@@ -58,7 +58,7 @@ export function verify(rawBody, header, secret, toleranceSeconds = 300) {
     {
       heading: "Retries",
       body: [
-        "Failed deliveries are retried with backoff at 30 seconds, 2 minutes, 10 minutes, 30 minutes, 1 hour, 3 hours, 6 hours and 12 hours. That is up to 8 attempts. After the last attempt the delivery is marked failed, and you can replay it from the dashboard.",
+        cadence.retries,
       ],
     },
   ],

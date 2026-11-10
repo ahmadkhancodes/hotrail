@@ -1,4 +1,4 @@
-import { product as p } from "@/config/product";
+import { product as p, cadence } from "@/config/product";
 import type { DocPage } from "./types";
 
 export const rollouts: DocPage = {
@@ -21,7 +21,7 @@ npx @buffersol/hotrail release --channel production --bundle 2K47 --percent 100`
     {
       heading: "Auto-pause",
       body: [
-        "Pass --autopause with a failure rate from 0 to 1. For example 0.02 means 2 percent. An evaluator runs every minute. When the failure rate of the channel passes the threshold and enough devices have reported, the channel is paused.",
+        "Pass --autopause with a failure rate from 0 to 1. For example 0.02 means 2 percent. " + cadence.autopause + " When the failure rate of the channel passes the threshold and enough devices have reported, the channel is paused.",
         "Pricing lists auto-pause under Maker and above. The code does not gate it by plan yet, so it runs on every plan, Free included.",
       ],
       code: {
