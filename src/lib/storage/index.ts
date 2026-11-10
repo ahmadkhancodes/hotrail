@@ -1,4 +1,4 @@
-import { appUrl } from "@/lib/env";
+import { appName, appUrl } from "@/lib/env";
 import { createMemoryStore } from "./memory";
 import type { BundleStore } from "./types";
 
@@ -19,6 +19,8 @@ export interface StoreEnv {
   NODE_ENV?: string;
   DB_DRIVER?: string;
   MONGODB_URI?: string;
+  MONGODB_DB?: string;
+  APP_NAME?: string;
 }
 
 /**
@@ -30,13 +32,20 @@ function refuseVolatileStore(e: StoreEnv, why: string): void {
   if (e.NODE_ENV !== "production") return;
   const db = e.DB_DRIVER ?? (e.MONGODB_URI ? "mongo" : "memory");
   if (why === "r2_incomplete" || db !== "memory") {
-    throw new Error(`bundle store not configured (${why}): set R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY`);
+    throw new Error(`bundle store not configured (${why}): either set BUNDLE_STORE=mongo (lean launch, uses the database) or set R2_ACCOUNT_ID, R2_BUCKET, R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY (R2)`);
   }
 }
 
-/** Picks the store from env. Default is memory whenever the R2 variables are absent. */
+/** Picks the store from env. Unset BUNDLE_STORE: R2 when all four R2 variables exist, else mongo when the DB driver is mongo, else memory. */
 export async function storeFromEnv(e: StoreEnv = process.env as StoreEnv, baseUrl = appUrl()): Promise<BundleStore> {
-  const wanted = e.BUNDLE_STORE ?? (e.R2_ACCOUNT_ID && e.R2_BUCKET && e.R2_ACCESS_KEY_ID && e.R2_SECRET_ACCESS_KEY ? "r2" : "memory");
+  const dbIsMongo = (e.DB_DRIVER ?? (e.MONGODB_URI ? "mongo" : "memory")) === "mongo";
+  const hasR2 = !!(e.R2_ACCOUNT_ID && e.R2_BUCKET && e.R2_ACCESS_KEY_ID && e.R2_SECRET_ACCESS_KEY);
+  const wanted = e.BUNDLE_STORE ?? (hasR2 ? "r2" : dbIsMongo && e.MONGODB_URI ? "mongo" : "memory");
+  if (wanted === "mongo") {
+    if (!e.MONGODB_URI) throw new Error("bundle store not configured (mongo_without_uri): BUNDLE_STORE=mongo needs MONGODB_URI");
+    const { createMongoStoreFromUri } = await import("./mongo");
+    return createMongoStoreFromUri(e.MONGODB_URI, e.MONGODB_DB ?? e.APP_NAME ?? appName(), baseUrl);
+  }
   if (wanted === "r2") {
     if (!(e.R2_ACCOUNT_ID && e.R2_BUCKET && e.R2_ACCESS_KEY_ID && e.R2_SECRET_ACCESS_KEY)) {
       refuseVolatileStore(e, "r2_incomplete");

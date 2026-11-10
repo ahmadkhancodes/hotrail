@@ -29,6 +29,13 @@ export const limits: DocPage = {
       ],
     },
     {
+      heading: "Upload size",
+      body: [
+        "Uploads go through the API and are limited to 4.5 MB per file (per request) for now. Larger bodies are refused with HTTP 413 and the error request_too_large, and the CLI prints the same limit. A bigger limit arrives with object storage (R2).",
+        "Nothing is truncated: an upload that is too large fails before anything is stored.",
+      ],
+    },
+    {
       heading: "Storage and event history",
       body: [
         `Storage is fair use. Uploads are refused above the storage limit of your plan. Events are kept for a number of days by plan: ${days}.`,

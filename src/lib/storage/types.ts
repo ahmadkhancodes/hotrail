@@ -9,7 +9,7 @@ export interface PutOptions {
 }
 
 export interface BundleStore {
-  readonly kind: "memory" | "fs" | "r2";
+  readonly kind: "memory" | "fs" | "r2" | "mongo";
   put(key: string, data: Uint8Array, opts?: PutOptions): Promise<void>;
   get(key: string): Promise<Uint8Array | null>;
   has(key: string): Promise<boolean>;

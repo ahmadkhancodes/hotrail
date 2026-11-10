@@ -85,6 +85,22 @@ describe("upload", () => {
     const auth = h.calls.find((c) => c.url.endsWith("/plan"));
     expect(auth).toBeDefined();
   });
+  it("shows the 4.5 MB upload limit and the R2 note on a 413 (JSON or platform body)", async () => {
+    for (const bodyless of [false, true]) {
+      const cwd = project();
+      await main(["init"], harness(cwd).io);
+      const h = harness(cwd, async (url, init) => {
+        if (url.endsWith("/api/v1/upload/plan")) {
+          const sha = (JSON.parse(init.body as string) as { manifest: Manifest }).manifest.files[0]!.sha256;
+          return json({ missing: [sha], uploads: { [sha]: { url: "https://api.test/api/v1/upload/blob/" + sha } } });
+        }
+        return bodyless ? new Response("Request Entity Too Large", { status: 413 }) : json({ error: "request_too_large", hint: "Uploads through the API are limited to 4.5 MB per file (per request) for now. A bigger limit arrives with object storage (R2)." }, 413);
+      });
+      expect(await main(["upload"], h.io)).toBe(1);
+      expect(h.err.join("\n")).toMatch(/413/);
+      expect(h.err.join("\n")).toMatch(/4\.5 MB.*R2/);
+    }
+  });
   it("blocks native files before any network call", async () => {
     const cwd = project({ "index.html": "<html></html>", "libfoo.so": new Uint8Array([1, 2, 3]) });
     await main(["init"], harness(cwd).io);

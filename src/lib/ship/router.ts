@@ -9,9 +9,14 @@ import { listNativeBuilds, registerNativeBuild } from "./native";
 import { releaseBundle, rollbackChannel, setChannelPaused } from "./release";
 import { usageSeries } from "./usage";
 import { acceptBlob, finalizeBundle, planBundle, uploadZipBundle } from "./upload";
-import { MAX_BUNDLE_BYTES, type Principal, type ShipDeps } from "./types";
+import { MAX_BUNDLE_BYTES, MAX_REQUEST_BYTES, REQUEST_LIMIT_HINT, type Principal, type ShipDeps } from "./types";
 
 export type Authenticate = (req: Request) => Promise<Principal>;
+
+const tooLarge = () => new HttpError(413, "request_too_large", { limit: MAX_REQUEST_BYTES, hint: REQUEST_LIMIT_HINT });
+function assertRequestSize(req: Request): void {
+  if (Number(req.headers.get("content-length") ?? 0) > MAX_REQUEST_BYTES) throw tooLarge();
+}
 
 const MAX_PLAN_BODY = 8 * 1024 * 1024; // a 20,000 file manifest
 
@@ -81,7 +86,9 @@ export async function handleShip(req: Request, segments: string[], deps: ShipDep
 
   // Signed blob PUT: the signature in the URL is the credential (no API key; the CLI sends none to storage).
   if (a === "upload" && b === "blob" && c && method === "PUT") {
+    if (deps.store.kind !== "r2") assertRequestSize(req);
     const body = new Uint8Array(await req.arrayBuffer());
+    if (deps.store.kind !== "r2" && body.byteLength > MAX_REQUEST_BYTES) throw tooLarge();
     await acceptBlob(deps, {
       appDocId: url.searchParams.get("app") ?? "", sha: c, size: Number(url.searchParams.get("size")),
       exp: Number(url.searchParams.get("exp")), sig: url.searchParams.get("sig") ?? "",
@@ -106,7 +113,9 @@ export async function handleShip(req: Request, segments: string[], deps: ShipDep
   if (a === "bundles" && !b && method === "POST") {
     const len = Number(req.headers.get("content-length") ?? 0);
     if (len > MAX_BUNDLE_BYTES) throw new HttpError(413, "bundle_too_large", { limit: MAX_BUNDLE_BYTES });
+    assertRequestSize(req);
     const zip = new Uint8Array(await req.arrayBuffer());
+    if (zip.byteLength > MAX_REQUEST_BYTES) throw tooLarge();
     const res = await uploadZipBundle(deps, p, {
       appId: url.searchParams.get("appId") ?? "", version: url.searchParams.get("version") ?? "", zip,
       nativeFingerprint: url.searchParams.get("nativeFingerprint") ?? undefined,

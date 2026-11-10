@@ -10,7 +10,7 @@ import { getJson, putJson } from "@/lib/storage/types";
 import { ensureApp } from "./apps";
 import { recordAudit, requireScope } from "./guard";
 import { assertStorageWithin } from "./metering";
-import { BLOB_URL_TTL_S, keys, MAX_BUNDLE_BYTES, type Principal, type ShipDeps } from "./types";
+import { BLOB_URL_TTL_S, keys, MAX_BUNDLE_BYTES, MAX_REQUEST_BYTES, REQUEST_LIMIT_HINT, type Principal, type ShipDeps } from "./types";
 import { checkZip, readEntry, ZipError, writeZip } from "./zip";
 
 const SHA_RE = /^[0-9a-f]{64}$/;
@@ -117,6 +117,8 @@ export async function planBundle(deps: ShipDeps, p: Principal, input: PlanInput)
   for (const [sha, size] of sizes) {
     if (await deps.store.has(keys.blob(app.id, sha))) continue;
     missing.push(sha);
+    // Without object storage every blob goes through one function request, which the platform caps at about 4.5 MB.
+    if (deps.store.kind !== "r2" && size > MAX_REQUEST_BYTES) throw new HttpError(413, "request_too_large", { limit: MAX_REQUEST_BYTES, hint: REQUEST_LIMIT_HINT });
     const presigned = await deps.store.presignPut(keys.blob(app.id, sha), { expiresInS: BLOB_URL_TTL_S, contentType: "application/octet-stream" });
     uploads[sha] = presigned ?? { url: await blobUploadUrl(deps, app.id, sha, size) };
   }

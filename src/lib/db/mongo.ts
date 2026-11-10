@@ -299,6 +299,7 @@ export async function ensureIndexes(uri: string, dbName: string, opts: { toleran
   await d.collection("passkey").createIndex({ userId: 1 });
   await d.collection("apikey").createIndex({ referenceId: 1 });
   await d.collection("rateLimit").createIndex({ key: 1 }); // lastRequest is a number, so no TTL index is possible
+  await d.collection("bundle_chunks").createIndex({ key: 1, n: 1 }, { unique: true }); // Mongo bundle store (src/lib/storage/mongo.ts)
   await ensureShipIndexes(d);
   return DELIVERY_TTL_DAYS;
 }

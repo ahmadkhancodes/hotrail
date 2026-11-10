@@ -93,12 +93,13 @@ describe("P0-3 concurrent pointer publishes", () => {
 
 describe("P0-4 production never runs on a volatile bundle store next to a real database", () => {
   it("refuses memory with Mongo and incomplete R2 settings, allows the all-memory demo", async () => {
-    await expect(storeFromEnv({ NODE_ENV: "production", MONGODB_URI: "mongodb://db" }, "https://x")).rejects.toThrow(/bundle store not configured/);
+    await expect(storeFromEnv({ NODE_ENV: "production", DB_DRIVER: "mongo" }, "https://x")).rejects.toThrow(/bundle store not configured/);
+    expect((await storeFromEnv({ NODE_ENV: "production", MONGODB_URI: "mongodb://db" }, "https://x")).kind).toBe("mongo"); // lean launch: Mongo store by default
     await expect(storeFromEnv({ NODE_ENV: "production", DB_DRIVER: "mongo", R2_ACCOUNT_ID: "a", BUNDLE_STORE: "r2" }, "https://x")).rejects.toThrow(/bundle store not configured/);
     await expect(storeFromEnv({ NODE_ENV: "production", DB_DRIVER: "memory", BUNDLE_STORE: "r2" }, "https://x")).rejects.toThrow(/r2_incomplete/);
     expect((await storeFromEnv({ NODE_ENV: "production", DB_DRIVER: "memory" }, "https://x")).kind).toBe("memory");
     expect((await storeFromEnv({ NODE_ENV: "production", MONGODB_URI: "mongodb://db", BUNDLE_STORE: "memory" }, "https://x")).kind).toBe("memory");
-    expect((await storeFromEnv({ NODE_ENV: "test", MONGODB_URI: "mongodb://db" }, "https://x")).kind).toBe("memory");
+    expect((await storeFromEnv({ NODE_ENV: "test", MONGODB_URI: "mongodb://db" }, "https://x")).kind).toBe("mongo");
   });
 });
 
