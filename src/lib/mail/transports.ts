@@ -34,6 +34,7 @@ export function resendTransport(apiKey: string, fetchFn: typeof fetch = fetch): 
           reply_to: msg.replyTo, headers: msg.headers,
           tags: msg.tags ? Object.entries(msg.tags).map(([name, value]) => ({ name, value })) : undefined,
         }),
+        signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) throw new Error(`mail_send_failed_${res.status}`);
       const body = (await res.json().catch(() => ({}))) as { id?: string };

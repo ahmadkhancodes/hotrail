@@ -103,6 +103,8 @@ export async function planBundle(deps: ShipDeps, p: Principal, input: PlanInput)
     if (!pub) throw new HttpError(400, "missing_public_key", { hint: "Send publicKey with the first signed upload." });
     const ok = await verifyManifest({ manifest: input.manifest, signature: input.signature, keyId: "" }, pub);
     if (!ok) throw new HttpError(400, "bad_signature", { hint: "The manifest was not signed with this app's key." });
+    // A leaked upload-only key must not be able to register its own public key and lock the owner out.
+    if (!registered && p.scope !== "all") throw new HttpError(403, "insufficient_scope", { need: "all", have: p.scope, hint: "Register the signing key with an all-scope key." });
     if (!registered) await deps.db.updateApp(app.id, { signingPublicKey: pub });
   } else if (registered) {
     throw new HttpError(400, "unsigned_not_allowed", { hint: "This app has a signing key, so every bundle must be signed." });

@@ -29,7 +29,7 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   }
   if (await db.hasStripeEvent(event.id)) return json({ received: true, duplicate: true }); // C-25
 
-  const obj = event.data.object as {
+  const obj = (event.data?.object ?? {}) as {
     customer?: string | { id: string } | null;
     metadata?: Record<string, string> | null;
     id?: string;
@@ -58,7 +58,9 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   if (event.type === "payment_intent.succeeded") {
     const plan = obj.metadata?.plan;
     const match = obj.metadata?.lookup_key ? planForLookupKey(obj.metadata.lookup_key) : null;
-    if (obj.metadata?.app === app && obj.metadata?.mode === "lifetime" && obj.id && match) {
+    // A refund can arrive before this event (out of order): never grant a purchase that was already refunded.
+    if (obj.id && (await db.hasStripeEvent(`refunded:${obj.id}`))) log.warn("pi_already_refunded", { code: "refunded_first" });
+    else if (obj.metadata?.app === app && obj.metadata?.mode === "lifetime" && obj.id && match) {
       await db.setEntitlement(orgId, lifetimeEntitlement(match.plan.id, obj.id, now));
       await deps.onChange?.(orgId, event.type);
     } else if (plan) log.debug("pi_ignored", { code: "not_lifetime" });
@@ -67,6 +69,7 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   }
 
   if (event.type === "charge.refunded" && obj.refunded) {
+    if (obj.payment_intent) await db.markStripeEvent(`refunded:${obj.payment_intent}`, "refund_marker");
     // C-27: a FULL refund ends the paid plan. Lifetime: drop it; subscription: cancel now. Partial refunds ignored.
     if (prev?.status === "lifetime" && prev.lifetimePaymentIntentId === obj.payment_intent) {
       await db.setEntitlement(orgId, { ...NONE(now), trialUsed: true });
@@ -85,7 +88,7 @@ export async function handleStripeWebhook(rawBody: string, signature: string | n
   if (relevant) {
     await db.setEntitlement(orgId, await computeEntitlement(stripe, app, customerId, prev?.status === "lifetime" ? prev : null, now));
     await deps.onChange?.(orgId, event.type);
-  }
+  } else log.info("stripe_event_ignored", { code: "unhandled_type", type: event.type });
   await db.markStripeEvent(event.id, event.type); // only after success
   return json({ received: true });
 }

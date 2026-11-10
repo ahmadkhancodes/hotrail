@@ -41,8 +41,8 @@
   --action: var(--accent-500);
   --action-hover: var(--accent-600);
   --action-text: #ffffff;
-  --focus: var(--amber-500);
-  --success: #2e9e5b; /* the go lamp */
+  --focus: #1f5fd1; /* 5.6:1 on white (WCAG 1.4.11) */
+  --success: #1f7a45; /* the go lamp; 5.4:1 on white */
   --success-surface: #e8f5ed;
   --warning: #8a5a00;
   --warning-surface: #fdf3da;

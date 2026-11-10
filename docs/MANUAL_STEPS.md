@@ -60,3 +60,8 @@
     - Point uptime probes at `/api/health`. It now returns 503 when the database is unreachable.
     - App id release requests: if a former customer (deleted account) or a rightful owner asks for an app id back, delete `ptr/<appId>/index.json` in the `hotrail-bundles` bucket after checking ownership: https://dash.cloudflare.com/?to=/:account/r2/default/buckets/hotrail-bundles
     - Copy decisions you may want to revisit: SSO is labelled "coming in v1" on the Team plan; the Appflow offer was removed; the hero line "same core features as Capgo" is still there and is a P1 in REVIEW (P1-22).
+
+14. **Launch hardening follow-ups** (2026-11-10)
+    - Run `npm run db:indexes` once if you do not want to wait for the auto index run (new Better Auth indexes).
+    - Signing keys: the first signed upload of an app now needs an all-scope API key. Tell CI users who only hold upload keys to register the key once with an all-scope key.
+    - Still needs you: P1-18 (set `DB_DRIVER` on every Vercel env), P1-22 (hero/FAQ copy decision), first plugin CI run (P1-12), and a Resend dashboard check that the sending domain is verified (rejected mail is now only logged, as `mail_send_failed`).
