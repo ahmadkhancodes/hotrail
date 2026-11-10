@@ -48,7 +48,7 @@ export const terms: LegalDoc = {
       title: "Cancellation and refunds",
       body: [
         "You can cancel anytime from the customer portal in Settings, then Billing. Your plan stays active until the end of the period you paid for.",
-        "Refunds: {{refund policy}}",
+        "Refunds: a new paid plan can be refunded in full within 14 days of the first payment, on request to contact@buffersoltech.com. After that, fees already paid for a billing period are not refunded, except where the law requires it. You can cancel at any time and the plan stays active until the end of the paid period.",
       ],
     },
     {
@@ -82,7 +82,7 @@ export const terms: LegalDoc = {
       id: "liability",
       title: "Limit of liability",
       body: [
-        `To the extent the law allows, our total liability for any claim is limited to {{cap}}. We are not liable for indirect or consequential loss, such as lost profit. Nothing here limits liability that cannot be limited by law.`,
+        `To the extent the law allows, our total liability for any claim is limited to the fees you paid us in the 12 months before the claim arose. We are not liable for indirect or consequential loss, such as lost profit. Nothing here limits liability that cannot be limited by law.`,
       ],
     },
     {
