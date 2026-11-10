@@ -7,6 +7,7 @@ import {
   type FaqItem, type Step,
 } from "@/components/marketing";
 import { capgoCheckedOn } from "@/content/compare";
+import { ogImages, twitterImages } from "@/lib/seo";
 import { freePlan, product } from "@/config/product";
 
 const TITLE = `${product.fullName}: live updates for Capacitor apps`;
@@ -19,10 +20,11 @@ export const metadata: Metadata = {
   title: { absolute: TITLE },
   description: DESCRIPTION,
   alternates: { canonical: "/" },
-  openGraph: { title: TITLE, description: DESCRIPTION, url: "/" },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: "/", images: ogImages() },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION, images: twitterImages() },
 };
 
-const linkClass = "rounded-sm underline underline-offset-4 hover:text-action focus-visible:focus-ring";
+const linkClass = "rounded-sm max-md:inline-block max-md:min-h-6 underline underline-offset-4 hover:text-action focus-visible:focus-ring";
 
 function Terminal({ children }: { children: string }) {
   return (

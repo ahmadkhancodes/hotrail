@@ -21,12 +21,12 @@ export default function DocsIndexPage() {
         {docGroups.map((g) => (
           <section key={g.title} aria-labelledby={`g-${g.title}`} className="flex flex-col gap-4">
             <h2 id={`g-${g.title}`} className="title-2 text-text">{g.title}</h2>
-            <ul className="grid gap-4 md:grid-cols-2">
+            <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {g.docs.map((d) => (
                 <li key={d.slug}>
                   <Link
                     href={`/docs/${d.slug}`}
-                    className="flex h-full flex-col gap-1 rounded-md border border-border bg-surface p-4 hover:bg-surface-raised focus-visible:focus-ring"
+                    className="flex h-full min-w-0 flex-col gap-1 break-words rounded-md border border-border bg-surface p-4 hover:bg-surface-raised focus-visible:focus-ring"
                   >
                     <span className="title-3 text-text">{d.title}</span>
                     <span className="body-6 text-text-subtle">{d.description}</span>

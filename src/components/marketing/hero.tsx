@@ -33,7 +33,7 @@ export function Hero({ title, subtitle, primaryCta, secondaryCta, command, proof
             <p className="caption-2 text-text-subtle">
               {proof}
               {secondaryCta ? (
-                <> <Link href={secondaryCta.href} className="rounded-sm underline underline-offset-4 hover:text-text focus-visible:focus-ring">{secondaryCta.label}</Link></>
+                <> <Link href={secondaryCta.href} className="rounded-sm max-md:inline-block max-md:min-h-6 underline underline-offset-4 hover:text-text focus-visible:focus-ring">{secondaryCta.label}</Link></>
               ) : null}
             </p>
             {note ? <div className="rounded-sm border border-border bg-surface-sunken p-4 body-6 text-text">{note}</div> : null}
