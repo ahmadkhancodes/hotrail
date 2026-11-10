@@ -1,7 +1,7 @@
 import { after } from "next/server";
 import { NO_UPDATE } from "@buffersol/hotrail-core";
 import { checkUpdate } from "@/lib/hotpath/check";
-import { storePointerReader } from "@/lib/ship/device";
+import { cachedPointerReader } from "@/lib/ship/device";
 import { shipDeps } from "@/lib/ship/context";
 import { recordActiveDevice } from "@/lib/ship/metering";
 import { getStore } from "@/lib/storage";
@@ -22,6 +22,13 @@ function seenThisMonth(b: { app_id?: unknown; device_id?: unknown }): boolean {
   return false;
 }
 
+let cached: { store: unknown; reader: ReturnType<typeof cachedPointerReader> } | null = null;
+async function reader() {
+  const store = await getStore();
+  if (cached?.store !== store) cached = { store, reader: cachedPointerReader(store) };
+  return cached.reader;
+}
+
 const headers = { "content-type": "application/json", "cache-control": "no-store" };
 
 /** @capgo/capacitor-updater `updateUrl`. Any error is "no update" with HTTP 200. */
@@ -32,7 +39,7 @@ export async function POST(req: Request) {
     after(async () => {
       if (!seenThisMonth(body)) await recordActiveDevice(await shipDeps(), body.app_id, body.device_id).catch(() => undefined);
     });
-    return new Response(JSON.stringify(await checkUpdate(storePointerReader(await getStore()), body)), { status: 200, headers });
+    return new Response(JSON.stringify(await checkUpdate(await reader(), body)), { status: 200, headers });
   } catch {
     return new Response(JSON.stringify(NO_UPDATE), { status: 200, headers });
   }

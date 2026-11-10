@@ -105,9 +105,11 @@ describe("CLI against the in-process API (memory store)", () => {
   it("an upload only key can upload but not release; a read key can only read", async () => {
     const h = harness();
     const cwd = project("1.0.0");
-    await runner(cwd, h).run("init");
+    const admin = runner(cwd, h);
+    await admin.run("init");
+    expect(await admin.run("upload")).toBe(0); // the first signed upload registers the key and needs the all scope
     const up = runner(cwd, h, "upload");
-    expect(await up.run("upload")).toBe(0);
+    expect(await up.run("upload", "--version", "1.0.1")).toBe(0);
     expect(await up.run("release", "--channel", "production", "--bundle", "1A00")).toBe(1);
     expect(up.err.join("\n")).toContain("insufficient_scope");
     expect(await up.run("status")).toBe(1);

@@ -51,7 +51,7 @@ export async function emitEvent(orgId: string, event: string, data: unknown, opt
 export async function attemptDelivery(
   d: WebhookDelivery,
   ep: WebhookEndpoint,
-  opts: { db: Db; fetchFn?: typeof fetch; now?: Date },
+  opts: { db: Db; fetchFn?: typeof fetch; now?: Date; resolveCheck?: (url: string) => Promise<boolean> },
 ): Promise<WebhookDelivery> {
   const now = opts.now ?? new Date();
   const fetchFn = opts.fetchFn ?? fetch;
@@ -59,6 +59,9 @@ export async function attemptDelivery(
   let code: number | null = null;
   let error: string | null = null;
   try {
+    // Real sends re-check the resolved address; tests that inject fetchFn opt in with resolveCheck.
+    const check = opts.resolveCheck ?? (opts.fetchFn ? null : resolvesToPublicHost);
+    if (check && !(await check(ep.url))) throw Object.assign(new Error("blocked"), { name: "BlockedError" });
     const ctrl = AbortSignal.timeout(10_000);
     const res = await fetchFn(ep.url, {
       method: "POST",
@@ -76,7 +79,7 @@ export async function attemptDelivery(
     code = res.status;
     if (!res.ok) error = `http_${res.status}`;
   } catch (e) {
-    error = (e as Error).name === "TimeoutError" ? "timeout" : "network_error";
+    error = (e as Error).name === "TimeoutError" ? "timeout" : (e as Error).name === "BlockedError" ? "blocked_address" : "network_error";
   }
   const ok = !error;
   const patch: Partial<WebhookDelivery> = {
@@ -109,6 +112,30 @@ export async function retryDueDeliveries(opts: { db?: Db; fetchFn?: typeof fetch
   return { processed: due.length, succeeded: ok };
 }
 
+/** True for loopback, private, link-local, CGNAT, unspecified and multicast addresses (v4, v6 and v4-mapped v6). */
+export function isPrivateIp(ip: string): boolean {
+  const a = ip.toLowerCase().replace(/^\[|\]$/g, "");
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(a);
+  if (mapped) return isPrivateIp(mapped[1]!);
+  const m = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(a);
+  if (m) {
+    const [x, y] = [Number(m[1]), Number(m[2])];
+    return x === 0 || x === 10 || x === 127 || x >= 224 || (x === 100 && y >= 64 && y <= 127) || (x === 169 && y === 254) ||
+      (x === 172 && y >= 16 && y <= 31) || (x === 192 && y === 168) || (x === 192 && y === 0) || (x === 198 && (y === 18 || y === 19));
+  }
+  if (a.includes(":")) return a === "::" || a === "::1" || /^f[cd]/.test(a) || /^fe[89ab]/.test(a) || a.startsWith("ff");
+  return true; // not an IP literal: treat as unsafe
+}
+
+/** Resolve the host at send time (defeats DNS names that point inward and rebinding after the save-time check). */
+export async function resolvesToPublicHost(raw: string): Promise<boolean> {
+  const host = new URL(raw).hostname.replace(/^\[|\]$/g, "");
+  if (/^[\d.]+$/.test(host) || host.includes(":")) return !isPrivateIp(host);
+  const { lookup } = await import("node:dns/promises");
+  const addrs = await lookup(host, { all: true });
+  return addrs.length > 0 && addrs.every((x) => !isPrivateIp(x.address));
+}
+
 /** Block private/loopback targets (SSRF) for user-supplied webhook URLs. */
 export function isSafeWebhookUrl(raw: string): boolean {
   let u: URL;
@@ -116,7 +143,7 @@ export function isSafeWebhookUrl(raw: string): boolean {
   if (u.protocol !== "https:" && !(process.env.NODE_ENV !== "production" && u.protocol === "http:")) return false;
   const h = u.hostname.toLowerCase();
   if (h === "localhost" || h.endsWith(".localhost") || h.endsWith(".internal") || h.endsWith(".local")) return false;
-  if (/^(127\.|10\.|192\.168\.|169\.254\.|0\.)/.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h)) return false;
+  if (/^[\d.]+$/.test(h) && isPrivateIp(h)) return false;
   if (h.startsWith("[") || h === "::1") return false;
   return true;
 }

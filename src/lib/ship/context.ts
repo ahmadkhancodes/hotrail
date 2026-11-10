@@ -7,7 +7,7 @@ import { can } from "@/lib/auth/roles";
 import { assertSameOrigin, HttpError } from "@/lib/http";
 import { enforceRateLimit, RULES } from "@/lib/security/ratelimit";
 import { getStore } from "@/lib/storage";
-import { sendMail } from "@/lib/mail";
+import { sendMailSafe } from "@/lib/mail";
 import { log } from "@/lib/logger";
 import { createNotifier } from "@/lib/notify";
 import { authRecipients } from "@/lib/notify/recipients";
@@ -34,7 +34,7 @@ export async function shipDeps(): Promise<ShipDeps> {
     now: () => new Date(),
     uploadSecret: uploadSecret(),
     baseUrl: appUrl(),
-    notify: createNotifier({ db, recipients: authRecipients, send: (m) => sendMail(m), baseUrl: appUrl(), log: (m, meta) => log.warn(m, meta) }),
+    notify: createNotifier({ db, recipients: authRecipients, send: (m) => sendMailSafe(m), baseUrl: appUrl(), log: (m, meta) => log.warn(m, meta) }),
   };
 }
 

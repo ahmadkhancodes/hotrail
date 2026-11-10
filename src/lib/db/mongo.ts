@@ -292,6 +292,13 @@ export async function ensureIndexes(uri: string, dbName: string, opts: { toleran
   await d.collection("member").createIndex({ organizationId: 1, userId: 1 }, { unique: true });
   await d.collection("organization").createIndex({ slug: 1 }, { unique: true });
   await d.collection("apikey").createIndex({ key: 1 });
+  await d.collection("session").createIndex({ userId: 1 });
+  await d.collection("account").createIndex({ userId: 1 });
+  await d.collection("invitation").createIndex({ organizationId: 1, email: 1 });
+  await d.collection("twoFactor").createIndex({ userId: 1 });
+  await d.collection("passkey").createIndex({ userId: 1 });
+  await d.collection("apikey").createIndex({ referenceId: 1 });
+  await d.collection("rateLimit").createIndex({ key: 1 }); // lastRequest is a number, so no TTL index is possible
   await ensureShipIndexes(d);
   return DELIVERY_TTL_DAYS;
 }

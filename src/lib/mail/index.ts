@@ -1,6 +1,7 @@
 import { product } from "@/config/product";
 import { appUrl, env } from "@/lib/env";
 import { getDb } from "@/lib/db";
+import { log } from "@/lib/logger";
 import { hmacSha256Hex } from "@/lib/ids";
 import { consoleTransport, resendTransport, smtpTransport } from "./transports";
 import type { MailMessage, MailTransport, SendResult } from "./types";
@@ -46,4 +47,17 @@ export async function sendMail(msg: MailMessage, transport: MailTransport = tran
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
   return transport.send({ ...wire, headers, from: msg.from ?? env().MAIL_FROM ?? product.mailFrom });
+}
+
+/**
+ * For request handlers: a provider rejection (bad address, rate limit, outage) must not 500 the request or leak
+ * provider details. Logs the status code only (never the address or provider body).
+ */
+export async function sendMailSafe(msg: MailMessage, transport?: MailTransport): Promise<SendResult | null> {
+  try {
+    return await sendMail(msg, transport);
+  } catch (e) {
+    log.warn("mail_send_failed", { code: /mail_send_failed_\d+/.exec((e as Error).message)?.[0] ?? "send_error" });
+    return null;
+  }
 }

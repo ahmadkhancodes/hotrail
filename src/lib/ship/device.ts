@@ -14,6 +14,24 @@ export const storePointerReader = (store: Pick<BundleStore, "get">): PointerRead
   readJson: <T,>(key: string) => getJson<T>(store as BundleStore, key),
 });
 
+/** Hot path reader: short in-process cache (a few seconds) so repeated checks skip R2; a pause reaches devices within the TTL. */
+export function cachedPointerReader(store: Pick<BundleStore, "get">, ttlMs = 3000, now: () => number = Date.now): PointerReader {
+  const inner = storePointerReader(store);
+  const memo = new Map<string, { at: number; v: Promise<unknown> }>();
+  return {
+    readJson: <T,>(key: string) => {
+      const t = now();
+      const hit = memo.get(key);
+      if (hit && t - hit.at < ttlMs) return hit.v as Promise<T | null>;
+      const v = inner.readJson<T>(key);
+      memo.set(key, { at: t, v });
+      if (memo.size > 5000) memo.clear();
+      v.catch(() => { if (memo.get(key)?.v === v) memo.delete(key); }); // never cache a failure
+      return v;
+    },
+  };
+}
+
 export interface StatsBeacon {
   action?: string;
   app_id?: string;
