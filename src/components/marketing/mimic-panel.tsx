@@ -38,16 +38,16 @@ export function MimicPanel() {
     <figure className="m-0 rounded-md border border-border bg-panel p-4 text-panel-ink">
       <figcaption className="flex items-center justify-between gap-4 pb-2 caption-5 text-panel-dim">
         <span><b className="font-bold text-panel-ink">production</b> · com.example.ordering</span>
-        <span className="font-mono">Demo data</span>
+        <span className="font-mono">Example channel</span>
       </figcaption>
-      <svg className="hidden w-full md:block" viewBox="0 0 640 250" role="img" aria-label="Sample signal box panel with three tracks: production, beta and staging. Bundle 2K47 moves onto production while the signal turns amber at 25 percent.">
+      <svg className="hidden w-full md:block" viewBox="0 0 640 250" role="img" aria-label="Example signal box panel with three tracks: production, beta and staging. Bundle 2K47 moves onto production while the signal turns amber at 25 percent.">
         <Track y={60} label="PRODUCTION" plates={[{ x: 150, code: "2K46" }, { x: 400, code: "2K47", run: true }]} />
         <Track y={140} label="BETA" plates={[{ x: 200, code: "2K47" }]} />
         <Track y={220} label="STAGING" plates={[{ x: 250, code: "2K48" }]} />
         <Signal y={60} />
         <text className="mm-label" x={604} y={100} textAnchor="middle">25%</text>
       </svg>
-      <svg className="w-full md:hidden" viewBox="0 0 640 100" role="img" aria-label="Sample production track. Bundle 2K47 at a 25 percent rollout, signal amber.">
+      <svg className="w-full md:hidden" viewBox="0 0 640 100" role="img" aria-label="Example production track. Bundle 2K47 at a 25 percent rollout, signal amber.">
         <Track y={60} label="PRODUCTION" plates={[{ x: 150, code: "2K46" }, { x: 400, code: "2K47", run: true }]} />
         <Signal y={60} />
       </svg>
