@@ -8,6 +8,7 @@ import { DELIVERY_TTL_DAYS, type AuditEntry, type BillingAccount, type Db, type 
 
 declare global {
   var __kitMongo: { uri: string; client: Promise<MongoClient> } | undefined;
+  var __kitIndexes: Map<string, Promise<void>> | undefined;
 }
 
 /** Fail fast: a Mongo outage must not hang the console for 8 s per request. */
@@ -27,7 +28,11 @@ type WithId<T> = T & { _id: string };
 
 export function createMongoDb(uri: string, dbName: string, app: string): Db {
   let dbp: Promise<MongoDatabase> | null = null;
-  const db = () => (dbp ??= mongoClient(uri).then((c) => c.db(dbName)));
+  const db = () =>
+    (dbp ??= mongoClient(uri).then((c) => {
+      autoEnsureIndexes(`${uri}|${dbName}`, () => ensureIndexes(uri, dbName, { tolerant: true }));
+      return c.db(dbName);
+    }));
   const col = async <T extends Document>(name: string) => (await db()).collection<T>(name) as unknown as Collection<T>;
   const strip = <T>(d: (T & { _id?: unknown; app?: string }) | null): T | null => {
     if (!d) return null;
@@ -210,9 +215,64 @@ export function createMongoDb(uri: string, dbName: string, app: string): Db {
   };
 }
 
-/** Indexes, created once by scripts/ensure-indexes.ts (never per cold start). TTLs are on Date fields. */
-export async function ensureIndexes(uri: string, dbName: string) {
-  const d = (await mongoClient(uri)).db(dbName);
+/** Never during `next build` (no DB there, and builds must not touch production). */
+function isBuildPhase() {
+  return process.env.NEXT_PHASE === "phase-production-build";
+}
+
+function scrub(e: unknown) {
+  const m = e instanceof Error ? e.message : String(e);
+  return m.replace(/mongodb(\+srv)?:\/\/\S+/gi, "mongodb://***").slice(0, 200);
+}
+
+/**
+ * Runs `run` once per server instance (memoized per key on globalThis), fire and forget: it never blocks or fails
+ * the caller, and a failure only logs a scrubbed warning (the next cold start retries). Skipped during build.
+ */
+export function autoEnsureIndexes(key: string, run: () => Promise<unknown>): Promise<void> | undefined {
+  if (isBuildPhase()) return undefined;
+  const m = (globalThis.__kitIndexes ??= new Map());
+  const existing = m.get(key);
+  if (existing) return existing;
+  const p = Promise.resolve()
+    .then(run)
+    .then(() => undefined)
+    .catch((e) => {
+      console.warn(`[db] ensureIndexes failed (will retry on next cold start): ${scrub(e)}`);
+    });
+  m.set(key, p);
+  return p;
+}
+
+/** Index conflict codes: 85 IndexOptionsConflict, 86 IndexKeySpecsConflict (same keys, other options / same name). */
+const CONFLICT_CODES = new Set([85, 86]);
+
+/** Wraps a Db so a conflicting existing index is logged and skipped instead of aborting the rest. */
+function tolerantDb(d: MongoDatabase): MongoDatabase {
+  return {
+    collection: (name: string) => {
+      const c = d.collection(name);
+      return {
+        createIndex: async (...args: Parameters<typeof c.createIndex>) => {
+          try {
+            return await c.createIndex(...args);
+          } catch (e) {
+            if (CONFLICT_CODES.has((e as { code?: number }).code ?? 0)) {
+              console.warn(`[db] index conflict on ${name}, left as is: ${scrub(e)}`);
+              return "";
+            }
+            throw e;
+          }
+        },
+      };
+    },
+  } as unknown as MongoDatabase;
+}
+
+/** Indexes: created lazily once per instance on first connection (see autoEnsureIndexes) and by `npm run db:indexes`. TTLs are on Date fields. */
+export async function ensureIndexes(uri: string, dbName: string, opts: { tolerant?: boolean } = {}) {
+  const raw = (await mongoClient(uri)).db(dbName);
+  const d = opts.tolerant ? tolerantDb(raw) : raw;
   await d.collection("billing_accounts").createIndex({ app: 1, stripeCustomerId: 1 }, { unique: true, partialFilterExpression: { stripeCustomerId: { $type: "string" } } });
   await d.collection("stripe_events").createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 });
   await d.collection("rate_limits").createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 });

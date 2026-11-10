@@ -67,3 +67,4 @@ Standing decisions are in docs/factory/BATCH1_PLAN.md (Mongo instead of Postgres
   - The legal placeholders stay owner items (MANUAL_STEPS 9).
 - M5: **API key roles.** Owner and admin get `apiKey:create/update/delete` because Better Auth's api-key plugin checks those actions. Members only read, and viewers have no access.
 - M5: **`/api/health`** does one indexed read with a 2 s timeout and returns 503 when the DB fails. The update check stays independent of the DB.
+- M5: **Indexes on first connection.** Memoized per instance on globalThis, not awaited by requests (health stays fast), never at build or import, index conflict codes 85/86 are logged and skipped, other errors are warned and retried on the next cold start.
