@@ -40,6 +40,7 @@ export default async function BillingPage({ searchParams }: { searchParams: SP }
         usage={usage}
         preselect={wanted && wanted.id !== "free" ? { plan: wanted.id, interval: one(sp.interval) === "month" ? "month" : "year" } : null}
         returnedSession={one(sp.session_id) ?? null}
+        checkoutCanceled={one(sp.checkout) === "canceled"}
       />
       <div className="pt-6">
         <LimitsPanel

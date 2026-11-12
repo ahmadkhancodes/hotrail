@@ -133,11 +133,11 @@ function Inspector({
   }
 
   if (!bundle) {
-    return <aside aria-label="Bundle detail" className="border border-border bg-surface p-4 body-6 text-text-subtle">Select a channel or a bundle to see its rollout.</aside>;
+    return <aside id="bundle-inspector" aria-label="Bundle detail" className="border border-border bg-surface p-4 body-6 text-text-subtle">Select a channel or a bundle to see its rollout.</aside>;
   }
   const l = ch ? LAMP[ch.lamp] : null;
   return (
-    <aside aria-label={`Bundle ${bundle.headcode} detail`} className="flex flex-col gap-4 self-start border border-rule bg-surface p-4">
+    <aside id="bundle-inspector" aria-label={`Bundle ${bundle.headcode} detail`} className="flex flex-col gap-4 self-start border border-rule bg-surface p-4">
       <h3 className="flex items-center gap-3 heading-6 text-text"><Plate code={bundle.headcode} /> {ch ? "Rollout" : "Bundle"}</h3>
       <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 body-6">
         <dt className="text-text-subtle">Channel</dt><dd className="m-0 text-right">{ch ? ch.name : "not live"}</dd>
@@ -290,6 +290,13 @@ export function LineView({ bundleId, initial, canWrite }: { bundleId: string; in
     return () => { alive.current = false; clearInterval(t); document.removeEventListener("visibilitychange", tick); };
   }, [load]);
 
+  /** Below xl the inspector sits under the tables: bring it into view so a tap on a channel or bundle visibly does something. */
+  const showInspector = useCallback(() => {
+    if (window.matchMedia("(min-width: 1280px)").matches) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(() => document.getElementById("bundle-inspector")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }), 0);
+  }, []);
+
   const bundle = useMemo(() => {
     if (!data) return null;
     const byId = data.bundles.find((b) => b.id === selectedBundle);
@@ -326,8 +333,8 @@ export function LineView({ bundleId, initial, canWrite }: { bundleId: string; in
       </p>
       <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <Tracks channels={data.channels} selected={bundle ? data.channels.find((c) => c.headcode === bundle.headcode && (selectedChannel ? c.id === selectedChannel : true))?.id ?? null : null} onSelect={(c) => { setSelectedChannel(c.id); setSelectedBundle(null); }} />
-          <BundlesTable bundles={data.bundles} selected={bundle?.id ?? null} onSelect={(b) => { setSelectedBundle(b.id); setSelectedChannel(null); }} />
+          <Tracks channels={data.channels} selected={bundle ? data.channels.find((c) => c.headcode === bundle.headcode && (selectedChannel ? c.id === selectedChannel : true))?.id ?? null : null} onSelect={(c) => { setSelectedChannel(c.id); setSelectedBundle(null); showInspector(); }} />
+          <BundlesTable bundles={data.bundles} selected={bundle?.id ?? null} onSelect={(b) => { setSelectedBundle(b.id); setSelectedChannel(null); showInspector(); }} />
           <AdoptionChart bundleId={data.app.bundleId} />
           {data.releases.length ? (
             <section aria-labelledby="rel-h">

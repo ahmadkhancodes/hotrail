@@ -30,3 +30,21 @@ Method: production build (`next start`), `DB_DRIVER=memory`, `E2E_OUTBOX=1`, con
 
 ## Battle hardening (2026-11-12)
 Fixed: blob PUT signature-before-body, case-folded manifest paths. Verified by unit tests only; browser CSP run, tenant isolation e2e, Stripe replay e2e and resilience e2e remain open.
+
+## Post-redesign regression pass (2026-11-12, after dark-mode removal, "departure board" redesign, hardening)
+Specs: `tests/e2e/qa2/{public,app}.spec.ts`, `tests/e2e/qa2/probe.ts` (in-page audit), unit `tests/unit/qa2-regressions.test.ts`. Run against `next start` with the memory DB and outbox mail, light only, 375 and 1440.
+
+**Journeys covered:** public pages (/, /pricing, docs index + three docs, compare, both legal pages, sign-in, two-factor, 404) audited for brand fonts (Jost / Albert Sans / DM Mono only), horizontal scroll, clipped text, WCAG text contrast (computed against the real background), console, CSP and hydration errors; every enabled button on /, /pricing, /docs, /compare/capgo and /sign-in clicked and checked for an observable effect; signed in as a free user with two apps: all ten dashboard screens audited the same way, every button clicked, Escape closes every dialog it opens; phone Line view selection; checkout return (canceled, success without a session); sign-in lands on the page asked for; sign-out returns home and the dashboard is closed again; device lookup; OG image and icons answer 200. The earlier `qa/` specs (forms, limits, orgs, webhooks, access, a11y) were re-run unchanged and are green. No old brand colours, fonts or dark-mode code found in src, e-mails, OG image or legal/docs pages (also enforced by `design-system` and `no-dark-mode` unit tests).
+
+**Defects found and fixed**
+1. **Root error page (`global-error.tsx`) lost the brand fonts.** It replaces the root layout, so the font CSS variables were never set and it rendered in the system font. It now sets them.
+2. **Phone: tapping a channel or bundle in the Line view appeared to do nothing**: the inspector (rollout, Raise, Pause, Rollback) sits below the tables on screens under 1280px. Selection now scrolls it into view (respects reduced motion). Test: `qa2/app` "phone: choosing a channel or bundle…".
+3. **Returning from Stripe Checkout with Cancel showed no feedback.** `/app/billing?checkout=canceled` now says "Checkout canceled. Nothing was charged."
+4. **Devices "Look up" was disabled with no reason** (open item from the first QA pass): it now has a title saying what to enter first.
+
+**Checked, no defect:** sign-in `next` preserved, no open redirect; checkout answers 503 `payments_disabled` while Stripe is not connected and the UI shows the calm notice (the console watcher in `qa2/app` allows exactly that 503); the Monthly/Annual toggle, Line view channel buttons and Refresh are idempotent when already selected / no new data, so the click crawler skips them on purpose; plan numbers on the pricing page come from `src/config/product.ts`; no invented logos, counts or testimonials found in marketing copy.
+
+**Open**
+- **Low:** the click crawler cannot tell a no-op from a visual-only effect (e.g. a Copy button whose feedback is a tooltip), so Copy buttons are covered by the `qa/marketing` spec only.
+- **Not testable here:** real Stripe checkout and return with a session, passkey/TOTP ceremonies, native plugin on devices, Vercel Analytics (404s locally).
+- Earlier open items about sign-in rate-limit wording and the shared-IP limit are unchanged.

@@ -40,7 +40,7 @@ export function DeviceLookup({ bundleId, initialQuery, retentionDays }: { bundle
             <Input id="device-q" name="q" value={q} onChange={(e) => setQ(e.target.value)} autoComplete="off" spellCheck={false} placeholder="5f1c2d3e-… or user-8841" />
           </Field>
         </div>
-        <Button type="submit" loading={state.status === "loading"} disabled={!q.trim()}>Look up</Button>
+        <Button type="submit" loading={state.status === "loading"} disabled={!q.trim()} title={q.trim() ? undefined : "Enter a device id or custom id first"}>Look up</Button>
       </form>
 
       {state.status === "error" ? <Notice tone="danger" title={state.message} /> : null}

@@ -1,10 +1,11 @@
 "use client";
 import "./globals.css";
+import { display, mono, sans } from "./fonts";
 
 /** Last-resort boundary: replaces the root layout, so it carries its own html/body and plain tokens. */
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
       <body className="min-h-dvh bg-surface text-text">
         <main id="main" className="mx-auto flex min-h-dvh max-w-xl flex-col items-start justify-center gap-4 px-4">
           <h1 className="heading-5">Something broke on our side</h1>
