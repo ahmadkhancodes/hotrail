@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ButtonLink } from "@/components/ui/button";
+import { SessionButtonLink } from "./session-link";
 import { Container } from "@/components/ui/layout";
 
 export interface HeroProps {
@@ -30,7 +30,7 @@ export function Hero({ title, subtitle, primaryCta, secondaryCta, command, proof
           <p className="body-3 text-text-subtle lg:col-span-5">{subtitle}</p>
           <div className="flex min-w-0 flex-col items-start gap-4 lg:col-span-6 lg:col-start-7">
             <div className="flex w-full flex-wrap items-center gap-3">
-              <ButtonLink href={primaryCta.href} size="lg">{primaryCta.label}</ButtonLink>
+              <SessionButtonLink href={primaryCta.href} label={primaryCta.label} />
               {command}
             </div>
             <p className="caption-2 text-text-subtle">
