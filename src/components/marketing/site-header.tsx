@@ -10,7 +10,13 @@ import { APP_HOME } from "@/lib/marketing/session-cta";
 
 const STAGGER_MS = 60;
 
-/** Flat timetable bar: full width, hairline below, current page underlined in ink. Mobile: full-height panel, staggered links (60ms, 24px rise, <= 400ms total). */
+const STAGGER_CAP_MS = 400;
+
+/**
+ * B7 navigation: a compact timetable bar floating 8px off the top edge, sized to the content column, on a translucent
+ * white surface over a background blur; square corners like the rest of the board. Current page underlined in ink.
+ * Mobile: full height panel (base surface at 95% with a strong blur), staggered links (60ms step, 400ms cap, 24px rise).
+ */
 export function SiteHeader() {
   const pathname = usePathname();
   const signedIn = useSignedIn();
@@ -80,8 +86,8 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border bg-surface">
-      <div className="relative z-50 mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-4 py-2 sm:px-6 lg:px-8">
+    <header className="fixed inset-x-0 top-2 z-50 px-2 sm:px-4">
+      <div className="relative z-50 mx-auto flex w-full max-w-6xl items-center justify-between gap-4 border border-border bg-surface/80 px-2 py-0.5 backdrop-blur-md sm:px-4">
         <Link href="/" className="inline-flex min-h-11 items-center gap-2 rounded-sm text-text focus-visible:focus-ring" aria-label={`${product.fullName} home`}>
           <span aria-hidden className="inline-block h-3 w-4 border-y-4 border-action" />
           <span className="heading-6">{product.name}</span><span className="caption-5 hidden text-text-subtle sm:inline">by BufferSol</span>
@@ -106,8 +112,8 @@ export function SiteHeader() {
             className="inline-flex size-11 items-center justify-center rounded-sm text-text transition-colors duration-300 ease-out-kit hover:bg-surface-sunken focus-visible:focus-ring md:hidden"
           >
             <span aria-hidden className="relative block size-6">
-              <span className={cn("absolute left-1 right-1 top-2 h-0.5 rounded-sm bg-current transition-transform duration-300 ease-out-kit", open && "translate-y-1 rotate-45")} />
-              <span className={cn("absolute bottom-2 left-1 right-1 h-0.5 rounded-sm bg-current transition-transform duration-300 ease-out-kit", open && "-translate-y-1 -rotate-45")} />
+              <span className={cn("absolute left-1 right-1 top-2 h-0.5 rounded-sm bg-current transition-transform duration-500 ease-out-kit", open && "translate-y-1 rotate-45")} />
+              <span className={cn("absolute bottom-2 left-1 right-1 h-0.5 rounded-sm bg-current transition-transform duration-500 ease-out-kit", open && "-translate-y-1 -rotate-45")} />
             </span>
           </button>
         </div>
@@ -121,7 +127,7 @@ export function SiteHeader() {
         aria-label="Menu"
         inert={!open}
         className={cn(
-          "fixed inset-0 z-40 flex flex-col bg-surface px-4 pt-20 transition-[opacity,visibility] duration-200 ease-out-kit md:hidden",
+          "fixed inset-0 z-40 flex h-dvh flex-col bg-surface/95 px-4 pt-24 backdrop-blur-xl transition-[opacity,visibility] duration-300 ease-out-kit md:hidden",
           open ? "visible opacity-100" : "invisible opacity-0",
         )}
       >
@@ -131,9 +137,9 @@ export function SiteHeader() {
               key={item.label}
               href={item.href}
               onClick={() => setOpenFor(null)}
-              style={{ transitionDelay: open ? `${i * STAGGER_MS}ms` : "0ms" }}
+              style={{ transitionDelay: open ? `${Math.min(i * STAGGER_MS, STAGGER_CAP_MS)}ms` : "0ms" }}
               className={cn(
-                "transition-[opacity,transform] duration-200 ease-out-kit focus-visible:focus-ring",
+                "transition-[opacity,transform] duration-500 ease-out-kit focus-visible:focus-ring",
                 open ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
                 item.kind === "cta"
                   ? cn(buttonClass("primary", "lg"), "mt-8")

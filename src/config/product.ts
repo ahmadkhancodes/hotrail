@@ -50,7 +50,7 @@ export const product = {
   legalEmail: "contact@buffersoltech.com",
   mailFrom: "Hotrail <hello@hotrail.buffersoltech.com>",
   description:
-    "Live updates for Capacitor apps. Push the web layer straight to installed apps with channels, staged rollouts, auto-pause and one-click rollback, with signing on by default and no third party in your update path.",
+    "Live updates for Capacitor apps. Push the web layer straight to installed apps with channels, staged rollouts, auto pause and one click rollback, with signing on by default and no third party in your update path.",
   tagline: "Fix your Capacitor app today. Not after review.",
   /** Legal entity details used by the legal templates. */
   legal: {
@@ -93,10 +93,10 @@ export const product = {
     {
       id: "maker",
       name: "Maker",
-      tagline: "For teams that need rollouts and auto-pause",
+      tagline: "For teams that need rollouts and auto pause",
       prices: [price("maker", "month", 1999), price("maker", "year", 20388)],
       limits: { mau: 10000, storage_gib: 1024, event_days: 60, build_min: 300 },
-      highlights: ["10,000 monthly active users", "Auto-pause rollouts and webhooks", "1 TB fair use storage", "60 day event history", "300 build minutes a month (coming in v1)"],
+      highlights: ["10,000 monthly active users", "Auto pause rollouts and webhooks", "1 TB fair use storage", "60 day event history", "300 build minutes a month (coming in v1)"],
       cta: "Choose Maker",
       featured: true,
       trialDays: 0,
@@ -142,12 +142,12 @@ export type CadenceMode = "daily" | "minute";
 export const CADENCE_MODE: CadenceMode = "daily";
 export const cadenceCopy: Record<CadenceMode, { autopause: string; retries: string; retriesShort: string }> = {
   daily: {
-    autopause: "Auto-pause is evaluated the moment a device reports a failed update, and a daily sweep double-checks every channel.",
+    autopause: "Auto pause is evaluated the moment a device reports a failed update, and a daily sweep checks every channel again.",
     retries: "A failed delivery is retried by our background run at least once a day, up to 8 attempts in total, and you can replay it from the dashboard at any time.",
     retriesShort: "retried at least once a day",
   },
   minute: {
-    autopause: "Auto-pause is evaluated the moment a device reports a failed update, and an evaluator sweeps every channel every minute.",
+    autopause: "Auto pause is evaluated the moment a device reports a failed update, and an evaluator sweeps every channel every minute.",
     retries: "Failed deliveries are retried with backoff at 30 seconds, 2 minutes, 10 minutes, 30 minutes, 1 hour, 3 hours, 6 hours and 12 hours. That is up to 8 attempts. After the last attempt the delivery is marked failed, and you can replay it from the dashboard.",
     retriesShort: "retried with backoff",
   },

@@ -34,7 +34,7 @@ export const comparisons: CompareEntry[] = [
     slug: "capgo",
     competitor: "Capgo",
     title: `${product.name} vs Capgo: live updates for Capacitor`,
-    description: `${product.name} and Capgo compared on price, free plan, rollouts, auto-pause, signing and compliance. Competitor facts checked ${capgoCheckedOn}.`,
+    description: `${product.name} and Capgo compared on price, free plan, rollouts, auto pause, signing and compliance. Competitor facts checked ${capgoCheckedOn}.`,
     headline: `${product.name} vs Capgo`,
     intro: `Both ship the web layer of a Capacitor app to installed devices. ${product.name} lists about half of Capgo's price on every tier and adds a free plan. Capgo is the established option with more certifications. Competitor facts below were checked ${capgoCheckedOn}.`,
     checkedOn: capgoCheckedOn,

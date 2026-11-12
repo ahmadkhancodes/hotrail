@@ -71,10 +71,9 @@ export default function HomePage() {
   return (
     <>
       <Hero
-        title={<>Fix your Capacitor app today. Not after review.</>}
+        title={<>Fix your Capacitor app{" "}<br className="max-sm:hidden" />today. Not after review.</>}
         subtitle="Live updates with staged rollouts, auto pause and one click rollback. Same core features as Capgo at about half the price. Built for US, Canadian and UK mobile teams by BufferSol Technologies."
         primaryCta={{ href: "/sign-in", label: "Start free" }}
-        secondaryCta={{ href: "/docs", label: "Read the docs" }}
         command={<CommandChip command={INIT} />}
         proof={`Free plan, ${freePlan.limits.mau} MAU, no card.`}
         note={
