@@ -21,6 +21,8 @@ interface Props {
   usage: UsageState[];
   preselect: { plan: PlanId; interval: Interval } | null;
   returnedSession: string | null;
+  /** Came back from Stripe Checkout without paying (`?checkout=canceled`). */
+  checkoutCanceled?: boolean;
 }
 
 const money = (cents: number) =>
@@ -89,6 +91,7 @@ export function BillingClient(p: Props) {
 
   return (
     <div className="flex flex-col gap-6">
+      {p.checkoutCanceled && !p.returnedSession ? <Notice title="Checkout canceled">Nothing was charged. Your plan has not changed; pick a plan below whenever you are ready.</Notice> : null}
       {verifying ? <Notice title="Confirming your payment">This takes a few seconds.</Notice> : null}
       {activated ? <Notice tone="success" title="Your plan is active">You are now on {activated}. A receipt is on its way to your email.</Notice> : null}
       {error ? (
