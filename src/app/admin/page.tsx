@@ -4,8 +4,13 @@ import { fmt } from "@/components/app/labels";
 import { Badge } from "@/components/ui/states";
 import { adminOverview } from "@/lib/admin";
 import { getFlags } from "@/lib/flags";
+import { notFound } from "next/navigation";
+import { isFounderAdmin, requireUser } from "@/lib/auth/session";
 
 export default async function AdminPage() {
+  // Checked here too, next to the data: a layout check alone is not a guarantee in the App Router (SECURITY-REVIEW S-9).
+  const s = await requireUser({ redirectTo: "/admin" });
+  if (!isFounderAdmin(s.user.email)) notFound();
   const [totals, flags] = await Promise.all([adminOverview(), getFlags()]);
   const stats = [
     { label: "Users", value: totals.users },

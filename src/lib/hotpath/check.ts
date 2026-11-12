@@ -47,8 +47,9 @@ export async function resolveChannel(reader: PointerReader, req: Pick<UpdateRequ
   if (!SAFE_ID.test(req.app_id ?? "")) return { channelId: null, source: "none", index: null };
   const index = await reader.readJson<PointerIndexLike>(indexKey(req.app_id));
   if (!index || index.v !== 1) return { channelId: null, source: "none", index: null };
-  const ov = req.device_id ? index.overrides?.[req.device_id] : undefined;
-  if (ov) return { channelId: ov, source: "override", index };
+  // Own keys only: "__proto__" or "constructor" as a device id must not resolve to Object.prototype members.
+  const ov = typeof req.device_id === "string" && index.overrides && Object.hasOwn(index.overrides, req.device_id) ? index.overrides[req.device_id] : undefined;
+  if (typeof ov === "string" && ov) return { channelId: ov, source: "override", index };
   const platform = req.platform === "ios" || req.platform === "android" ? req.platform : undefined;
   const def = platform ? index.defaults?.[platform] : (index.defaults?.ios ?? index.defaults?.android);
   return def ? { channelId: def, source: "default", index } : { channelId: null, source: "none", index };

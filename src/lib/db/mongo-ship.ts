@@ -54,6 +54,7 @@ export function createMongoShip(col: Col, app: string): ShipDb & { deleteOrg(org
       return doc;
     },
     async getAppByBundleId(bundleId) {
+      if (typeof bundleId !== "string") return null; // never let an operator object become the filter
       return strip<AppDoc>(await (await apps()).findOne({ app, bundleId }));
     },
     async getAppById(id) {
