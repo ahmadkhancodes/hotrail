@@ -50,7 +50,9 @@ describe("design system", () => {
 
   it("has no gradients, glass, arbitrary type sizes or pill badges", () => {
     for (const [p, s] of files) {
-      expect(s, p).not.toMatch(/bg-gradient|linear-gradient|radial-gradient|backdrop-blur/);
+      expect(s, p).not.toMatch(/bg-gradient|linear-gradient|radial-gradient/);
+      // Glass only on the floating nav (B7: translucent bar over a background blur).
+      if (!p.endsWith("site-header.tsx")) expect(s, p).not.toMatch(/backdrop-blur/);
       expect(s, p).not.toMatch(/\btext-\[\d/);
       expect(s, p).not.toMatch(/rounded-full[^"]*\b(px-|py-)[^"]*caption/);
     }

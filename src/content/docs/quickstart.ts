@@ -33,7 +33,7 @@ plugins: {
     {
       heading: "Initialize the project",
       body: [
-        "Create a key in the dashboard (an empty Line view has a one-click button that fills it into these commands), then run init in your project folder. It finds your appId in the Capacitor config, creates your signing key, prints the exact URLs or plugin setup to paste, and offers migration mode if it sees @capgo/capacitor-updater in package.json.",
+        "Create a key in the dashboard (an empty Line view has a one click button that fills it into these commands), then run init in your project folder. It finds your appId in the Capacitor config, creates your signing key, prints the exact URLs or plugin setup to paste, and offers migration mode if it sees @capgo/capacitor-updater in package.json.",
       ],
       code: { lang: "bash", code: "export HOTRAIL_API_KEY=hr_xxx\nnpx @buffersol/hotrail init" },
     },

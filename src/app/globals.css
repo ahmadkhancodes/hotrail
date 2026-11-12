@@ -145,7 +145,7 @@
 }
 
 /* ---- Named type styles (playbook §5). Use these, never loose size+weight pairs. ---- */
-@utility heading-1 { font-family: var(--font-display-family); font-size: 4rem; line-height: 1; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
+@utility heading-1 { font-family: var(--font-display-family); font-size: 3.75rem; line-height: 1; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
 @utility heading-2 { font-family: var(--font-display-family); font-size: 3rem; line-height: 1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
 @utility heading-3 { font-family: var(--font-display-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
 @utility heading-4 { font-family: var(--font-display-family); font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
@@ -156,6 +156,8 @@
 @utility title-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; }
 @utility title-4 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
 @utility title-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+/* Hero copy width (B5): heading and subheading never wider than 680px. */
+@utility hero-measure { max-width: 680px; }
 @utility body-1 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; text-wrap: pretty; }
 @utility body-2 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; text-wrap: pretty; }
 @utility body-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 400; text-wrap: pretty; }
@@ -171,9 +173,10 @@
 @utility caption-3 { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
 @utility caption-4 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
 @utility caption-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
-/* Departure board numerals (docs/design-brief.md §4): versions and percentages set huge, lining and tabular. */
-@utility numeral-1 { font-family: var(--font-display-family); font-size: 9rem; line-height: 0.82; font-weight: 500; letter-spacing: -0.05em; font-variant-numeric: lining-nums tabular-nums; }
-@utility numeral-2 { font-family: var(--font-display-family); font-size: 5rem; line-height: 0.85; font-weight: 500; letter-spacing: -0.04em; font-variant-numeric: lining-nums tabular-nums; }
+/* Departure board numerals (docs/design-brief.md §4): versions and percentages set huge, lining and tabular.
+   Sizes sit on the Tailwind scale: 128 / 72 / 48 px. */
+@utility numeral-1 { font-family: var(--font-display-family); font-size: 8rem; line-height: 0.82; font-weight: 500; letter-spacing: -0.05em; font-variant-numeric: lining-nums tabular-nums; }
+@utility numeral-2 { font-family: var(--font-display-family); font-size: 4.5rem; line-height: 0.85; font-weight: 500; letter-spacing: -0.04em; font-variant-numeric: lining-nums tabular-nums; }
 @utility numeral-3 { font-family: var(--font-display-family); font-size: 3rem; line-height: 1; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: lining-nums tabular-nums; }
 @utility figure-1 { font-family: var(--font-mono-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 
@@ -199,7 +202,7 @@
 /* Scroll reveal (rise 32px + fade, once). Reduced motion: opacity only. */
 .kit-reveal { opacity: 0; transform: translateY(32px); transition: opacity 700ms var(--ease-out-kit), transform 700ms var(--ease-out-kit); }
 .kit-reveal[data-visible="true"] { opacity: 1; transform: none; }
-.kit-word { opacity: 0.5; transition: opacity 500ms var(--ease-out-kit); }
+.kit-word { opacity: 0.3; transition: opacity 500ms var(--ease-out-kit); }
 .kit-word[data-on="true"] { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .kit-reveal { transform: none; transition: opacity 300ms var(--ease-out-kit); }

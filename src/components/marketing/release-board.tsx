@@ -103,7 +103,6 @@ export function ReleaseBoard() {
               {ROWS.map((r, i) => (
                 <tr key={r.channel} className={cn("border-b border-border", i === 0 && "bg-marker")}>
                   <th scope="row" className="relative px-4 py-3 text-left align-middle">
-                    {i === 0 ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-marker-bar" /> : null}
                     <span className="block body-5 text-text">{r.channel}</span>
                     <span className="block caption-5 text-text-muted">{r.platform}</span>
                   </th>
@@ -120,7 +119,6 @@ export function ReleaseBoard() {
           <ul className="m-0 list-none p-0 md:hidden">
             {ROWS.map((r, i) => (
               <li key={r.channel} className={cn("relative flex items-center justify-between gap-3 border-b border-border px-4 py-3", i === 0 && "bg-marker")}>
-                {i === 0 ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-marker-bar" /> : null}
                 <span className="flex flex-col gap-1">
                   <span className="body-5 text-text">{r.channel} <PlateTag code={r.code} /></span>
                   <Lamp k={r.lamp} />

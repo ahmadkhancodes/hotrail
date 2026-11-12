@@ -91,7 +91,6 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                 "max-md:px-0 md:[&:nth-child(2n)]:border-r-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(4n)]:border-r-0",
               )}
             >
-              {plan.featured ? <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-marker-bar" /> : null}
               <div className="pb-6">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="heading-6 text-text">{plan.name}</h3>
