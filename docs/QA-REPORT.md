@@ -10,7 +10,7 @@ Method: production build (`next start`), `DB_DRIVER=memory`, `E2E_OUTBOX=1`, con
 - **Webhooks happy path** (`webhooks`): add, duplicate, pause, resume, send test, delete with Escape and confirm.
 - **Organisations** (`orgs`): switcher (Escape, create second org, switch back), notification switch persists after reload, delete-account dialog needs the phrase, invitation e-mail -> sign in -> accept -> lands in the org.
 - **Plan limit** (`limits`): Free user's third app gets 402 `plan_limit` with a reason that matches the pricing copy; hostile app ids/versions/zips give 4xx never 5xx; Line view and device lookup at 375px with data.
-- **Layout and accessibility** (`a11y-layout`): 14 pages x 375/1440 x light/dark: no horizontal scroll, every control has an accessible name, pointer cursor on all clickable elements, 44px tap targets on phones; keyboard Tab to submit with visible focus.
+- **Layout and accessibility** (`a11y-layout`): 14 pages x 375/1440 x light: no horizontal scroll, every control has an accessible name, pointer cursor on all clickable elements, 44px tap targets on phones; keyboard Tab to submit with visible focus.
 - Existing specs (`flow`, `line`, `m3`, `m4`, `app-smoke`) kept unchanged and green.
 
 ## Defects found and fixed

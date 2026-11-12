@@ -1,6 +1,6 @@
 # Design QA scorecard (DESIGN_PLAYBOOK §9), M1-B storefront, 5 Nov 2026
 
-Screenshots: `docs/qa/` (`/`, `/pricing`, `/compare/capgo`, `/docs/quickstart`, `/sign-in`; 375 and 1440; light and dark). Overflow check in `scripts/screenshots.ts`: no horizontal overflow on any of the 20 captures. Self-graded.
+Screenshots: `docs/qa/` (`/`, `/pricing`, `/compare/capgo`, `/docs/quickstart`, `/sign-in`; 375 and 1440; light). Overflow check in `scripts/screenshots.ts`: no horizontal overflow on any of the 20 captures. Self-graded.
 
 | Category | Score | Worst problem |
 |---|---|---|

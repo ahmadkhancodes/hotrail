@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { product } from "@/config/product";
-import { ThemeToggle } from "@/components/theme";
 import { buttonClass } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 
@@ -89,7 +88,6 @@ export function SiteHeader() {
         <div className="flex items-center gap-1">
           <Link href="/sign-in" className={cn(buttonClass("tertiary", "md"), "max-md:hidden")}>Sign in</Link>
           <Link href="/sign-in" className={cn(buttonClass("primary", "md"), "max-md:hidden")}>Start free</Link>
-          <ThemeToggle />
           <button
             ref={toggleRef}
             type="button"

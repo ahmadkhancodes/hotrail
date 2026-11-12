@@ -1,6 +1,6 @@
 # Roadmap: Hotrail by BufferSol (full workbook MVP in 5 milestones)
 
-Each milestone ends with: lint + typecheck + tests + build green, deployed, Playwright screenshots (375/1440, light/dark) in `docs/qa/`, PROGRESS.md updated, PR merged to main, one line to the orchestrator.
+Each milestone ends with: lint + typecheck + tests + build green, deployed, Playwright screenshots (375/1440, light) in `docs/qa/`, PROGRESS.md updated, PR merged to main, one line to the orchestrator.
 
 | Milestone | Scope | P0s (brief numbering) |
 |---|---|---|

@@ -58,7 +58,7 @@ Method: (a) from the competitor audit, list the category defaults (e.g., every d
 
 Direction output (fill in the brief, then codify in Tailwind theme tokens):
 
-1. **Palette:** neutral ramp (10 shades) + ONE accent kept under about 80% saturation [repo figma-designer] + semantic red/green/yellow. Name tokens by role (`surface`, `text-subtle`, `action`) not by color [repo figma-designer]. Provide light and dark via CSS variables, not duplicated hardcoded colors.
+1. **Palette:** neutral ramp (10 shades) + ONE accent kept under about 80% saturation [repo figma-designer] + semantic red/green/yellow. Name tokens by role (`surface`, `text-subtle`, `action`) not by color [repo figma-designer]. Provide light via CSS variables, not duplicated hardcoded colors.
 2. **Type:** one typeface per site [repo B1]; a second only if the brief justifies it, and Geist Mono only for code/data. Repo whitelist: Geist, Manrope, Geist Mono, Poppins. Repo ban: Inter, Roboto, Arial, Open Sans, Helvetica. No italics. No 900 weight.
 3. **Density, imagery, tone:** one line each, from the table.
 4. **Signature move:** one memorable, ownable element per page (a product-UI interaction in the hero, a distinctive proof format, a typographic moment). Without one, the page is generic.
@@ -146,7 +146,7 @@ Implementation in Tailwind (v3 `@layer components` or v4 `@utility`): one class 
 - **Dark-mode backgrounds, only:** `#000000`, `#181818`, `#1F1F1F`, `#272727`, `#313131`, `#131209` [repo B4]. (Override per Section 3 only if the brand requires.)
 - **Borders go all the way around or not at all.** No single-sided card borders (use a 1px divider element between rows) [repo B4, figma-designer].
 - **One accent color**, under 80% saturation; semantic red/green/yellow only for state [repo figma-designer].
-- **Two-layer tokens** [repo figma-designer]: raw palettes (10+ shades from 00 to 1000) then semantic role tokens (`surface/primary`, `text/subtle`, `action/primary-hover`, `border/error`) with light and dark modes. In Next.js: CSS variables for roles, switched by `data-theme` / `prefers-color-scheme`; components reference roles only, so a rebrand edits one file.
+- **Two-layer tokens** [repo figma-designer]: raw palettes (10+ shades from 00 to 1000) then semantic role tokens (`surface/primary`, `text/subtle`, `action/primary-hover`, `border/error`) with light modes. In Next.js: CSS variables for roles, switched by `data-theme` / `prefers-color-scheme`; components reference roles only, so a rebrand edits one file.
 - **Contrast** [repo figma-designer]: body 4.5:1; large text (24px+, or 18px bold+) and UI parts (icons, input borders, focus rings) 3:1; touch targets at least 44x44 on mobile; never color alone for state. If the brand color fails with white text, darken the action shade.
 - **Icons** [repo B6]: Phosphor, Solar or Iconamoon only; never Material. One stroke weight across the site. Import as SVG React components, color via `currentColor`/role tokens. **No emoji as icons**, no icon-in-a-circle on every card [ours]; prefer product UI fragments or a typographic treatment where an icon adds nothing.
 

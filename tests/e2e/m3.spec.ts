@@ -4,7 +4,7 @@ import { nativeFingerprint } from "@buffersol/hotrail-core";
 import { writeZip } from "../../src/lib/ship/zip";
 
 // M3 pages on the memory driver: adoption chart + "not offered to build N" + bundle delete guard on the Line view,
-// and the device lookup page. Screenshots at 375/1440, light/dark into docs/qa.
+// and the device lookup page. Screenshots at 375/1440, light into docs/qa.
 const APP = "com.example.northline.m3";
 const camera = { capacitor: "8.0.0", plugins: { "@capacitor/camera": "8.2.0" } };
 const zip = (body: string) => writeZip([{ path: "index.html", data: new TextEncoder().encode(`<html>${body}</html>`) }, { path: "app.js", data: new TextEncoder().encode(body.repeat(100)) }]);
@@ -61,10 +61,8 @@ test("Line adoption chart, incompatible builds, delete guard, device lookup", as
   await page.getByRole("dialog").getByRole("button", { name: "Delete" }).click();
   await expect(page.getByRole("button", { name: "Select bundle 1A02" })).toHaveCount(0, { timeout: 15_000 });
 
-  for (const theme of ["light", "dark"] as const) {
+  for (const theme of ["light"] as const) {
     for (const width of [1440, 375]) {
-      await page.emulateMedia({ colorScheme: theme });
-      await page.evaluate((t) => localStorage.setItem("theme", t), theme);
       await page.setViewportSize({ width, height: width < 800 ? 812 : 900 });
       await page.goto("/app");
       await expect(chart.getByRole("img", { name: /Adoption by bundle/ })).toBeVisible({ timeout: 15_000 });
@@ -74,10 +72,8 @@ test("Line adoption chart, incompatible builds, delete guard, device lookup", as
   }
 
   // device lookup by custom id, then by device id
-  for (const theme of ["light", "dark"] as const) {
+  for (const theme of ["light"] as const) {
     for (const width of [1440, 375]) {
-      await page.emulateMedia({ colorScheme: theme });
-      await page.evaluate((t) => localStorage.setItem("theme", t), theme);
       await page.setViewportSize({ width, height: width < 800 ? 812 : 900 });
       await page.goto("/app/devices");
       await expect(page.getByRole("heading", { name: "Devices", level: 1 })).toBeVisible();
