@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CHUNK_BYTES, createMongoStore, type ChunkDoc, type MongoLike, type ObjectDoc } from "@/lib/storage/mongo";
 import { storeFromEnv } from "@/lib/storage";
+import { hmacSha256Hex } from "@/lib/ids";
 import { harness, noise } from "./helpers/ship";
 import { MAX_REQUEST_BYTES } from "@/lib/ship/types";
 
@@ -160,7 +161,10 @@ describe("request size limit (413)", () => {
   });
   it("rejects an oversize blob PUT and an oversize file at plan time", async () => {
     const h = harness();
-    const blob = await h.fetch(`${h.deps.baseUrl}/api/v1/upload/blob/${"a".repeat(64)}?app=x&size=1&exp=1&sig=x`, { method: "PUT", body: noise(MAX_REQUEST_BYTES + 1) as BodyInit });
+    const sha0 = "a".repeat(64);
+    const exp = Math.floor(Date.now() / 1000) + 600;
+    const sig = await hmacSha256Hex(h.deps.uploadSecret, `x.${sha0}.1.${exp}`);
+    const blob = await h.fetch(`${h.deps.baseUrl}/api/v1/upload/blob/${sha0}?app=x&size=1&exp=${exp}&sig=${sig}`, { method: "PUT", body: noise(MAX_REQUEST_BYTES + 1) as BodyInit });
     expect(blob.status).toBe(413);
     expect((await blob.json()).error).toBe("request_too_large");
     const data = noise(MAX_REQUEST_BYTES + 10);

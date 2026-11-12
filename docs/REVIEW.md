@@ -67,11 +67,11 @@ The CLI e2e test "upload only key" now registers the signing key with an all-sco
 
 ## P2
 
-- `src/lib/ship/router.ts:84`: the signed blob PUT reads the body before checking the signature. Check the signature first.
+- ~~`src/lib/ship/router.ts:84`: signed blob PUT reads the body before the signature~~ **fixed** (`verifyBlobSignature` runs first; test in `battle-hardening.test.ts`).
 - `src/lib/auth/index.ts:68`: the 5 minute session cookie cache means a revoked session works for up to 5 minutes. Org API keys survive member removal (by design; say so in the docs).
 - `src/lib/webhooks/outbound.ts`: endpoints are never disabled after repeated failures (the brief says 50).
 - R2 custom domain makes every key public, including `ptr/` (override device ids) and `pending/`. Serve only `zips/`, `manifests/` and `blobs/` from the CDN (a Worker or a separate bucket).
-- `packages/core/src/manifest.ts:22`: paths that differ only in case (`A.js` and `a.js`) collide on case-insensitive iOS filesystems. Reject case-folded duplicates.
+- ~~`packages/core/src/manifest.ts:22` case-colliding paths~~ **fixed** (core `buildManifest` and server `validateManifest` reject case-folded duplicates).
 - Plugin: `safeName(".")` and a manifest path `"."` resolve to the bundles root. Native `removePath` should refuse the root. Native `download` accepts `http:`. `hashFile` and copy `src` are not confined to the bundles root.
 - First-come app id claims: someone can squat another company's app id. A support process to release ids is needed (pairs with P0-2).
 - Bundle delete guard: the "last 3 bundles per channel" rule from ARCHITECTURE is not enforced (live and rollback target are).

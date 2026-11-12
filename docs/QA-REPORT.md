@@ -27,3 +27,6 @@ Method: production build (`next start`), `DB_DRIVER=memory`, `E2E_OUTBOX=1`, con
 - **Medium (design call):** magic-link sign-in is limited to a few requests per minute per IP by Better Auth's built-in rule; teams behind one IP can see "Too many attempts" at the sign-in form. Raising it is a security trade-off.
 - **Not testable here:** real Stripe checkout return (Stripe not connected: the UI shows the calm "not connected" notice), passkey and TOTP ceremonies (need an authenticator), the native plugin on devices, 3-month overage nudge (not built, see REVIEW.md).
 - The Vercel Analytics script 404s on `next start` locally (only exists on Vercel); ignored by the console watcher.
+
+## Battle hardening (2026-11-12)
+Fixed: blob PUT signature-before-body, case-folded manifest paths. Verified by unit tests only; browser CSP run, tenant isolation e2e, Stripe replay e2e and resilience e2e remain open.
