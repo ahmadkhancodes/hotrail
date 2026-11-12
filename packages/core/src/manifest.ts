@@ -37,8 +37,9 @@ export async function buildManifest(input: {
   const seen = new Set<string>();
   for (const f of input.files) {
     const path = normalizePath(f.path);
-    if (seen.has(path)) throw new Error(`duplicate path: ${path}`);
-    seen.add(path);
+    // Case-folded: A.js and a.js collide on case-insensitive (iOS) filesystems.
+    if (seen.has(path.toLowerCase())) throw new Error(`duplicate path: ${path}`);
+    seen.add(path.toLowerCase());
     files.push({ path, sha256: await sha256Hex(f.data), size: f.data.byteLength });
   }
   files.sort((a, b) => (a.path < b.path ? -1 : 1));

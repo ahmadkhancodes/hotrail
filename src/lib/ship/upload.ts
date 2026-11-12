@@ -58,11 +58,18 @@ export async function blobUploadUrl(deps: ShipDeps, appDocId: string, sha: strin
 }
 
 /** The PUT behind blobUploadUrl: no API key, the signature is the credential. */
-export async function acceptBlob(deps: ShipDeps, q: { appDocId: string; sha: string; size: number; exp: number; sig: string }, body: Uint8Array): Promise<void> {
+type BlobQuery = { appDocId: string; sha: string; size: number; exp: number; sig: string };
+
+/** Checks the signed URL alone, so the router can reject a forged PUT before it reads any body bytes. */
+export async function verifyBlobSignature(deps: ShipDeps, q: BlobQuery): Promise<void> {
   if (!SHA_RE.test(q.sha) || !Number.isInteger(q.size) || q.size < 0) throw new HttpError(400, "invalid_blob");
   if (q.exp * 1000 < deps.now().getTime()) throw new HttpError(403, "upload_url_expired");
   const expected = await hmacSha256Hex(deps.uploadSecret, `${q.appDocId}.${q.sha}.${q.size}.${q.exp}`);
   if (!safeEqual(expected, q.sig)) throw new HttpError(403, "bad_upload_signature");
+}
+
+export async function acceptBlob(deps: ShipDeps, q: BlobQuery, body: Uint8Array): Promise<void> {
+  await verifyBlobSignature(deps, q);
   if (body.byteLength !== q.size) throw new HttpError(422, "size_mismatch");
   if ((await sha256Hex(body)) !== q.sha) throw new HttpError(422, "hash_mismatch");
   await deps.store.put(keys.blob(q.appDocId, q.sha), body, { contentType: "application/octet-stream" });
@@ -78,8 +85,9 @@ function validateManifest(input: PlanInput): void {
   for (const f of m.files) {
     if (!SHA_RE.test(f.sha256) || !Number.isInteger(f.size) || f.size < 0) throw new HttpError(400, "invalid_manifest_file", { path: f.path });
     try { if (normalizePath(f.path) !== f.path) throw new Error("not normalized"); } catch { throw new HttpError(422, "unsafe_path", { path: f.path }); }
-    if (seen.has(f.path)) throw new HttpError(422, "duplicate_path", { path: f.path });
-    seen.add(f.path);
+    const folded = f.path.toLowerCase();
+    if (seen.has(folded)) throw new HttpError(422, "duplicate_path", { path: f.path });
+    seen.add(folded);
     const v = checkFile(f.path, new Uint8Array(0));
     if (v) violations.push(v);
   }
