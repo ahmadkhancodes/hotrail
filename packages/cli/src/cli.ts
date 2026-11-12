@@ -24,7 +24,7 @@ Usage: npx @buffersol/hotrail <command> [options]
   upload [--dir d] [--version x.y.z] [--unsigned]
                                Hash, sign and upload a web build (only new files are sent)
   release --channel c [--bundle 2K47 | --version x.y.z] [--percent n] [--autopause 0.02]
-                               Point a channel at a bundle
+                               Point a channel at a bundle (default: the version in package.json)
   rollback --channel c         Reverse a channel to its previous bundle
   native register --build 41 [--platform ios|android]
                                Record this store build's native fingerprint (run after each store release)
@@ -57,7 +57,28 @@ function loadConfig(io: Io): HotrailConfig {
 function makeApi(io: Io, cfg: HotrailConfig): Api {
   const apiKey = io.env.HOTRAIL_API_KEY;
   if (!apiKey) throw new ApiError(0, "HOTRAIL_API_KEY is not set.", "Create a key in Settings, API keys, then export HOTRAIL_API_KEY.");
-  return createApi({ baseUrl: safeApiUrl(io.env.HOTRAIL_API_URL ?? cfg.apiUrl ?? "https://hotrail.buffersoltech.com"), apiKey, fetchImpl: io.fetchImpl });
+  return createApi({ baseUrl: safeApiUrl(io.env.HOTRAIL_API_URL ?? cfg.apiUrl ?? DEFAULT_URL), apiKey, fetchImpl: io.fetchImpl });
+}
+
+const DEFAULT_URL = "https://hotrail.buffersoltech.com";
+/** Host used in printed snippets and doc links: HOTRAIL_API_URL when set and valid, else hotrail.json, else production. */
+function docsBase(io: Io): string {
+  const raw = io.env.HOTRAIL_API_URL ?? readJson<HotrailConfig>(join(io.cwd, "hotrail.json"))?.apiUrl ?? DEFAULT_URL;
+  try { return new URL(raw).origin; } catch { return DEFAULT_URL; }
+}
+
+/** Ready-to-paste plugin setup with the project's real appId, host and public key (keys match HotrailConfig in the plugin). */
+export function pluginSnippet(appId: string, base: string, publicKey: string): string {
+  return `import { HotrailUpdater } from "@buffersol/hotrail-updater";
+
+await HotrailUpdater.configure({
+  appId: "${appId}",
+  updateUrl: "${base}/api/v1/updates/check",
+  statsUrl: "${base}/api/v1/updates/stats",
+  channelUrl: "${base}/api/v1/updates/channel",
+  publicKey: "${publicKey}",
+});
+await HotrailUpdater.notifyAppReady();`;
 }
 
 /** The API key is sent to this URL, and hotrail.json is a repo file anyone can edit: https only (plain http for localhost). */
@@ -74,7 +95,7 @@ export function safeApiUrl(raw: string): string {
 async function init(io: Io): Promise<void> {
   const appId = detectAppId(io.cwd);
   if (!appId) {
-    io.err("No Capacitor project found (capacitor.config.* with an appId).\nCordova or Ionic legacy app? See https://hotrail.buffersoltech.com/docs/cordova");
+    io.err(`No Capacitor project found (capacitor.config.* with an appId).\nRun init in the folder that holds capacitor.config.ts or .json. Guide: ${docsBase(io)}/docs/quickstart`);
     throw new ApiError(0, "no capacitor config");
   }
   const cfgPath = join(io.cwd, "hotrail.json");
@@ -89,13 +110,18 @@ async function init(io: Io): Promise<void> {
     const cur = existsSync(gi) ? readFileSync(gi, "utf8") : "";
     if (!cur.split("\n").includes(".hotrail/")) appendFileSync(gi, (cur.endsWith("\n") || cur === "" ? "" : "\n") + ".hotrail/\n");
     io.out(`Created signing key at .hotrail/signing-key.json (added to .gitignore). Keep it private.`);
-    io.out(`Public key (put it in your Capacitor config as hotrailPublicKey):\n  ${kp.publicKey}`);
   }
+  const pub = readJson<{ publicKey?: string }>(keyPath)?.publicKey;
+  const base = docsBase(io);
   io.out(`App ${appId} ready. Web directory: ${cfg.dir}.`);
   if (usesCapgoUpdater(io.cwd)) {
-    io.out("Found @capgo/capacitor-updater. Migration mode: point updateUrl, statsUrl and channelUrl at your Hotrail URLs now, and swap to @buffersol/hotrail-updater at your next store build.");
-  } else if (!("@buffersol/hotrail-updater" in { ...readPackage(io.cwd).dependencies })) {
-    io.out("Next: npm install @buffersol/hotrail-updater && npx cap sync, then rebuild the native app once.");
+    io.out("Found @capgo/capacitor-updater. Migration mode: point these three URLs at Hotrail in capacitor.config now, and swap to @buffersol/hotrail-updater at your next store build.");
+    io.out(`\nplugins: {\n  CapacitorUpdater: {\n    updateUrl: "${base}/api/v1/updates/check",\n    statsUrl: "${base}/api/v1/updates/stats",\n    channelUrl: "${base}/api/v1/updates/channel",\n  },\n}\n`);
+  } else {
+    if (!("@buffersol/hotrail-updater" in { ...readPackage(io.cwd).dependencies })) {
+      io.out("Next: npm install @buffersol/hotrail-updater && npx cap sync, then rebuild the native app once.");
+    }
+    if (pub) io.out(`Add this to your app's startup code (the public key lets devices verify every bundle):\n\n${pluginSnippet(appId, base, pub)}\n`);
   }
   io.out("Then: npx @buffersol/hotrail upload");
 }
@@ -162,7 +188,8 @@ async function release(io: Io, flags: Record<string, string | true>): Promise<vo
   const api = makeApi(io, cfg);
   const channel = str(flags.channel) ?? cfg.channel;
   const bundle = str(flags.bundle);
-  const version = str(flags.version);
+  // Same default as upload: the version in package.json, so `upload` then `release` needs no flags.
+  const version = str(flags.version) ?? (bundle ? undefined : readJson<{ version?: string }>(join(io.cwd, "package.json"))?.version);
   if (!bundle && !version) throw new ApiError(0, "Say what to release.", "Pass --bundle 2K47 or --version 2.14.1.");
   const percent = flags.percent === undefined ? 100 : Number(flags.percent);
   if (!Number.isFinite(percent) || percent < 0 || percent > 100) throw new ApiError(0, "--percent must be between 0 and 100.");

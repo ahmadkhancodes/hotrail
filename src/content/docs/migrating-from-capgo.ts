@@ -34,7 +34,7 @@ channelUrl: ${p.url}/api/v1/updates/channel`,
     {
       heading: "Step 3: upload and release",
       body: [
-        "Upload a build, then release it to a channel. Start with a small percentage if you want to watch the first rollout.",
+        "Upload a build, then release it to a channel. Both commands use the version in your package.json. Start with a small percentage if you want to watch the first rollout.",
       ],
       code: {
         lang: "bash",

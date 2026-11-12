@@ -27,6 +27,13 @@ export async function ensureCustomer(stripe: Pick<Stripe, "customers">, db: Db, 
   return c;
 }
 
+/** Where Stripe sends the buyer back: billing shows "plan active" on success and "Nothing was charged" on cancel. */
+export const checkoutReturnUrls = (base: string) => ({
+  success: `${base.replace(/\/$/, "")}/app/billing?checkout=success`,
+  cancel: `${base.replace(/\/$/, "")}/app/billing?checkout=canceled`,
+});
+export const portalReturnUrl = (base: string) => `${base.replace(/\/$/, "")}/app/billing`;
+
 export async function createCheckoutSession(
   stripe: Pick<Stripe, "customers" | "subscriptions" | "prices" | "checkout">,
   db: Db,

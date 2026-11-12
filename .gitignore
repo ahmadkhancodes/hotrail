@@ -43,3 +43,6 @@ next-env.d.ts
 playwright-report
 test-results
 .lighthouseci
+
+# bundled package bins (npm run build:packages)
+/packages/*/dist/

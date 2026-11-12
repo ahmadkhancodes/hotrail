@@ -15,7 +15,7 @@ export const cli: DocPage = {
     {
       heading: "init and upload",
       body: [
-        "init detects your Capacitor appId and web directory, writes hotrail.json and creates a signing key. It stops with a message if there is no Capacitor config.",
+        "init detects your Capacitor appId and web directory, writes hotrail.json and creates a signing key. It then prints what to paste into your app: the three plugin URLs in migration mode, or a HotrailUpdater.configure block with your appId and public key. It stops with a message if there is no Capacitor config.",
         "upload hashes and signs a web build and sends only new files. Flags: --dir for the build folder, --version for a semver version (default is the version in package.json), and --unsigned to skip signing. Uploads that contain native files are refused, because Hotrail ships the web layer only. Upload does not release.",
       ],
       code: { lang: "bash", code: "npx @buffersol/hotrail upload --dir dist --version 2.14.1" },
@@ -23,7 +23,7 @@ export const cli: DocPage = {
     {
       heading: "release and rollback",
       body: [
-        "release points a channel at a bundle. Flags: --channel, --bundle (headcode) or --version, --percent (0 to 100, default 100) and --autopause (0 to 1).",
+        "release points a channel at a bundle. Flags: --channel, --bundle (headcode) or --version (default: the version in package.json, the same one upload used), --percent (0 to 100, default 100) and --autopause (0 to 1).",
         "rollback --channel reverses a channel to its previous bundle.",
       ],
       code: {

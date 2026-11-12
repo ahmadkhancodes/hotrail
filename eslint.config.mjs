@@ -11,7 +11,7 @@ const eslintConfig = defineConfig([
     },
   },
   { files: ["tests/**"], rules: { "@typescript-eslint/no-explicit-any": "off" } },
-  globalIgnores(["playwright-report/**", "test-results/**", "infra/**"]),
+  globalIgnores(["playwright-report/**", "test-results/**", "infra/**", "packages/*/dist/**"]),
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

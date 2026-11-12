@@ -5,11 +5,13 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "hotrail-mcp": "./src/bin.ts"
+    "hotrail-mcp": "./dist/bin.js"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build": "node ../../scripts/build-packages.mjs mcp",
+    "prepack": "node ../../scripts/build-packages.mjs mcp"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -19,5 +21,10 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
     "zod": "^4.6.7"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ]
 }

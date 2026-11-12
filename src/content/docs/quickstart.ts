@@ -9,14 +9,14 @@ export const quickstart: DocPage = {
     {
       heading: "Status",
       body: [
-        `${p.fullName} is pre-launch. The update API and upload pipeline are being built (milestone M2), so the URLs and commands below are the planned contract. Anything marked coming is not shipped yet.`,
+        `The update API, the upload pipeline and the CLI work today, and every command on this page is run by our test suite against the app. The Swift and Kotlin code of @buffersol/hotrail-updater has not been compiled or tested on devices yet, so start with @capgo/capacitor-updater and the three URLs below.`,
       ],
     },
     {
       heading: "Change three URLs",
       body: [
         "If your app already runs @capgo/capacitor-updater in self-hosted mode, the plugin talks to three endpoints. Point them at your Hotrail app and keep the plugin as it is for now.",
-        "Swap the plugin for @buffersol/hotrail-updater (MIT, coming) at your next store build. Until then the stock plugin keeps working, because the update API answers the documented self-hosted protocol.",
+        "Swap the plugin for @buffersol/hotrail-updater (MIT) at your next store build, once its native code is verified. Until then the stock plugin keeps working, because the update API answers the documented self-hosted protocol.",
       ],
       code: {
         lang: "ts",
@@ -33,31 +33,31 @@ plugins: {
     {
       heading: "Initialize the project",
       body: [
-        "Run init in your project folder. It finds your appId in the Capacitor config, creates your signing key and offers migration mode if it sees @capgo/capacitor-updater in package.json.",
+        "Create a key in the dashboard (an empty Line view has a one-click button that fills it into these commands), then run init in your project folder. It finds your appId in the Capacitor config, creates your signing key, prints the exact URLs or plugin setup to paste, and offers migration mode if it sees @capgo/capacitor-updater in package.json.",
       ],
-      code: { lang: "bash", code: "npx @buffersol/hotrail init" },
+      code: { lang: "bash", code: "export HOTRAIL_API_KEY=hr_xxx\nnpx @buffersol/hotrail init" },
     },
     {
       heading: "Upload, release, roll back",
       body: [
-        "Upload hashes your build folder, sends only files the server does not already have, signs the manifest and rejects native files. Release points a channel at a bundle. Rollback reverses the channel to its previous bundle.",
+        "Upload hashes your build folder, sends only files the server does not already have, signs the manifest and rejects native files. It uses the version in package.json. Release points a channel at a bundle; without --bundle or --version it releases the package.json version, so the two commands need no ids. Rollback reverses the channel to its previous bundle.",
       ],
       code: {
         lang: "bash",
         code: `npx @buffersol/hotrail upload --dir dist
-npx @buffersol/hotrail release --channel production --bundle 2K47 --percent 10 --autopause 0.02
+npx @buffersol/hotrail release --channel production --percent 10 --autopause 0.02
 npx @buffersol/hotrail status
 npx @buffersol/hotrail rollback --channel production`,
       },
     },
     {
-      heading: "CI recipe: GitHub Actions (coming)",
+      heading: "CI recipe: GitHub Actions",
       body: [
-        "A published recipe is coming with the update API. The shape will be a job that builds your web app, then runs upload and release with an API key from your repository secrets.",
+        "A job that builds your web app, then uploads and releases it with an API key from your repository secrets. Create an Upload only key if the job should not release; this recipe releases, so it needs an All key. Upload and release both use the version in package.json.",
       ],
       code: {
         lang: "yaml",
-        code: `# .github/workflows/hotrail.yml (set APP_VERSION to your release version)
+        code: `# .github/workflows/hotrail.yml
 name: hotrail
 on: { push: { branches: [main] } }
 jobs:
@@ -69,21 +69,21 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm ci && npm run build
       - run: npx @buffersol/hotrail upload --dir dist
-      - run: npx @buffersol/hotrail release --channel beta --version "$APP_VERSION"`,
+      - run: npx @buffersol/hotrail release --channel beta`,
       },
     },
     {
-      heading: "CI recipe: GitLab CI (coming)",
+      heading: "CI recipe: GitLab CI",
       body: ["Same steps in GitLab CI. Store the key as a masked CI/CD variable named HOTRAIL_API_KEY."],
       code: {
         lang: "yaml",
-        code: `# .gitlab-ci.yml (set APP_VERSION as a CI variable)
+        code: `# .gitlab-ci.yml
 hotrail:
   image: node:22
   script:
     - npm ci && npm run build
     - npx @buffersol/hotrail upload --dir dist
-    - npx @buffersol/hotrail release --channel beta --version "$APP_VERSION"`,
+    - npx @buffersol/hotrail release --channel beta`,
       },
     },
     {

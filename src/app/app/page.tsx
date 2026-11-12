@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/app/page-header";
-import { CopyButton } from "@/components/app/copy-button";
-import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
 import { cn } from "@/components/ui/cn";
 import { can } from "@/lib/auth/roles";
 import { requireOrg } from "@/lib/auth/session";
 import { buildLine, type LineView as LineData } from "@/lib/ship/line";
 import { shipDeps } from "@/lib/ship/context";
+import { appUrl } from "@/lib/env";
+import { FirstRunSetup } from "./first-run-setup";
 import { LineView } from "./line-view";
 
 export const metadata = { title: "Line" };
@@ -20,18 +20,12 @@ export default async function LinePage({ searchParams }: { searchParams: Promise
   const apps = await deps.db.listApps(ctx.org.id);
 
   if (apps.length === 0) {
-    const cmd = "npx @buffersol/hotrail init";
     return (
       <>
         <PageHeader title="Line" description={`${ctx.org.name}: every channel is a track, every release is a train.`} />
         <EmptyState
           title="No trains on this line yet."
-          body={
-            <>
-              <p>Run the CLI in your Capacitor project. It finds your app, creates a signing key, and uploads your first bundle.</p>
-              <pre className="mt-3 overflow-x-auto border border-border bg-surface-sunken px-3 py-2 font-mono caption-2 text-text"><code><span aria-hidden className="text-text-muted">$ </span>{cmd}</code></pre>
-            </>
-          }
+          body={<FirstRunSetup orgId={ctx.org.id} baseUrl={appUrl()} canCreateKey={can(ctx.role, "apiKey", "manage")} />}
           visual={
             <div className="w-full max-w-xl border border-dashed border-border-input" aria-label="Example of your first channel row" role="img">
               <div className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-4 px-4 py-3 opacity-60">
@@ -41,13 +35,6 @@ export default async function LinePage({ searchParams }: { searchParams: Promise
                 <span className="caption-4 text-text"><span aria-hidden className="text-lamp-green">●</span> Live</span>
               </div>
               <p className="border-t border-dashed border-border-input px-4 py-2 caption-5 text-text-muted">Example: your first upload shows up as headcode 1A00.</p>
-            </div>
-          }
-          action={
-            <div className="flex flex-wrap gap-2">
-              <CopyButton value={cmd} label="Copy command" />
-              <Link href="/app/settings/api-keys" className={buttonClass("secondary", "sm")}>Create an API key</Link>
-              <Link href="/docs/quickstart" className={buttonClass("tertiary", "sm")}>Read the quickstart</Link>
             </div>
           }
         />
