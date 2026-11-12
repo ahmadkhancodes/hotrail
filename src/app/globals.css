@@ -231,3 +231,19 @@
 @keyframes mm-run { from { transform: translateX(-200px); } to { transform: none; } }
 @keyframes mm-red { 0% { opacity: 1; } 65% { opacity: 1; } 100% { opacity: 0.18; } }
 @keyframes mm-amber { 0% { opacity: 0.18; } 65% { opacity: 0.18; } 100% { opacity: 1; } }
+
+/* Tailwind v4 no longer sets a pointer cursor on buttons. Anything you can click shows the hand. */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  select,
+  label[for],
+  input:is([type="checkbox"], [type="radio"], [type="submit"], [type="button"], [type="file"]):not(:disabled) {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
