@@ -6,7 +6,7 @@ export function Container({ className, children }: { className?: string; childre
 }
 
 /**
- * Marketing section (docs/design-brief.md §4). Each section opens with a 2px ink rule like a printed timetable.
+ * Marketing section (docs/design-brief.md §4). Each section opens with a 2px cobalt rule like a printed timetable.
  * `rhythm` varies the vertical padding on purpose so the page does not repeat one block height.
  */
 export function Section({ id, tone = "base", rhythm = "lg", rule = true, className, children, labelledBy }: { id?: string; tone?: "base" | "raised" | "inverse"; rhythm?: "sm" | "md" | "lg"; rule?: boolean; className?: string; children: ReactNode; labelledBy?: string }) {

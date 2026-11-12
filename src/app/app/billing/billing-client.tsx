@@ -134,7 +134,7 @@ export function BillingClient(p: Props) {
       <section aria-labelledby="plans-h" className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <h2 id="plans-h" className="title-2 text-text">Plans</h2>
-          <div role="group" aria-label="Billing interval" className="inline-flex w-fit border border-text">
+          <div role="group" aria-label="Billing interval" className="inline-flex w-fit border border-action">
             {(["month", "year"] as const).map((i) => (
               <button
                 key={i}
@@ -162,7 +162,7 @@ export function BillingClient(p: Props) {
                 aria-label={pl.name}
                 className={cn("relative flex flex-col gap-4 border-b border-border p-4 md:border-r", current || chosen ? "bg-surface-sunken" : "bg-surface")}
               >
-                {current || chosen ? <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-marker" /> : null}
+                {current || chosen ? <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-marker-bar" /> : null}
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="title-3 text-text">{pl.name}</h3>
                   {current ? <Badge tone="success">Current</Badge> : pl.featured && !chosen ? <span className="bg-marker px-2 py-0.5 caption-3 text-marker-ink">Our pick for teams</span> : null}

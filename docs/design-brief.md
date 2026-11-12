@@ -1,6 +1,8 @@
-# Hotrail by BufferSol: design brief ("the working timetable")
+# Hotrail by BufferSol: design brief ("the departure board")
 
-Status: approved by the redesign task of 12 Nov 2026. It replaces the "signal box" system (navy panel on warm paper) in `docs/DESIGN.md` §5 to §9. The founder said that system read as typical AI-generated UI, and he was right: warm cream paper, a dark mock "terminal" panel in the hero, mono `01 / 02 / 03` step numbers, a condensed display face and an amber accent is the house style of AI-built landing pages in 2026. Evidence for this brief: `docs/design/audit-2026-11/*.png` (Playwright, 1440x900 and 375x812, captured 12 Nov 2026). The final screens are in `docs/qa/design/`.
+Status: approved by the identity task of 12 Nov 2026 (second pass that day). It replaces the "working timetable" system (ink black buttons and a signal yellow marker on white, Archivo + IBM Plex), which, next to six sibling BufferSol products, read as one shared house look: neutral grotesk, black buttons, warm or plain paper. Hotrail now has its own identity: **release engineering, cobalt blue on bright white, huge numerals (rollout percentages, prices, times) as the visual anchor, a departure board layout, a geometric grotesk.** The competitor audit, ICP and positioning below still hold. Final screens: `docs/qa/design/` (1440 and 375, light only).
+
+Sibling directions we must not drift toward: terracotta and serif (Postslot), newsprint grey and highlighter (Straightpin), ink black with lime (Inboxwire), technical drawing blue grey with safety orange (Stepclimb), mint ledger and forest green (Wirebook), concrete grey with teal (DockCrate).
 
 ## 1. Competitor and taste audit (screenshots in docs/design/audit-2026-11/)
 
@@ -18,7 +20,7 @@ Status: approved by the redesign task of 12 Nov 2026. It replaces the "signal bo
 
 **What the ICP rewards:** PlanetScale is the one the ICP quotes as "looks like engineers made it". It is left aligned, typographic, square, dense, and uses one warm accent sparingly. Our buyer reads changelogs, `git log` and CI output all day. Tables are their native format.
 
-**The gap:** no one in the category looks like a precise operational document, and no one shows the release control surface itself. Hotrail's name already gives us the vocabulary (lines, headcodes, departures). We keep the vocabulary and drop the illustration: the page reads as a **working timetable**, the printed document railway staff run a line from. Ruled columns, real times, real figures, a single yellow marker for "the train that is moving now".
+**The gap:** no one in the category looks like a precise operational document, and no one shows the release control surface itself. Hotrail's name already gives us the vocabulary (lines, headcodes, departures). We keep the vocabulary and drop the illustration: the page reads as a **departure board**: a cobalt band on top, ruled rows, and the one number that matters right now (how far the rollout has gone) set huge. Capgo also uses blue, but as azure on navy with a centred H1 and a map; ours is a deep cobalt on bright white with left aligned, number led layouts and no illustration.
 
 ## 2. ICP card
 A frontend or full-stack developer, or the release lead at a 2 to 200 person team in the US, Canada or UK, who ships a Capacitor app to both stores and has just shipped a broken web bundle. They read the page at a desk with an editor open, or on a phone during an incident. They fear an update they cannot undo, a vendor that disappears or leaks, and a surprise invoice. They trust GitHub, Linear, PlanetScale, CI logs and anything that shows its numbers. The developer is the buyer; a security reviewer sometimes follows.
@@ -26,49 +28,53 @@ A frontend or full-stack developer, or the release lead at a 2 to 200 person tea
 ## 3. Positioning line
 For Capacitor teams stuck waiting one to three days on store review to fix a broken web bundle, Hotrail by BufferSol is the live update service with staged rollouts, auto pause and one click rollback at about half the Capgo price, signed by default with no third party in the update path.
 
-## 4. Visual system (clearly different from the old one)
+## 4. Visual system
 
-| Axis | Old ("signal box") | New ("working timetable") | Competitors |
-|---|---|---|---|
-| Ground | warm cream #F6F5F0 | paper white #FFFFFF, cool grey wells #F3F4F5 | navy-black, white |
-| Accent | navy actions + amber focus | ink black actions + **signal yellow #FFD23F** as a marker fill only (live row, current page, headcode plate, selection) | azure, indigo, black pill |
-| Hero | dark SVG panel with trains | the real release board, light, in a ruled frame, full container width | map, icons, logos |
-| Type | Barlow Condensed / Atkinson / Red Hat Mono | **Archivo** expanded (wdth 112 to 125) display, **IBM Plex Sans** text, **IBM Plex Mono** figures | Inter-like sans |
-| Shape | 2 to 4 px everywhere | 0 px for containers, tables and panels; 2 px for buttons and inputs only; round only for lamps | 8 to 16 px + pills |
-| Rules | hairlines | thick/thin rules like a printed timetable: 2 px ink rule opens a section, 1 px hairlines divide rows | soft shadows |
+| Axis | Old ("working timetable") | New ("departure board") |
+|---|---|---|
+| Ground | paper white, grey wells | bright white `#FFFFFF`, cool blue grey wells `#F1F4F9` / `#F7F9FC` |
+| Accent | ink black buttons + signal yellow marker | **cobalt `#1546C9`** for actions, rules, plates, numerals; cobalt tint `#DBE5FD` behind the live row and current page |
+| Anchor | the table | **huge numerals**: rollout % (144 px on desktop), prices, incident times, the 404 |
+| Type | Archivo expanded / IBM Plex Sans / Plex Mono | **Jost** (geometric grotesk, display + numerals) / **Albert Sans** (geometric text grotesk) / **DM Mono** (commands, headcodes, logs) |
+| Rules | 2 px ink rule opens a section | 2 px **cobalt** rule opens a section; 1 px hairlines `#E1E6EF` divide rows |
+| Plates | yellow plate, ink text | cobalt plate, white mono headcode (like a platform indicator) |
+| Mark | yellow square | two cobalt rails (`h-3 w-4 border-y-4`), also the favicon |
 
-### Palette (raw, then roles; light only)
-- Ink ramp: `#0E1012` (ink), `#2B3036`, `#4A5058` (subtle, 8.0:1 on white), `#5E656E` (muted, 5.8:1), `#8B929B` (input borders, 3.2:1), `#C9CDD2` (strong rule), `#E3E5E8` (hairline), `#F3F4F5` (well), `#FFFFFF` (paper).
-- Action: ink `#0E1012` with white text (19:1); hover `#2B3036`.
-- Marker: signal yellow `#FFD23F`, always with ink text (14:1). Never used for text on white.
-- Focus: `#1859D6` 2 px ring, offset 2 (5.6:1 on white, distinct from the marker).
-- State only, always with glyph and word: go `#137A43` (●), caution `#8A5A00` text with `#E9A400` glyph (▲), stop `#C22E1F` (■).
+### Palette (light only) and contrast pairs
+- Ink ramp: `#0A1633` ink (17.6:1 on white), `#1F2A44`, `#3B4559` subtle (9.6:1), `#525D72` muted (6.6:1 on white, 6.0:1 on `#F1F4F9`), `#7C879C` input borders (3.5:1, non text), `#C3CBD9` strong rule, `#E1E6EF` hairline, `#F1F4F9` well, `#F7F9FC` raised, `#FFFFFF` paper.
+- Cobalt: `#1546C9` action and accent text (7.6:1 on white; white on it 7.6:1), hover `#0F379F` (10.2:1), deep `#0A2470` (inverse surface), tint `#DBE5FD` (ink on it 15:1), `#EEF3FE`.
+- Focus: cobalt 2 px outline, offset 2 (7.6:1 on white; the offset keeps it visible on cobalt buttons).
+- State, always glyph + word: go `#13843F` (●), caution `#8A5A00` text with `#B57A00` glyph (▲, 3.7:1), stop `#C22E1F` (■).
+- Lighthouse (local, `next start`): `/` performance 95 (91 on the first cold run), accessibility 100; `/pricing` 98 / 100. Contrast and target size audits pass.
 
 ### Type
-Archivo is a grotesque from Omnibus-Type with a width axis; set expanded (`font-stretch: 112%` for headings, 125% for the hero) it reads like platform signage without the condensed "poster" cliché, and no rival uses a wide face. IBM Plex Sans carries an engineering lineage and stays legible at 14 px in dense tables. Plex Mono sets headcodes, times, percentages and commands with tabular figures. All SIL OFL, loaded with `next/font/google` (self hosted at build, no runtime CDN). Weights: Archivo 600/700, Plex Sans 400/500/600, Plex Mono 400/500. No italics, no 900.
+Jost is a Futura lineage geometric grotesk with lining figures that stay crisp at 144 px; it sets headings (500/600) and the `numeral-1/2/3` utilities (9 / 5 / 3 rem, tight tracking, lining tabular figures). Albert Sans is a geometric text grotesk that holds up at 14 px in dense tables. DM Mono sets commands, headcodes, logs and small figures. All SIL OFL via `next/font/google` (self hosted at build). Display uses `display: "optional"` and is preloaded; mono is not preloaded.
 
 ### Grid, rhythm, radius
-- 12 column grid, 1200 px container, 24 px gutters. Marketing sections alternate between three layouts on purpose: a **ledger** (label column 3 / content 9, ruled rows), a **split** (5 / 7) and a **full bleed board** (the product). No two adjacent sections share a layout, and padding varies (96, 64, 48) by weight of content.
-- Section heads sit in the left label column, not centered. No eyebrow labels, no step numbers.
-- Radius: `rounded-none` default; `rounded-sm` (2 px) on buttons, inputs, plates; `rounded-full` for lamps only.
+- 12 column grid, `max-w-7xl` container. Sections alternate ledger (4/8), split (5/7) and the full width board; padding varies (96, 64, 48).
+- Radius: `rounded-none` for containers, tables and panels; 2 px for buttons, inputs and plates; round only for lamps. No pills.
 
-### Imagery
-Only the real product: the release board (channels, headcode, rollout percentage, devices, failure rate, lamp) rendered with the same `Plate` and lamp tokens as the console, and labelled "Example data". No illustrations, no icons in squares, no emoji.
+### Motifs
+- **The board:** a cobalt caption band ("Departures · app · Example data"), a left "now departing" cell with the huge percentage, plate and previous headcode, a right timetable of channels with display numerals, and a mono log with times.
+- **Numerals over adjectives:** prices are whole dollars set huge with raised cents; the incident table sets times in cobalt display figures.
+- **The live row:** cobalt tint plus a 4 px cobalt edge (board, Line view tracks, app nav current page, featured plan top edge).
 
 ### Motion
-One signature beat: on first paint the live row's rollout bar fills from the previous percentage to the current one (transform: scaleX, 700 ms, `cubic-bezier(0.22, 1, 0.36, 1)`), once. Hover changes colour only (300 ms). `prefers-reduced-motion`: the bar is drawn at its final width with no transition. The tagline reveal keeps its per word opacity step.
+One beat: the live rollout bar fills from its previous step once (700 ms, `cubic-bezier(0.22, 1, 0.36, 1)`); hover changes colour only; reduced motion draws it at its final width.
+
+### What changed, what stayed
+- Changed: every colour token (`src/app/globals.css`), the font pairing (`src/app/fonts.ts`), the hero board, pricing table, Line view (inspector shows the huge percentage), buttons (cobalt primary, cobalt outline secondary), app nav current page, the brand mark, OG image, icons, e-mail templates, 404.
+- Stayed: copy and claims, the information architecture, the real product hero, square containers, state colours, the single motion beat. `tests/unit/design-system.test.ts` fails if the old yellow, black, cream, navy or indigo values or the old fonts come back.
 
 ## 5. App UI rules (every signed-in screen)
-- Shell: a 240 px left rail on white with a hairline right edge, product wordmark, org switcher, nav items 44 px tall; the current page gets a 4 px yellow marker block and ink text, not a grey pill. Mobile: top bar + full screen menu.
-- Page header: Archivo title, one line of plain description, one primary action on the right.
-- Tables: 44 px rows, 1 px hairlines, sticky header in the well colour, mono tabular figures right aligned, no zebra.
-- Forms: labels above inputs, 2 px radius, 44 px inputs, inline specific errors.
-- Empty states: ruled box with a sentence, the exact command or action, and an example row so the user sees what will appear.
-- Loading: skeleton blocks shaped like the rows. Errors: inline, specific, with a retry.
-- Dialogs: square, 2 px ink top rule, one primary action.
+- Shell: 256 px left rail on white with a hairline edge, rails mark + wordmark, org switcher, 44 px nav items; the current page gets the cobalt tint, a 4 px cobalt edge and a cobalt icon. Mobile: top bar + full screen menu.
+- Page header: Jost title, one line of description, one primary action, then a 2 px cobalt rule.
+- Tables: 44 px rows, hairlines, well coloured header, mono tabular figures right aligned, no zebra; the selected row takes the cobalt tint.
+- The rollout figure is the anchor of the inspector (`numeral-2`, cobalt).
+- Forms: labels above, 44 px inputs, 2 px radius, inline specific errors. Dialogs: square, cobalt rule, one primary action.
 
 ## 6. Banned (checked on every page)
-Centered hero over a gradient, glow or map; purple, indigo or blue as the accent; Inter, Geist or system fonts everywhere; three identical icon cards; "Everything you need" grids; emoji or stock art; glassmorphism; one big radius on everything; pill badges; uniform section rhythm; stat strips with invented numbers; "streamline", "seamless", "supercharge"; cream paper; mono step numbers as decoration; a dark terminal mock in the hero.
+Centred hero over a gradient, glow or map; purple or indigo; Inter, Geist or system fonts everywhere; three identical icon cards; "Everything you need" grids; emoji or stock art; glassmorphism; one big radius on everything; pill badges; uniform section rhythm; invented stats; "streamline", "seamless", "supercharge"; cream paper; black primary buttons; dark mode; a dark terminal mock in the hero.
 
 ## 7. Copy
-Unchanged in substance (it was already honest and dated). Headlines stay concrete ("Fix your Capacitor app today. Not after review."). Example data is always labelled. No invented logos, stats or testimonials.
+Unchanged in substance. Example data is always labelled. No invented logos, stats or testimonials.

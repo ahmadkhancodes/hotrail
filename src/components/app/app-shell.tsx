@@ -38,11 +38,11 @@ function NavLink({ item, pathname, onNavigate }: { item: NavItem; pathname: stri
       aria-current={active ? "page" : undefined}
       className={cn(
         "relative flex min-h-11 items-center gap-3 px-3 py-2 body-5 transition-colors duration-300 ease-out-kit focus-visible:focus-ring",
-        active ? "bg-surface-sunken font-semibold text-text" : "text-text-subtle hover:bg-surface-sunken hover:text-text",
+        active ? "bg-marker font-semibold text-text" : "text-text-subtle hover:bg-surface-sunken hover:text-text",
       )}
     >
-      {active ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-marker" /> : null}
-      <Icon size={18} weight={active ? "bold" : "regular"} aria-hidden className={active ? "text-text" : "text-text-muted"} />
+      {active ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-marker-bar" /> : null}
+      <Icon size={18} weight={active ? "bold" : "regular"} aria-hidden className={active ? "text-text-accent" : "text-text-muted"} />
       {item.label}
     </Link>
   );
@@ -120,7 +120,7 @@ export function AppShell({ org, user, isAdmin, productName, banners, children }:
     <div className="flex min-h-dvh flex-col bg-surface lg:flex-row">
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col border-r border-border bg-surface p-4 lg:flex">
         <div className="mb-6 px-3 pt-2">
-          <Link href="/app" className="inline-flex items-center gap-2 rounded-sm text-text focus-visible:focus-ring"><span aria-hidden className="inline-block size-3 bg-marker ring-1 ring-text" /><span className="heading-6">{productName}</span></Link>
+          <Link href="/app" className="inline-flex items-center gap-2 rounded-sm text-text focus-visible:focus-ring"><span aria-hidden className="inline-block h-3 w-4 border-y-4 border-action" /><span className="heading-6">{productName}</span></Link>
         </div>
         <div className="min-h-0 flex-1">
           <SidebarBody org={org} user={user} isAdmin={isAdmin} pathname={pathname} />
@@ -128,7 +128,7 @@ export function AppShell({ org, user, isAdmin, productName, banners, children }:
       </aside>
 
       <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-surface px-4 py-2 lg:hidden">
-        <Link href="/app" className="inline-flex items-center gap-2 rounded-sm text-text focus-visible:focus-ring"><span aria-hidden className="inline-block size-3 bg-marker ring-1 ring-text" /><span className="heading-6">{productName}</span></Link>
+        <Link href="/app" className="inline-flex items-center gap-2 rounded-sm text-text focus-visible:focus-ring"><span aria-hidden className="inline-block h-3 w-4 border-y-4 border-action" /><span className="heading-6">{productName}</span></Link>
         <button
           type="button"
           aria-label="Open menu"
