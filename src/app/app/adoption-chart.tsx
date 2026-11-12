@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import type { UsageSeries } from "@/lib/ship/usage";
 
-const COLORS = ["var(--focus)", "var(--lamp-green)", "var(--lamp-amber)", "var(--text-subtle)"];
+// One ink family; series are told apart by dash pattern and the end label, never by hue alone (state colours stay for state).
+const COLORS = ["var(--text)", "var(--text-muted)", "var(--text-subtle)", "var(--border-input)"];
 const DASH = [undefined, "6 3", "2 3", "10 3 2 3"];
 const W = 640;
 const H = 180;

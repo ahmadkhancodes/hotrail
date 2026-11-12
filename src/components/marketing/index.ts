@@ -7,5 +7,5 @@ export { PricingTable } from "./pricing-table";
 export { Faq, type FaqItem } from "./faq";
 export { TaglineReveal } from "./tagline-reveal";
 export { FinalCta } from "./final-cta";
-export { MimicPanel } from "./mimic-panel";
+export { ReleaseBoard } from "./release-board";
 export { CommandChip } from "./command-chip";

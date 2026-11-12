@@ -49,3 +49,23 @@ export async function magicLink(request: APIRequestContext, email: string): Prom
   }, { timeout: 10_000 }).toBeTruthy();
   return link!;
 }
+
+/**
+ * API magic-link sign-in for specs that seed data. The whole suite signs in from one IP, so Better Auth's per IP limits
+ * can refuse (429) or drop a request late in the run; wait and ask again rather than fail on test plumbing.
+ */
+export async function signInViaApi(page: Page, request: APIRequestContext, email: string, origin: string) {
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const res = await page.request.post("/api/auth/sign-in/magic-link", { data: { email, callbackURL: "/app" }, headers: { origin } });
+    if (res.ok()) {
+      for (let i = 0; i < 10; i++) {
+        const box = await (await request.get(`/api/dev/outbox?to=${encodeURIComponent(email)}`)).json();
+        const link = /https?:\/\/\S+magic-link\/verify\S+/.exec(box.messages.at(-1)?.text ?? "")?.[0];
+        if (link) return void (await page.goto(link));
+        await page.waitForTimeout(500);
+      }
+    }
+    await page.waitForTimeout(11_000);
+  }
+  throw new Error(`no magic link for ${email} after 6 attempts`);
+}

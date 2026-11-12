@@ -14,7 +14,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
           <button
             type="button"
             onClick={reset}
-            className="button-md min-h-11 rounded-md bg-action px-3 py-2 text-action-text transition-colors duration-300 hover:bg-action-hover focus-visible:focus-ring"
+            className="button-md min-h-11 bg-action px-3 py-2 text-action-text transition-colors duration-300 hover:bg-action-hover focus-visible:focus-ring"
           >
             Reload
           </button>

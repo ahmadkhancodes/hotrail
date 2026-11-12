@@ -1,6 +1,8 @@
-import { Atkinson_Hyperlegible, Barlow_Condensed, Red_Hat_Mono } from "next/font/google";
+import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 
-// Hotrail type system (docs/DESIGN.md §6): condensed railway display, hyperlegible body, mono for data.
-export const sans = Atkinson_Hyperlegible({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-kit-sans", display: "swap" });
-export const mono = Red_Hat_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-kit-mono", display: "swap" });
-export const display = Barlow_Condensed({ subsets: ["latin"], weight: ["500", "600"], variable: "--font-kit-display", display: "swap" });
+// Hotrail type system (docs/design-brief.md §4): expanded grotesque display, engineering text face, mono for figures.
+export const sans = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-kit-sans", display: "swap" });
+export const mono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-kit-mono", display: "swap", preload: false });
+// "optional" for the display face: it is preloaded, so it is in place on a normal load, and a slow first visit keeps the
+// metric-matched fallback instead of a late swap that would push LCP (the hero H1) back.
+export const display = Archivo({ subsets: ["latin"], axes: ["wdth"], variable: "--font-kit-display", display: "optional" });

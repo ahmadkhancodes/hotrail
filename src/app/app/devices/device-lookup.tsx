@@ -50,7 +50,7 @@ export function DeviceLookup({ bundleId, initialQuery, retentionDays }: { bundle
 
       {d ? (
         <section aria-label="Device" className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <dl className="m-0 grid h-fit grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-md border border-border bg-surface p-4 body-6">
+          <dl className="m-0 grid h-fit grid-cols-[auto_1fr] gap-x-4 gap-y-2 border border-border bg-surface p-4 body-6">
             <dt className="text-text-subtle">Device id</dt><dd className="m-0 break-all text-right font-mono">{d.deviceId}</dd>
             <dt className="text-text-subtle">Custom id</dt><dd className="m-0 text-right font-mono">{d.customId ?? "none"}</dd>
             <dt className="text-text-subtle">Platform</dt><dd className="m-0 text-right">{d.platform}</dd>

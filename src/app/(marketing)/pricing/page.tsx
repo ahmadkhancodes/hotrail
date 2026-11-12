@@ -48,19 +48,19 @@ const jsonLd = {
 export default function PricingPage() {
   return (
     <>
-      <Section labelledBy="pricing-title">
+      <Section labelledBy="pricing-title" rule={false} rhythm="md">
         <h1 className="sr-only">{title}</h1>
         <PricingTable title="Half the fare. Same line." />
         <p className="body-3 mt-8 max-w-2xl text-text-subtle">No bandwidth meter. No seats. Hit your limit and your app keeps running; we pause new downloads and ask. Capgo list prices are monthly, checked {capgoCheckedOn}.</p>
       </Section>
       <Section tone="raised" labelledBy="limits-title">
         <h2 id="limits-title" className="heading-4 md:heading-3 text-text">Limits by plan</h2>
-        <div role="region" aria-label="Plan limits, scrolls sideways on small screens" tabIndex={0} className="mt-8 overflow-x-auto rounded-md border border-border bg-surface focus-visible:focus-ring">
+        <div role="region" aria-label="Plan limits, scrolls sideways on small screens" tabIndex={0} className="mt-8 overflow-x-auto border-t-2 border-rule bg-surface focus-visible:focus-ring">
           <table className="w-full min-w-[36rem] border-collapse text-left">
             <caption className="sr-only">Limits for each Hotrail plan</caption>
             <thead>
               <tr className="border-b border-border-strong">
-                <th scope="col" className="sticky left-0 bg-surface-raised px-4 py-3 caption-3 text-text-subtle">Limit</th>
+                <th scope="col" className="sticky left-0 bg-surface px-4 py-3 caption-3 text-text-subtle">Limit</th>
                 {plans.map((p) => <th key={p.id} scope="col" className="px-4 py-3 title-4 text-text">{p.name}</th>)}
                 <th scope="col" className="px-4 py-3 title-4 text-text">{product.scale.name}</th>
               </tr>

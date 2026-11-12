@@ -26,7 +26,23 @@ export default async function LinePage({ searchParams }: { searchParams: Promise
         <PageHeader title="Line" description={`${ctx.org.name}: every channel is a track, every release is a train.`} />
         <EmptyState
           title="No trains on this line yet."
-          body={<>Run the CLI in your Capacitor project. It finds your app, creates a signing key, and uploads your first bundle.<br /><code className="mt-2 inline-block">{cmd}</code></>}
+          body={
+            <>
+              <p>Run the CLI in your Capacitor project. It finds your app, creates a signing key, and uploads your first bundle.</p>
+              <pre className="mt-3 overflow-x-auto border border-border bg-surface-sunken px-3 py-2 font-mono caption-2 text-text"><code><span aria-hidden className="text-text-muted">$ </span>{cmd}</code></pre>
+            </>
+          }
+          visual={
+            <div className="w-full max-w-xl border border-dashed border-border-input" aria-label="Example of your first channel row" role="img">
+              <div className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-4 px-4 py-3 opacity-60">
+                <span className="body-5 text-text">production</span>
+                <span className="rounded-sm border border-plate-ink bg-plate px-1 font-mono caption-3 tracking-widest text-plate-ink">1A00</span>
+                <span className="block h-2 bg-border-input" />
+                <span className="caption-4 text-text"><span aria-hidden className="text-lamp-green">●</span> Live</span>
+              </div>
+              <p className="border-t border-dashed border-border-input px-4 py-2 caption-5 text-text-muted">Example: your first upload shows up as headcode 1A00.</p>
+            </div>
+          }
           action={
             <div className="flex flex-wrap gap-2">
               <CopyButton value={cmd} label="Copy command" />

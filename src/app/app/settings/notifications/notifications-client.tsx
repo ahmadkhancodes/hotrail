@@ -38,7 +38,7 @@ export function NotificationsClient({ initial }: { initial: Pref[] }) {
                 aria-labelledby={`n-${p.kind}`}
                 disabled={busy === p.kind}
                 onClick={() => toggle(p)}
-                className="button-sm min-h-11 min-w-20 rounded-md border border-border-strong px-3 py-2 text-text transition-colors duration-300 hover:bg-surface-raised focus-visible:focus-ring"
+                className="button-sm min-h-11 min-w-20 border border-border-strong px-3 py-2 text-text transition-colors duration-300 hover:bg-surface-raised focus-visible:focus-ring"
               >
                 {p.enabled ? "On" : "Off"}
               </button>

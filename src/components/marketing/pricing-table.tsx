@@ -42,7 +42,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         {title ? <h2 id={`${id}-title`} className="heading-4 md:heading-2 text-text">{title}</h2> : <span />}
         <div className="flex flex-col gap-2 md:items-end">
-            <div role="group" aria-label="Billing interval" className="inline-flex w-fit rounded-md border border-border bg-surface-raised p-1">
+            <div role="group" aria-label="Billing interval" className="inline-flex w-fit border border-text bg-surface">
               {options.map((o) => (
                 <button
                   key={o.id}
@@ -50,8 +50,8 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                   aria-pressed={interval === o.id}
                   onClick={() => setBilling(o.id)}
                   className={cn(
-                    "min-h-11 rounded-sm px-4 button-sm transition-colors duration-300 ease-out-kit focus-visible:focus-ring",
-                    interval === o.id ? "bg-surface text-text" : "text-text-subtle hover:text-text",
+                    "min-h-11 px-4 button-sm transition-colors duration-300 ease-out-kit focus-visible:focus-ring",
+                    interval === o.id ? "bg-action text-action-text" : "text-text-subtle hover:text-text",
                   )}
                 >
                   {o.label}
@@ -62,7 +62,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
           </div>
       </div>
 
-      <ul className="mt-8 grid gap-4 md:mt-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-y-0">
+      <ul className="mt-8 grid border-t-2 border-rule bg-surface md:mt-12 md:grid-cols-2 lg:grid-cols-4 lg:gap-y-0">
         {plans.map((plan) => {
           const price = priceFor(plan, interval);
           const free = !price;
@@ -71,20 +71,20 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
             <li
               key={plan.id}
               className={cn(
-                "grid grid-rows-[auto_auto_auto_auto_1fr] rounded-md border bg-surface p-6 lg:row-span-5 lg:grid-rows-subgrid",
-                plan.featured ? "border-action ring-1 ring-action" : "border-border",
+                "relative grid grid-rows-[auto_auto_auto_auto_1fr] border-b border-border p-6 md:border-r lg:row-span-5 lg:grid-rows-subgrid",
+                "max-md:px-0 md:[&:nth-child(2n)]:border-r-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(4n)]:border-r-0",
               )}
             >
               <div className="pb-6">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="heading-6 text-text">{plan.name}</h3>
-                  {plan.featured ? <span className="caption-3 text-action">Most popular</span> : null}
+                  {plan.featured ? <span className="bg-marker px-2 py-0.5 caption-3 text-marker-ink">Our pick for teams</span> : null}
                 </div>
                 <p className="body-6 mt-1 text-text-subtle">{plan.tagline}</p>
               </div>
               <div className="pb-6">
                 <p className="flex items-baseline gap-1">
-                  <span className="heading-3 tabular-nums text-text">{free ? "$0" : money(price.usd)}</span>
+                  <span className="figure-1 text-text">{free ? "$0" : money(price.usd)}</span>
                   <span className="body-6 text-text-subtle">{free ? "free" : `per ${price.interval}`}</span>
                 </p>
                 {price && price.interval === "year" && yearlySaving(plan) ? (
@@ -100,12 +100,9 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                 <Link href={href} className={cn(buttonClass(plan.featured ? "primary" : "secondary", "md"), "w-full")}>{plan.cta}</Link>
               </div>
               <p className="caption-2 pb-6 text-text-subtle">{free ? RISK_FREE : RISK_PAID}</p>
-              <ul className="flex flex-col gap-2 border-t border-border pt-6">
+              <ul className="flex flex-col border-t border-border">
                 {plan.highlights.map((h) => (
-                  <li key={h} className="flex items-start gap-2 body-6 text-text">
-                    <Check size={16} weight="regular" aria-hidden className="mt-0.5 shrink-0 text-success" />
-                    <span>{h}</span>
-                  </li>
+                  <li key={h} className="border-b border-border py-2 body-6 text-text last:border-b-0">{h}</li>
                 ))}
               </ul>
             </li>
@@ -113,7 +110,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
         })}
       </ul>
 
-      <div className="mt-4 grid gap-4 rounded-md border border-border bg-surface p-6 md:grid-cols-12 md:items-center">
+      <div className="grid gap-4 border-b border-rule bg-surface p-6 md:grid-cols-12 md:items-center">
         <div className="md:col-span-4">
           <h3 className="heading-6 text-text">{product.scale.name}</h3>
           <p className="body-6 mt-1 text-text-subtle">{product.scale.tagline}</p>
@@ -121,7 +118,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
         </div>
         <ul className="flex flex-col gap-1 body-6 text-text md:col-span-5">
           {product.scale.highlights.map((h) => (
-            <li key={h} className="flex items-start gap-2"><Check size={16} weight="regular" aria-hidden className="mt-0.5 shrink-0 text-success" /><span>{h}</span></li>
+            <li key={h} className="flex items-start gap-2"><Check size={16} weight="regular" aria-hidden className="mt-0.5 shrink-0 text-text-muted" /><span>{h}</span></li>
           ))}
         </ul>
         <div className="md:col-span-3 md:justify-self-end">

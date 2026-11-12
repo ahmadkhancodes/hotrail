@@ -134,7 +134,7 @@ export function BillingClient(p: Props) {
       <section aria-labelledby="plans-h" className="flex flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <h2 id="plans-h" className="title-2 text-text">Plans</h2>
-          <div role="group" aria-label="Billing interval" className="inline-flex rounded-md border border-border-strong p-1">
+          <div role="group" aria-label="Billing interval" className="inline-flex w-fit border border-text">
             {(["month", "year"] as const).map((i) => (
               <button
                 key={i}
@@ -142,7 +142,7 @@ export function BillingClient(p: Props) {
                 aria-pressed={interval === i}
                 onClick={() => setInterval(i)}
                 className={cn(
-                  "button-sm min-h-8 max-sm:min-h-11 rounded-sm px-3 py-1 transition-colors duration-300 focus-visible:focus-ring",
+                  "button-sm min-h-11 px-4 py-1 transition-colors duration-300 focus-visible:focus-ring",
                   interval === i ? "bg-action text-action-text" : "text-text-subtle hover:text-text",
                 )}
               >
@@ -151,7 +151,7 @@ export function BillingClient(p: Props) {
             ))}
           </div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid border-t-2 border-rule bg-surface md:grid-cols-2 xl:grid-cols-4">
           {product.plans.map((pl) => {
             const price = pl.prices.find((x) => x.interval === interval) ?? pl.prices[0];
             const current = pl.id === live.planId;
@@ -160,15 +160,16 @@ export function BillingClient(p: Props) {
               <article
                 key={pl.id}
                 aria-label={pl.name}
-                className={cn("flex flex-col gap-4 rounded-lg border bg-surface p-4", current || chosen ? "border-action" : "border-border")}
+                className={cn("relative flex flex-col gap-4 border-b border-border p-4 md:border-r", current || chosen ? "bg-surface-sunken" : "bg-surface")}
               >
+                {current || chosen ? <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-marker" /> : null}
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="title-3 text-text">{pl.name}</h3>
-                  {current ? <Badge tone="success">Current</Badge> : null}
+                  {current ? <Badge tone="success">Current</Badge> : pl.featured && !chosen ? <span className="bg-marker px-2 py-0.5 caption-3 text-marker-ink">Our pick for teams</span> : null}
                 </div>
                 <p className="body-6 text-text-subtle">{pl.tagline}</p>
                 <p className="text-text">
-                  <span className="heading-5 tabular-nums">{price ? money(price.usd) : "$0"}</span>
+                  <span className="font-mono title-1 tabular-nums">{price ? money(price.usd) : "$0"}</span>
                   <span className="caption-2 text-text-subtle"> {price ? `per ${price.interval}` : "forever"}</span>
                 </p>
                 {price && price.interval !== interval ? <p className="caption-2 text-text-muted">Billed {price.interval === "year" ? "yearly" : "monthly"} only.</p> : null}
@@ -180,7 +181,7 @@ export function BillingClient(p: Props) {
                 ) : p.isPaid ? (
                   <Button variant="secondary" onClick={portal} loading={busy === "portal"} disabled={!p.canManage}>Change in billing portal</Button>
                 ) : (
-                  <Button onClick={() => checkout(pl)} loading={busy === pl.id} disabled={!p.canManage || !!busy}>{pl.cta}</Button>
+                  <Button variant={chosen || (pl.featured && !p.preselect) ? "primary" : "secondary"} onClick={() => checkout(pl)} loading={busy === pl.id} disabled={!p.canManage || !!busy}>{pl.cta}</Button>
                 )}
               </article>
             );
