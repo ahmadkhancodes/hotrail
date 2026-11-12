@@ -19,7 +19,7 @@ export function DocsNav({ groups, current }: { groups: NavGroup[]; current: stri
           id="docs-select"
           value={current}
           onChange={(e) => router.push(`/docs/${e.target.value}`)}
-          className="body-5 min-h-11 w-full rounded-md border border-border-strong bg-surface px-3 text-text focus-visible:focus-ring"
+          className="body-5 min-h-11 w-full border border-border-strong bg-surface px-3 text-text focus-visible:focus-ring"
         >
           {groups.map((g) => (
             <optgroup key={g.title} label={g.title}>
@@ -41,7 +41,7 @@ export function DocsNav({ groups, current }: { groups: NavGroup[]; current: stri
                     href={`/docs/${i.slug}`}
                     aria-current={i.slug === current ? "page" : undefined}
                     className={cn(
-                      "body-5 flex min-h-11 items-center rounded-md px-3 focus-visible:focus-ring",
+                      "body-5 flex min-h-11 items-center px-3 focus-visible:focus-ring",
                       i.slug === current ? "bg-surface-raised text-text" : "text-text-subtle hover:bg-surface-raised hover:text-text",
                     )}
                   >

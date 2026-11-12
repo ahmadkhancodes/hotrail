@@ -11,7 +11,7 @@ export function UsageBanner({ usage, entitlement }: { usage: UsageState[]; entit
   const pastDue = entitlement?.status === "past_due";
   if (!worst && !pastDue) return null;
   const link = (label: string) => (
-    <Link href="/app/billing" className="button-sm inline-flex min-h-11 items-center rounded-md border border-border-strong bg-surface px-3 py-2 text-text transition-colors duration-300 hover:bg-surface-raised focus-visible:focus-ring">
+    <Link href="/app/billing" className="button-sm inline-flex min-h-11 items-center border border-border-strong bg-surface px-3 py-2 text-text transition-colors duration-300 hover:bg-surface-raised focus-visible:focus-ring">
       {label}
     </Link>
   );

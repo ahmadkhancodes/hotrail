@@ -59,10 +59,10 @@ test("public pages render with metadata and no horizontal overflow at 375px", as
   expect(await (await page.request.get("/llms.txt")).text()).toContain("Hotrail by BufferSol");
 });
 
-test("landing shows the mimic panel, the init command and the dated Appflow note", async ({ page }) => {
+test("landing shows the release board, the init command and the dated Appflow note", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Fix your Capacitor app today");
-  await expect(page.getByRole("img", { name: /signal box panel/i }).first()).toBeAttached();
+  await expect(page.getByRole("figure", { name: /release board/i }).first()).toBeVisible();
   await expect(page.getByText("npx @buffersol/hotrail init").first()).toBeVisible();
   await expect(page.getByText("31 Dec 2027").first()).toBeVisible();
   await page.goto("/pricing");

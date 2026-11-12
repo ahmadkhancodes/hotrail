@@ -26,7 +26,7 @@ export default function DocsIndexPage() {
                 <li key={d.slug}>
                   <Link
                     href={`/docs/${d.slug}`}
-                    className="flex h-full min-w-0 flex-col gap-1 break-words rounded-md border border-border bg-surface p-4 hover:bg-surface-raised focus-visible:focus-ring"
+                    className="flex h-full min-w-0 flex-col gap-1 break-words border border-border bg-surface p-4 hover:bg-surface-raised focus-visible:focus-ring"
                   >
                     <span className="title-3 text-text">{d.title}</span>
                     <span className="body-6 text-text-subtle">{d.description}</span>

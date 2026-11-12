@@ -16,7 +16,7 @@ export function Faq({ title = "Questions, answered", items }: { title?: string; 
   return (
     <Section labelledBy="faq-title">
       <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
-        <h2 id="faq-title" className="heading-4 md:heading-2 text-text lg:col-span-4">{title}</h2>
+        <h2 id="faq-title" className="heading-4 md:heading-3 text-text lg:col-span-4">{title}</h2>
         <div className="lg:col-span-8">
           {items.map((item) => (
             <details key={item.q} className="group border-t border-border last:border-b">

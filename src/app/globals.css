@@ -10,26 +10,22 @@
   --font-mono-family: var(--font-kit-mono), ui-monospace, monospace;
   --font-display-family: var(--font-kit-display), ui-sans-serif, system-ui, sans-serif;
 
-  /* raw ramp: signal navy ink ramp on cool paper (docs/DESIGN.md §5) */
+  /* raw ramp: ink on paper white (docs/design-brief.md §4) */
   --n-0: #ffffff;
-  --n-50: #f6f5f0;
-  --n-100: #eceff4;
-  --n-200: #d5dae2;
-  --n-300: #b9c1cd;
-  --n-400: #8a96a8;
-  --n-500: #5f6b7e;
-  --n-600: #4a5668;
-  --n-700: #2f3d55;
-  --n-800: #1c2b44;
-  --n-900: #0f1b2d;
-  --n-1000: #0a101b;
-  --accent-500: #14284b; /* signal navy */
-  --accent-600: #0e1d38;
-  --amber-500: #e0a21b; /* signal amber */
+  --n-50: #f8f9fa;
+  --n-100: #f3f4f5;
+  --n-200: #e3e5e8;
+  --n-300: #c9cdd2;
+  --n-400: #8b929b;
+  --n-500: #5e656e;
+  --n-600: #4a5058;
+  --n-700: #2b3036;
+  --n-900: #0e1012;
+  --marker-500: #ffd23f; /* signal yellow: marker fill only, ink text on top */
 
   /* role tokens: light */
   --surface: var(--n-0);
-  --surface-raised: var(--n-50);
+  --surface-raised: var(--n-100);
   --surface-sunken: var(--n-100);
   --surface-inverse: var(--n-900);
   --text: var(--n-900);
@@ -38,26 +34,31 @@
   --text-inverse: var(--n-0);
   --border: var(--n-200);
   --border-strong: var(--n-300);
-  --action: var(--accent-500);
-  --action-hover: var(--accent-600);
+  --border-input: var(--n-400);
+  --rule: var(--n-900);
+  --action: var(--n-900);
+  --action-hover: var(--n-700);
   --action-text: #ffffff;
-  --focus: #1f5fd1; /* 5.6:1 on white (WCAG 1.4.11) */
-  --success: #1f7a45; /* the go lamp; 5.4:1 on white */
-  --success-surface: #e8f5ed;
+  --marker: var(--marker-500);
+  --marker-ink: var(--n-900);
+  --focus: #1859d6; /* 5.6:1 on white (WCAG 1.4.11) */
+  --success: #137a43;
+  --success-surface: #e9f5ee;
   --warning: #8a5a00;
-  --warning-surface: #fdf3da;
-  --danger: #c8372d;
-  --danger-surface: #fbeceb;
-  --panel: #0f1b2d;
-  --panel-ink: #e7ecf4;
-  --panel-dim: #8190a8;
-  --rail: #8fa0b8;
-  --plate: #f4f1e6;
-  --plate-ink: #0f1b2d;
-  --lamp-red: #e4574d;
-  --lamp-amber: #f0b93a;
-  --lamp-green: #3dbb73;
-  --shadow-color: 215 40% 12%;
+  --warning-surface: #fdf4dc;
+  --danger: #c22e1f;
+  --danger-surface: #fbecea;
+  /* The release board is light now: same paper, ink rails, yellow plates. */
+  --panel: var(--n-0);
+  --panel-ink: var(--n-900);
+  --panel-dim: var(--n-500);
+  --rail: var(--n-900);
+  --plate: var(--marker-500);
+  --plate-ink: var(--n-900);
+  --lamp-red: #c22e1f;
+  --lamp-amber: #e9a400;
+  --lamp-green: #16934f;
+  --shadow-color: 210 10% 8%;
   color-scheme: light;
 }
 
@@ -81,6 +82,10 @@
   --color-text-inverse: var(--text-inverse);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
+  --color-border-input: var(--border-input);
+  --color-rule: var(--rule);
+  --color-marker: var(--marker);
+  --color-marker-ink: var(--marker-ink);
   --color-action: var(--action);
   --color-action-hover: var(--action-hover);
   --color-action-text: var(--action-text);
@@ -119,11 +124,12 @@
   --spacing-20: 80px;
   --spacing-24: 96px;
 
-  /* Sharp, engineered corners (docs/DESIGN.md §7): 2 and 4 only, pill for lamps. */
+  /* Timetable corners (docs/design-brief.md §4): containers square, controls 2px, lamps round. */
+  --radius-xs: 2px;
   --radius-sm: 2px;
-  --radius-md: 4px;
-  --radius-lg: 4px;
-  --radius-xl: 4px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
 
   --ease-out-kit: cubic-bezier(0.22, 1, 0.36, 1);
   --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
@@ -131,12 +137,12 @@
 }
 
 /* ---- Named type styles (playbook §5). Use these, never loose size+weight pairs. ---- */
-@utility heading-1 { font-family: var(--font-display-family); font-size: 3.75rem; line-height: 1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
-@utility heading-2 { font-family: var(--font-display-family); font-size: 3rem; line-height: 1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
-@utility heading-3 { font-family: var(--font-display-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
-@utility heading-4 { font-family: var(--font-display-family); font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
-@utility heading-5 { font-family: var(--font-display-family); font-size: 1.5rem; line-height: 2rem; font-weight: 600; text-wrap: balance; }
-@utility heading-6 { font-family: var(--font-display-family); font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; text-wrap: balance; }
+@utility heading-1 { font-family: var(--font-display-family); font-size: 3.75rem; line-height: 1; font-weight: 700; font-stretch: 125%; letter-spacing: -0.03em; text-wrap: balance; }
+@utility heading-2 { font-family: var(--font-display-family); font-size: 3rem; line-height: 1; font-weight: 650; font-stretch: 112%; letter-spacing: -0.02em; text-wrap: balance; }
+@utility heading-3 { font-family: var(--font-display-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 650; font-stretch: 112%; letter-spacing: -0.015em; text-wrap: balance; }
+@utility heading-4 { font-family: var(--font-display-family); font-size: 1.875rem; line-height: 2.25rem; font-weight: 650; font-stretch: 112%; letter-spacing: -0.01em; text-wrap: balance; }
+@utility heading-5 { font-family: var(--font-display-family); font-size: 1.5rem; line-height: 2rem; font-weight: 650; font-stretch: 112%; text-wrap: balance; }
+@utility heading-6 { font-family: var(--font-display-family); font-size: 1.25rem; line-height: 1.75rem; font-weight: 650; font-stretch: 112%; text-wrap: balance; }
 @utility title-1 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; }
 @utility title-2 { font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; }
 @utility title-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; }
@@ -157,6 +163,7 @@
 @utility caption-3 { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
 @utility caption-4 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
 @utility caption-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
+@utility figure-1 { font-family: var(--font-mono-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 
 @utility focus-ring {
   outline: 2px solid var(--focus);
@@ -169,18 +176,18 @@
     background: var(--surface);
     color: var(--text);
     font-family: var(--font-sans-family);
-    font-feature-settings: "ss01", "cv11";
+    font-feature-settings: "kern";
     -webkit-font-smoothing: antialiased;
   }
   :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-  ::selection { background: var(--action); color: var(--action-text); }
+  ::selection { background: var(--marker); color: var(--marker-ink); }
   code, kbd, pre, samp { font-family: var(--font-mono-family); }
 }
 
 /* Scroll reveal (rise 32px + fade, once). Reduced motion: opacity only. */
 .kit-reveal { opacity: 0; transform: translateY(32px); transition: opacity 700ms var(--ease-out-kit), transform 700ms var(--ease-out-kit); }
 .kit-reveal[data-visible="true"] { opacity: 1; transform: none; }
-.kit-word { opacity: 0.3; transition: opacity 500ms var(--ease-out-kit); }
+.kit-word { opacity: 0.5; transition: opacity 500ms var(--ease-out-kit); }
 .kit-word[data-on="true"] { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .kit-reveal { transform: none; transition: opacity 300ms var(--ease-out-kit); }
@@ -218,3 +225,7 @@
     cursor: not-allowed;
   }
 }
+
+/* Release board signature beat (docs/design-brief.md §4): the live rollout bar fills from its previous step, once. */
+.rb-bar { animation: rb-fill 700ms var(--ease-out-kit) 300ms both; }
+@keyframes rb-fill { from { transform: scaleX(var(--rb-from, 0)); } }

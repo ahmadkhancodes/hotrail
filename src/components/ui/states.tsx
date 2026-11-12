@@ -3,13 +3,13 @@ import { cn } from "./cn";
 
 /** Skeleton shaped like the real layout (no circular spinners for content). */
 export function Skeleton({ className }: { className?: string }) {
-  return <div aria-hidden className={cn("rounded-md bg-surface-sunken motion-safe:animate-pulse", className)} />;
+  return <div aria-hidden className={cn("bg-surface-sunken motion-safe:animate-pulse", className)} />;
 }
 
 /** Composed getting-started view that teaches the next action. */
 export function EmptyState({ title, body, action, visual }: { title: string; body: ReactNode; action?: ReactNode; visual?: ReactNode }) {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-lg border border-border bg-surface-raised p-8">
+    <div className="flex flex-col items-start gap-4 border border-border border-t-2 border-t-rule bg-surface p-6 md:p-8">
       {visual}
       <div className="flex max-w-xl flex-col gap-2">
         <h3 className="heading-6 text-text">{title}</h3>
@@ -23,7 +23,7 @@ export function EmptyState({ title, body, action, visual }: { title: string; bod
 /** Inline, specific error: what failed and what to do next. */
 export function ErrorState({ title, body, action }: { title: string; body: ReactNode; action?: ReactNode }) {
   return (
-    <div role="alert" className="flex flex-col items-start gap-3 rounded-lg border border-danger bg-danger-surface p-6">
+    <div role="alert" className="flex flex-col items-start gap-3 border border-danger border-t-2 bg-danger-surface p-6">
       <h3 className="title-3 text-danger">{title}</h3>
       <div className="body-6 text-text">{body}</div>
       {action}
@@ -41,7 +41,7 @@ const tones: Record<Tone, string> = {
 
 export function Notice({ tone = "info", title, children, action }: { tone?: Tone; title?: string; children?: ReactNode; action?: ReactNode }) {
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={cn("flex flex-col gap-2 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between", tones[tone])}>
+    <div role={tone === "danger" ? "alert" : "status"} className={cn("flex flex-col gap-2 border p-4 sm:flex-row sm:items-center sm:justify-between", tones[tone])}>
       <div className="flex flex-col gap-1">
         {title ? <p className="title-4">{title}</p> : null}
         {children ? <div className="body-6 text-text-subtle">{children}</div> : null}

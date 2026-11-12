@@ -1,33 +1,34 @@
 import type { ReactNode } from "react";
 import { Section } from "@/components/ui/layout";
-import { Reveal } from "@/components/ui/reveal";
-import { cn } from "@/components/ui/cn";
 
 export interface Step {
   title: string;
   body: ReactNode;
-  /** A UI fragment or code sample, not an icon. */
+  /** The command or UI fragment for this step, not an icon. */
   visual: ReactNode;
 }
 
-export function HowItWorks({ title, steps }: { title: ReactNode; steps: Step[] }) {
+/** Steps as ruled timetable rows: the command is the row's anchor, the explanation sits beside it. */
+export function HowItWorks({ title, intro, steps }: { title: ReactNode; intro?: ReactNode; steps: Step[] }) {
   return (
-    <Section labelledBy="how-title">
-      <h2 id="how-title" className="heading-4 md:heading-2 max-w-2xl text-text">{title}</h2>
-      <ol className="mt-12 flex flex-col gap-16 md:mt-16 md:gap-24">
-        {steps.map((step, i) => (
-          <li key={step.title}>
-            <Reveal className="grid items-center gap-6 lg:grid-cols-12 lg:gap-16">
-              <div className={cn("flex flex-col gap-3 lg:col-span-5", i % 2 === 1 && "lg:order-2 lg:col-start-8")}>
-                <p aria-hidden className="heading-2 tabular-nums text-text-muted">{String(i + 1).padStart(2, "0")}</p>
-                <h3 className="heading-5 text-text"><span className="sr-only">Step {i + 1}: </span>{step.title}</h3>
-                <p className="body-3 text-text-subtle">{step.body}</p>
+    <Section labelledBy="how-title" rhythm="md">
+      <div className="grid gap-8 lg:grid-cols-12 lg:gap-6">
+        <div className="flex flex-col gap-4 lg:col-span-4 lg:pr-8">
+          <h2 id="how-title" className="heading-4 md:heading-3 text-text">{title}</h2>
+          {intro ? <p className="body-3 text-text-subtle">{intro}</p> : null}
+        </div>
+        <ol className="m-0 flex list-none flex-col p-0 lg:col-span-8">
+          {steps.map((step, i) => (
+            <li key={step.title} className="grid gap-3 border-t border-border py-6 first:border-t-0 first:pt-0 md:grid-cols-8 md:gap-6">
+              <h3 className="title-2 text-text md:col-span-2"><span className="sr-only">Step {i + 1}: </span>{step.title}</h3>
+              <div className="flex min-w-0 flex-col gap-3 md:col-span-6">
+                {step.visual}
+                <p className="body-6 text-text-subtle">{step.body}</p>
               </div>
-              <div className={cn("min-w-0 lg:col-span-7", i % 2 === 1 && "lg:order-1 lg:col-start-1")}>{step.visual}</div>
-            </Reveal>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ol>
+      </div>
     </Section>
   );
 }

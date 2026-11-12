@@ -10,7 +10,7 @@ function Text({ children }: { children: string }) {
     <>
       {children.split(placeholder).map((part, i) =>
         part.startsWith("{{") ? (
-          <mark key={i} className="rounded-md bg-warning-surface px-1 text-text">{part}</mark>
+          <mark key={i} className="bg-warning-surface px-1 text-text">{part}</mark>
         ) : (
           part
         ),
@@ -40,7 +40,7 @@ function Block({ block }: { block: LegalBlock }) {
   }
   const { head, rows } = block.table;
   return (
-    <div className="overflow-x-auto rounded-md border border-border">
+    <div className="overflow-x-auto border border-border">
       <table className="body-6 w-full border-collapse text-left">
         <thead className="bg-surface-raised text-text">
           <tr>
@@ -80,7 +80,7 @@ export function LegalDoc({ doc }: { doc: LegalDocData }) {
             Last updated <time dateTime={product.legal.effectiveDate}>{formatted}</time>
           </p>
         </header>
-        <nav aria-label="Table of contents" className="my-8 rounded-md border border-border bg-surface-raised p-4">
+        <nav aria-label="Table of contents" className="my-8 border border-border bg-surface-raised p-4">
           <h2 className="title-4 mb-3 text-text">On this page</h2>
           <ol className="body-6 flex list-decimal flex-col gap-1 pl-6 text-text-subtle">
             {doc.sections.map((s) => (

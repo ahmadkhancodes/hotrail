@@ -28,11 +28,11 @@ const linkClass =
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-surface-raised">
-      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
+    <footer className="bg-surface">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8"><div className="border-t-2 border-rule py-12 md:py-16">
         <div className="grid gap-12 md:grid-cols-12">
           <div className="flex max-w-xs flex-col gap-3 md:col-span-5">
-            <Link href="/" className="title-2 w-fit rounded-sm text-text focus-visible:focus-ring">{product.name}</Link>
+            <Link href="/" className="inline-flex w-fit items-center gap-2 rounded-sm text-text focus-visible:focus-ring"><span aria-hidden className="inline-block size-3 bg-marker ring-1 ring-text" /><span className="heading-6">{product.name}</span></Link>
             <p className="body-6 text-text-subtle">{product.tagline}</p>
             <p className="caption-5 text-text-muted">Capacitor and Ionic are trademarks of their owners. {product.name} is not affiliated with them.</p>
           </div>
@@ -56,6 +56,6 @@ export function SiteFooter() {
           <p className="caption-2 text-text-muted">&copy; {new Date().getFullYear()} {product.company}</p>
         </div>
       </div>
-    </footer>
+    </div></footer>
   );
 }

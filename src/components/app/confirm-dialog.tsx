@@ -38,7 +38,7 @@ export function ConfirmDialog({
       aria-labelledby={`${id}-t`}
       onClose={() => { setTyped(""); onClose(); }}
       onClick={(e) => { if (e.target === ref.current) ref.current?.close(); }}
-      className="m-auto w-full max-w-md rounded-lg border border-border bg-surface p-0 text-text backdrop:bg-surface-inverse/60"
+      className="m-auto w-full max-w-md border border-rule bg-surface p-0 text-text shadow-[0_8px_24px_rgba(14,16,18,.16)] backdrop:bg-surface-inverse/40"
     >
       <form
         method="dialog"

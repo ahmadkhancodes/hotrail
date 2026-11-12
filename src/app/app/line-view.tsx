@@ -26,12 +26,13 @@ const LAMP: Record<Lamp, { glyph: string; letter: string; word: string; cls: str
   green: { glyph: "●", letter: "G", word: "Live", cls: "text-lamp-green" },
   amber: { glyph: "▲", letter: "A", word: "Rolling out", cls: "text-lamp-amber" },
   red: { glyph: "■", letter: "R", word: "Paused", cls: "text-lamp-red" },
-  idle: { glyph: "○", letter: "-", word: "No bundle", cls: "text-panel-dim" },
+  idle: { glyph: "○", letter: "-", word: "No bundle", cls: "text-text-muted" },
 };
 
+/** Headcode plate: the bundle's 4 character code on the signal yellow marker (same as the marketing board). */
 export function Plate({ code, className }: { code: string; className?: string }) {
   return (
-    <span className={cn("inline-block rounded-sm border border-plate-ink bg-plate px-2 font-display text-lg leading-5 font-semibold tracking-[0.08em] text-plate-ink", className)}>
+    <span className={cn("inline-block rounded-sm border border-plate-ink bg-plate px-1 font-mono caption-3 tracking-widest text-plate-ink", className)}>
       {code}
     </span>
   );
@@ -41,67 +42,65 @@ const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en", { hour12: false });
 const bytes = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1e3))} kB`);
 
-function TrackSvg({ ch }: { ch: LineChannel }) {
-  const on = (l: Lamp) => ({ opacity: ch.lamp === l ? 1 : 0.18 });
+function RolloutBar({ ch }: { ch: LineChannel }) {
+  const live = ch.lamp === "amber" || ch.lamp === "red";
   return (
-    <svg viewBox="0 0 480 56" className="block h-14 w-full" role="img" aria-label={`${ch.name} track: ${ch.headcode ?? "no bundle"}, ${LAMP[ch.lamp].word.toLowerCase()}${ch.headcode ? ` at ${ch.percent} percent` : ""}`}>
-      <path className="mm-sleeper" d="M8 28H400" strokeWidth={10} />
-      <path className="mm-rail" d="M8 25H400M8 31H400M400 16V40" />
-      {ch.previousHeadcode ? (
-        <g transform="translate(104,28)" opacity={0.55}>
-          <rect className="mm-plate" x={-26} y={-13} width={52} height={26} rx={2} />
-          <text className="mm-plate-t" y={6}>{ch.previousHeadcode}</text>
-        </g>
-      ) : null}
-      {ch.headcode ? (
-        <g transform="translate(264,28)">
-          <rect className="mm-plate" x={-26} y={-13} width={52} height={26} rx={2} />
-          <text className="mm-plate-t" y={6}>{ch.headcode}</text>
-        </g>
-      ) : null}
-      <g transform="translate(446,28)">
-        <rect className="mm-post" x={-9} y={-24} width={18} height={50} rx={2} />
-        <circle cx={0} cy={-13} r={4.5} fill="var(--lamp-red)" style={on("red")} />
-        <circle cx={0} cy={1} r={4.5} fill="var(--lamp-amber)" style={on("amber")} />
-        <circle cx={0} cy={15} r={4.5} fill="var(--lamp-green)" style={on("green")} />
-      </g>
-    </svg>
+    <span className="flex items-center gap-3" aria-hidden>
+      <span className="relative block h-2 w-full bg-surface-sunken">
+        <span
+          className={cn("absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500 ease-out-kit", ch.lamp === "red" ? "bg-lamp-red" : live ? "bg-text" : "bg-border-input")}
+          style={{ transform: `scaleX(${ch.headcode ? ch.percent / 100 : 0})` }}
+        />
+      </span>
+      <span className="w-12 shrink-0 text-right font-mono caption-2 tabular-nums text-text">{ch.headcode ? `${ch.percent}%` : "-"}</span>
+    </span>
   );
 }
 
+/** Channels as timetable rows: name, headcode, rollout bar, devices, signal. Selecting a row opens it in the inspector. */
 function Tracks({ channels, selected, onSelect }: { channels: LineChannel[]; selected: string | null; onSelect: (c: LineChannel) => void }) {
   return (
-    <ul aria-label="Channels" className="m-0 list-none rounded-md bg-panel p-2 text-panel-ink md:px-3">
-      {channels.map((c, i) => {
-        const l = LAMP[c.lamp];
-        return (
-          <li key={c.id} style={i > 0 ? { borderTop: "1px solid color-mix(in srgb, var(--panel-dim) 30%, transparent)" } : undefined}>
-            <button
-              type="button"
-              onClick={() => onSelect(c)}
-              aria-pressed={selected === c.id}
-              className={cn(
-                "grid w-full cursor-pointer grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 rounded-sm px-2 py-2 text-left md:min-h-[76px] md:grid-cols-[104px_1fr_168px] md:py-0",
-                "focus-visible:focus-ring hover:bg-white/5 aria-pressed:bg-white/5 aria-pressed:outline-2 aria-pressed:-outline-offset-2 aria-pressed:outline-focus",
-              )}
-            >
-              <span className="font-mono text-xs leading-4 text-panel-dim">
-                <b className="block font-medium text-panel-ink">{c.name}</b>
-                {c.platform === "all" ? "iOS + Android" : c.platform === "ios" ? "iOS" : "Android"}
-              </span>
-              <span className="hidden md:block"><TrackSvg ch={c} /></span>
-              <span className="text-right font-mono text-xs leading-4 text-panel-dim">
-                <b className="block text-sm leading-5 font-medium text-panel-ink md:hidden">
-                  {c.headcode ? <Plate code={c.headcode} className="mr-2 align-middle" /> : null}
-                </b>
-                <span className={l.cls} aria-hidden>{l.glyph}</span> {l.letter} {l.word}{c.headcode ? ` · ${c.percent}%` : ""}
-                <br />{c.devices.toLocaleString("en")} devices
-              </span>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="border border-rule bg-surface">
+      <div aria-hidden className="hidden grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,2fr)_88px_120px] gap-4 border-b border-rule px-4 py-2 caption-3 text-text-subtle md:grid">
+        <span>Channel</span><span>Bundle</span><span>Rollout</span><span className="text-right">Devices</span><span>Signal</span>
+      </div>
+      <ul aria-label="Channels" className="m-0 list-none p-0">
+        {channels.map((c) => {
+          const l = LAMP[c.lamp];
+          const on = selected === c.id;
+          return (
+            <li key={c.id} className="border-b border-border last:border-b-0">
+              <button
+                type="button"
+                onClick={() => onSelect(c)}
+                aria-pressed={on}
+                className={cn(
+                  "relative grid min-h-14 w-full cursor-pointer grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors duration-300 ease-out-kit",
+                  "md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,2fr)_88px_120px]",
+                  "hover:bg-surface-sunken focus-visible:focus-ring focus-visible:-outline-offset-2",
+                  on && "bg-surface-sunken",
+                )}
+              >
+                {on ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-marker" /> : null}
+                <span className="min-w-0">
+                  <b className="block body-5 text-text">{c.name}</b>
+                  <span className="block caption-5 text-text-muted">{c.platform === "all" ? "iOS + Android" : c.platform === "ios" ? "iOS" : "Android"}</span>
+                </span>
+                <span className="text-right md:text-left">
+                  {c.headcode ? <Plate code={c.headcode} /> : <span className="caption-5 text-text-muted">No bundle</span>}
+                  {c.previousHeadcode ? <span className="ml-2 hidden whitespace-nowrap caption-5 text-text-muted 2xl:inline">after <span className="font-mono">{c.previousHeadcode}</span></span> : null}
+                </span>
+                <span className="col-span-2 md:col-span-1"><RolloutBar ch={c} /></span>
+                <span className="font-mono caption-2 tabular-nums text-text md:text-right">{c.devices.toLocaleString("en")}<span className="md:sr-only"> devices</span></span>
+                <span className="text-right caption-4 text-text md:text-left">
+                  <span className={l.cls} aria-hidden>{l.glyph}</span> {l.word}{c.headcode ? <span className="sr-only">, {c.percent}%</span> : null}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -134,12 +133,12 @@ function Inspector({
   }
 
   if (!bundle) {
-    return <aside aria-label="Bundle detail" className="rounded-md border border-border bg-surface p-4 body-6 text-text-subtle">Select a channel or a bundle to see its rollout.</aside>;
+    return <aside aria-label="Bundle detail" className="border border-border bg-surface p-4 body-6 text-text-subtle">Select a channel or a bundle to see its rollout.</aside>;
   }
   const l = ch ? LAMP[ch.lamp] : null;
   return (
-    <aside aria-label={`Bundle ${bundle.headcode} detail`} className="flex flex-col gap-4 rounded-md border border-border bg-surface p-4 shadow-[-8px_0_24px_rgba(15,27,45,.08)]">
-      <h3 className="flex items-center gap-3 heading-5 text-text"><Plate code={bundle.headcode} /> {ch ? "Rollout" : "Bundle"}</h3>
+    <aside aria-label={`Bundle ${bundle.headcode} detail`} className="flex flex-col gap-4 self-start border border-rule bg-surface p-4">
+      <h3 className="flex items-center gap-3 heading-6 text-text"><Plate code={bundle.headcode} /> {ch ? "Rollout" : "Bundle"}</h3>
       <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 body-6">
         <dt className="text-text-subtle">Channel</dt><dd className="m-0 text-right">{ch ? ch.name : "not live"}</dd>
         <dt className="text-text-subtle">Version</dt><dd className="m-0 text-right font-mono">{bundle.version}</dd>
@@ -150,15 +149,15 @@ function Inspector({
       </dl>
       {ch && l ? (
         <div>
-          <div><span className={l.cls} aria-hidden>{l.glyph}</span> {l.letter} {l.word} · <span className="font-mono">{ch.percent}%</span></div>
-          <div className="my-2 h-2 rounded-sm border border-border bg-surface-sunken" role="progressbar" aria-label="Rollout" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ch.percent}>
-            <div className="h-full bg-lamp-amber" style={{ width: `${ch.percent}%` }} />
+          <div className="body-6"><span className={l.cls} aria-hidden>{l.glyph}</span> {l.word} · <span className="font-mono">{ch.percent}%</span></div>
+          <div className="my-2 h-2 bg-surface-sunken" role="progressbar" aria-label="Rollout" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ch.percent}>
+            <div className={cn("h-full w-full origin-left transition-transform duration-500 ease-out-kit", ch.paused ? "bg-lamp-red" : "bg-text")} style={{ transform: `scaleX(${ch.percent / 100})` }} />
           </div>
         </div>
       ) : null}
       {bundle.incompatible.length > 0 ? (
-        <div data-testid="incompatible" className="rounded-sm border border-lamp-amber p-3 body-6">
-          <b className="text-lamp-amber">▲</b> Not offered to {bundle.incompatible.length} store {bundle.incompatible.length === 1 ? "build" : "builds"}:
+        <div data-testid="incompatible" className="border border-lamp-amber bg-warning-surface p-3 body-6">
+          <b className="text-warning">▲</b> Not offered to {bundle.incompatible.length} store {bundle.incompatible.length === 1 ? "build" : "builds"}:
           <ul className="m-0 mt-1 list-disc pl-5">
             {bundle.incompatible.map((i) => <li key={i.build}>{i.reasons.join("; ")}</li>)}
           </ul>
@@ -166,11 +165,11 @@ function Inspector({
         </div>
       ) : null}
       {ch?.paused ? (
-        <div role="alert" className="rounded-sm border border-lamp-red p-3 body-6">
-          <b className="text-lamp-red">■ R</b> {ch.pausedReason === "manual" ? "Paused by hand." : ch.pausedReason ?? "Paused."} Devices keep what they have and get nothing new until you resume or reverse.
+        <div role="alert" className="border border-danger bg-danger-surface p-3 body-6">
+          <b className="text-danger">■ Paused.</b> {ch.pausedReason === "manual" ? "Paused by hand." : ch.pausedReason ?? "Paused."} Devices keep what they have and get nothing new until you resume or reverse.
         </div>
       ) : null}
-      {error ? <div role="alert" className="rounded-sm border border-lamp-red p-3 body-6 text-text">{error}</div> : null}
+      {error ? <div role="alert" className="border border-danger bg-danger-surface p-3 body-6 text-text">{error}</div> : null}
       {!canWrite ? (
         <p className="body-6 text-text-subtle">Your role is read only. Owners, admins and members can release.</p>
       ) : (
@@ -215,24 +214,24 @@ function Inspector({
 
 function BundlesTable({ bundles, selected, onSelect }: { bundles: LineBundle[]; selected: string | null; onSelect: (b: LineBundle) => void }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto border border-border bg-surface">
       <table className="w-full border-collapse text-left body-6 tabular-nums">
         <caption className="sr-only">Bundles, newest first</caption>
         <thead>
-          <tr className="border-b border-border caption-5 text-text-subtle">
-            <th scope="col" className="p-2 font-bold">Headcode</th>
-            <th scope="col" className="p-2 font-bold">Version</th>
-            <th scope="col" className="hidden p-2 font-bold sm:table-cell">Native build</th>
-            <th scope="col" className="p-2 text-right font-bold">Adoption</th>
-            <th scope="col" className="p-2 text-right font-bold">Failures</th>
-            <th scope="col" className="hidden p-2 text-right font-bold md:table-cell">Delta sent</th>
+          <tr className="border-b border-rule bg-surface-sunken caption-3 text-text-subtle">
+            <th scope="col" className="p-2">Headcode</th>
+            <th scope="col" className="p-2">Version</th>
+            <th scope="col" className="hidden p-2 sm:table-cell">Native build</th>
+            <th scope="col" className="p-2 text-right">Adoption</th>
+            <th scope="col" className="p-2 text-right">Failures</th>
+            <th scope="col" className="hidden p-2 text-right md:table-cell">Delta sent</th>
           </tr>
         </thead>
         <tbody>
           {bundles.map((b) => (
-            <tr key={b.id} aria-selected={selected === b.id} className="h-11 border-b border-border aria-selected:bg-surface-raised md:h-8">
+            <tr key={b.id} aria-selected={selected === b.id} className="h-11 border-b border-border last:border-b-0 aria-selected:bg-surface-sunken">
               <td className="p-0">
-                <button type="button" onClick={() => onSelect(b)} className="flex min-h-11 cursor-pointer items-center gap-2 px-2 focus-visible:focus-ring md:min-h-8" aria-label={`Select bundle ${b.headcode}`}>
+                <button type="button" onClick={() => onSelect(b)} className="flex min-h-11 cursor-pointer items-center gap-2 px-2 focus-visible:focus-ring" aria-label={`Select bundle ${b.headcode}`}>
                   <Plate code={b.headcode} />
                   {b.channels.length ? <span className="caption-5 text-text-subtle">{b.channels.join(", ")}</span> : null}
                 </button>
@@ -240,7 +239,7 @@ function BundlesTable({ bundles, selected, onSelect }: { bundles: LineBundle[]; 
               <td className="px-2 font-mono">{b.version}</td>
               <td className="hidden px-2 font-mono sm:table-cell">{b.nativeFingerprint.slice(0, 12)}</td>
               <td className="px-2 text-right font-mono">{pct(b.adoption)}</td>
-              <td className={cn("px-2 text-right font-mono", b.failureRate > 0.02 && "text-lamp-red")}>{pct(b.failureRate)}</td>
+              <td className={cn("px-2 text-right font-mono", b.failureRate > 0.02 && "text-danger")}>{pct(b.failureRate)}</td>
               <td className="hidden px-2 text-right font-mono md:table-cell">{pct(b.uploadRatio)}</td>
             </tr>
           ))}
@@ -324,15 +323,15 @@ export function LineView({ bundleId, initial, canWrite }: { bundleId: string; in
       <p className="m-0 caption-5 text-text-subtle" aria-live="off">
         <span className="text-lamp-green" aria-hidden>●</span> Live, updated {time(data.generatedAt)} · {data.totals.devices.toLocaleString("en")} devices seen in 30 days
       </p>
-      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
         <div className="flex min-w-0 flex-col gap-6">
           <Tracks channels={data.channels} selected={bundle ? data.channels.find((c) => c.headcode === bundle.headcode && (selectedChannel ? c.id === selectedChannel : true))?.id ?? null : null} onSelect={(c) => { setSelectedChannel(c.id); setSelectedBundle(null); }} />
           <BundlesTable bundles={data.bundles} selected={bundle?.id ?? null} onSelect={(b) => { setSelectedBundle(b.id); setSelectedChannel(null); }} />
           <AdoptionChart bundleId={data.app.bundleId} />
           {data.releases.length ? (
             <section aria-labelledby="rel-h">
-              <h2 id="rel-h" className="title-4 pb-2 text-text-subtle">Recent release actions</h2>
-              <ul className="m-0 flex list-none flex-col divide-y divide-border border-y border-border p-0 body-6">
+              <h2 id="rel-h" className="title-3 pb-2 text-text">Recent release actions</h2>
+              <ul className="m-0 flex list-none flex-col divide-y divide-border border-t border-rule border-b border-b-border p-0 body-6">
                 {data.releases.slice(0, 6).map((r) => (
                   <li key={r.id} className="flex flex-wrap items-baseline gap-x-3 py-2">
                     <span className="font-mono caption-5 text-text-subtle">{time(r.at)}</span>
