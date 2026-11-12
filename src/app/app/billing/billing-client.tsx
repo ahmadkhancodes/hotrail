@@ -105,7 +105,7 @@ export function BillingClient(p: Props) {
           title={`Continue with ${pre.name}`}
           action={<Button onClick={() => checkout(pre)} loading={busy === pre.id}>Continue to checkout</Button>}
         >
-          You picked {pre.name} billed {p.preselect?.interval === "month" ? "monthly" : "yearly"} on the pricing page.
+          {pre.name}, billed {p.preselect?.interval === "month" ? "monthly" : "annually"}: {pre.highlights.slice(0, 2).join(", ")}. One step to Stripe Checkout; you can cancel any time.
         </Notice>
       ) : null}
 

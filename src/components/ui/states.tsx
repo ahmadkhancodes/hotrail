@@ -11,7 +11,7 @@ export function EmptyState({ title, body, action, visual }: { title: string; bod
   return (
     <div className="flex flex-col items-start gap-4 border border-border border-t-2 border-t-rule bg-surface p-6 md:p-8">
       {visual}
-      <div className="flex max-w-xl flex-col gap-2">
+      <div className="flex w-full min-w-0 max-w-xl flex-col gap-2">
         <h3 className="heading-6 text-text">{title}</h3>
         <div className="body-6 text-text-subtle">{body}</div>
       </div>

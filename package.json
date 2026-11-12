@@ -12,7 +12,8 @@
     "stripe:setup": "tsx scripts/stripe-setup.ts",
     "db:indexes": "tsx scripts/ensure-indexes.ts",
     "screenshots": "tsx scripts/screenshots.ts",
-    "deploy": "scripts/deploy.sh"
+    "deploy": "scripts/deploy.sh",
+    "build:packages": "node scripts/build-packages.mjs"
   },
   "dependencies": {
     "@better-auth/api-key": "^1.7.17",

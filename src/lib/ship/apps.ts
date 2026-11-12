@@ -1,4 +1,5 @@
 import { generateSigningKeyPair } from "@buffersol/hotrail-core";
+import { plans } from "@/config/product";
 import { effectivePlan } from "@/lib/billing/entitlement";
 import type { AppDoc } from "@/lib/db/types";
 import { seal } from "@/lib/crypto/secretbox";
@@ -10,6 +11,18 @@ import { DEFAULT_AUTOPAUSE_THRESHOLD, DEFAULT_MIN_SAMPLE, type Principal, type S
 
 export const BUNDLE_ID_RE = /^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z0-9_-]+){1,8}$/;
 export const FREE_APP_LIMIT = 2;
+
+/** The 402 a Free org gets for its third app: names the cheapest paid plan with its real price and links straight to checkout. */
+export function appLimitDetails(baseUrl: string) {
+  const next = plans.find((pl) => pl.prices.some((x) => x.interval === "month"))!;
+  const monthly = next.prices.find((x) => x.interval === "month")!;
+  const upgradeUrl = `${baseUrl.replace(/\/$/, "")}/app/billing?plan=${next.id}&interval=month`;
+  return {
+    limit: FREE_APP_LIMIT,
+    upgradeUrl,
+    hint: `The Free plan includes ${FREE_APP_LIMIT} apps. ${next.name} ($${(monthly.usd / 100).toFixed(2)}/mo) has unlimited apps. Upgrade: ${upgradeUrl}`,
+  };
+}
 
 /**
  * Finds the org's app by Capacitor appId or creates it on first upload with a `production` channel that is the
@@ -31,7 +44,7 @@ export async function ensureApp(deps: ShipDeps, p: Principal, bundleId: string, 
   }
   const ent = await deps.db.getEntitlement(p.orgId);
   if (effectivePlan(ent).id === "free" && (await deps.db.listApps(p.orgId)).length >= FREE_APP_LIMIT) {
-    throw new HttpError(402, "plan_limit", { limit: FREE_APP_LIMIT, hint: "The Free plan includes 2 apps. Upgrade to add more." });
+    throw new HttpError(402, "plan_limit", appLimitDetails(deps.baseUrl));
   }
   const id = uuidv7();
   let signingPublicKey: string | null = null;

@@ -4,8 +4,24 @@
   "description": "Hotrail by BufferSol CLI: init, upload, release, rollback, status for Capacitor live updates.",
   "license": "MIT",
   "type": "module",
-  "bin": { "hotrail": "./src/bin.ts" },
-  "scripts": { "typecheck": "tsc --noEmit", "test": "vitest run" },
-  "dependencies": { "@buffersol/hotrail-core": "*" },
-  "devDependencies": { "@types/node": "^22.0.0", "typescript": "^5.6.0", "vitest": "^2.1.0" }
+  "bin": {
+    "hotrail": "./dist/bin.js"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "node ../../scripts/build-packages.mjs cli",
+    "prepack": "node ../../scripts/build-packages.mjs cli"
+  },
+  "dependencies": {
+    "@buffersol/hotrail-core": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "files": [
+    "dist"
+  ]
 }

@@ -48,3 +48,38 @@ Specs: `tests/e2e/qa2/{public,app}.spec.ts`, `tests/e2e/qa2/probe.ts` (in-page a
 - **Low:** the click crawler cannot tell a no-op from a visual-only effect (e.g. a Copy button whose feedback is a tooltip), so Copy buttons are covered by the `qa/marketing` spec only.
 - **Not testable here:** real Stripe checkout and return with a session, passkey/TOTP ceremonies, native plugin on devices, Vercel Analytics (404s locally).
 - Earlier open items about sign-in rate-limit wording and the shared-IP limit are unchanged.
+
+## Usefulness pass 2 (2026-11-12): first ten minutes, working docs, billing path
+Method: production build (`next start`), memory DB, outbox mail, real Chromium, and the **CLI run as a real process from its shipped bundle** (`packages/cli/dist/bin.js`) against the running server. Specs: `tests/e2e/qa3/personas.spec.ts`, `tests/e2e/qa3/docs-live.spec.ts`; unit `tests/unit/docs-samples.test.ts`, `tests/unit/billing-journey.test.ts`.
+
+### Personas (from docs/brief.md)
+- **Indie Ian**: solo dev, one Vite + React Capacitor app, 500-5K MAU, wants a hotfix out today, pays $0-7.
+- **Agency Alicia**: agency lead with several client apps in one org, wants a setup that repeats per client in minutes, upgrades when the agency outgrows Free.
+- **Platform Paul**: mid-size team on `@capgo/capacitor-updater` or Appflow, must migrate without a store build, reads the docs and API before committing.
+
+### Walk-throughs and frictions found
+| Day | Persona | What happened before this pass | Impact | Fixed |
+|---|---|---|---|---|
+| 1 | Ian | Empty dashboard said "run init", but upload needs `HOTRAIL_API_KEY`: Settings, API keys, name, scope, create, copy, then compose the export line by hand (5+ clicks and typing) | High, blocks first value | One click: "Create a key and fill it in" puts a real key (and `HOTRAIL_API_URL` off production) into `init`, `upload`, `release` commands. Budget asserted: at most 1 click from empty dashboard to runnable snippet |
+| 1 | Ian | `npx @buffersol/hotrail` could not run: the package `bin` was a `.ts` file with extensionless imports (`ERR_MODULE_NOT_FOUND`) | High, every docs command dead | CLI and MCP ship a bundled `dist/bin.js`; the persona specs run that file |
+| 1 | Ian | `init` said to put the public key in the Capacitor config as `hotrailPublicKey`, an option that does not exist (the plugin reads `publicKey` in `configure()`); signing doc said the same | High, signed updates would never verify | `init` prints a paste-ready `HotrailUpdater.configure` block with the real appId, host and key (or, in Capgo migration mode, the three `CapacitorUpdater` URLs); signing doc fixed |
+| 1 | Paul | Migration guide's `release --channel production --percent 10` failed with "Say what to release." | High, guide dead-ends at step 3 | `release` defaults to the package.json version, like `upload` |
+| 1 | Paul | Quickstart said "pre-launch, being built (M2)", CI recipes "(coming)"; the CI recipe uploaded the package.json version but released `$APP_VERSION` | Medium, distrust and a broken CI release | Copy updated; recipes release what they uploaded |
+| 1 | Paul | Signing doc's `upload --unsigned` example fails (409 same version, then 400 `unsigned_not_allowed` once the app has a key) | Medium | Doc states the real rule; test proves both cases |
+| 1 | Ian | `init` outside a Capacitor folder linked to `/docs/cordova` (404) | Low | Links to the quickstart on the configured host |
+| 2 | Alicia | Second client app: same snippet in a new project, no new setup | none | Asserted |
+| 7 | Alicia | Third app on Free: "Upgrade to add more." with no plan, price or link; billing preselect said "on the pricing page" even when coming from the CLI | High, the moment she decides to pay | 402 names Solo ($6.99/mo, from `product.ts`) with a direct link that preselects Solo monthly; notice shows the plan's first two highlights |
+
+Day 2 "invite a teammate" was not re-walked here: `tests/e2e/qa/orgs.spec.ts` already covers invite e-mail, sign-in, accept and landing in the org (green in this run).
+
+### Docs must work
+Every code block on `/docs` (27 blocks on 13 pages) has a runner, and a new block with an unknown shape fails the test: CLI and CI lines run through the real CLI against the in-process API (placeholder key `hr_xxx`/`YOUR_API_KEY` and headcode `2K47` replaced with the real ones); the plugin `configure` keys and methods are checked against the plugin's types; device URLs must be the three routes that exist and answer the stock updater on `next start`; the webhook `verify()` sample is executed against a real Hotrail signature; the API doc's JSON shapes are compared with real responses; `curl` blocks run with the real `curl` binary and a real key. Landing page and Line view commands run in the order a visitor reads them. Pricing highlights are checked against the enforced limits (MAU, event days, Free app limit).
+
+### Billing path (as far as Stripe test mode allows without card entry)
+`tests/unit/billing-journey.test.ts`: Free third app 402 with upgrade link, Checkout Session for the `hotrail_maker_monthly` price, `metadata.app=hotrail`, success URL `/app/billing?checkout=success&session_id={CHECKOUT_SESSION_ID}`, cancel URL `/app/billing?checkout=canceled` (same helper as the route), webhook activates Maker (third app accepted, MAU included 10,000), portal link returns to `/app/billing`, `customer.subscription.deleted` drops back to Free (fourth app refused, MAU 500, existing apps kept). In the browser the upgrade link lands on billing with Solo picked and "Continue to checkout".
+
+### Left
+- The npm packages are still unpublished (owner: npm token, MANUAL_STEPS), so `npx @buffersol/hotrail` resolves only after publishing.
+- Not built: the "waiting for your first device check-in" screen, weekly digest e-mail, keyboard shortcuts in the console, Appflow import.
+- Real Stripe Checkout with a card, GBP/CAD prices, and Solo prices in the Stripe fake (the journey test uses Maker).
+- Sign-in rate limit for teams behind one IP is unchanged.

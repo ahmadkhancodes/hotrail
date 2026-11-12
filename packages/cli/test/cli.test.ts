@@ -45,7 +45,13 @@ describe("init", () => {
     expect(JSON.parse(readFileSync(join(cwd, "hotrail.json"), "utf8")).appId).toBe("com.example.ordering");
     expect(existsSync(join(cwd, ".hotrail", "signing-key.json"))).toBe(true);
     expect(readFileSync(join(cwd, ".gitignore"), "utf8")).toContain(".hotrail/");
-    expect(h.out.join("\n")).toContain("Public key");
+    const out = h.out.join("\n");
+    const pub = JSON.parse(readFileSync(join(cwd, ".hotrail", "signing-key.json"), "utf8")).publicKey as string;
+    // Personalised, paste-ready plugin setup with the real appId and key, using the plugin's real option names.
+    expect(out).toContain(`appId: "com.example.ordering"`);
+    expect(out).toContain(`publicKey: "${pub}"`);
+    expect(out).toContain("HotrailUpdater.configure(");
+    expect(out).not.toContain("hotrailPublicKey");
   });
   it("offers migration mode when @capgo/capacitor-updater is present", async () => {
     const cwd = project();
@@ -143,8 +149,20 @@ describe("release, rollback, status", () => {
     await main(["init"], harness(cwd).io);
     const h = harness(cwd);
     expect(await main(["release", "--bundle", "2K47", "--percent", "250"], h.io)).toBe(1);
-    expect(await main(["release"], h.io)).toBe(1);
     expect(h.calls).toHaveLength(0);
+    writeFileSync(join(cwd, "package.json"), JSON.stringify({ dependencies: {} }));
+    expect(await main(["release"], h.io)).toBe(1);
+    expect(h.err.join("\n")).toContain("Say what to release.");
+    expect(h.calls).toHaveLength(0);
+  });
+  it("release with no target uses the package.json version, like upload", async () => {
+    const cwd = project();
+    writeFileSync(join(cwd, "package.json"), JSON.stringify({ version: "2.14.1", dependencies: {} }));
+    await main(["init"], harness(cwd).io);
+    const h = harness(cwd, () => json({ headcode: "1A00", percent: 10, channel: "production" }));
+    expect(await main(["release", "--percent", "10"], h.io)).toBe(0);
+    expect(JSON.parse(h.calls[0]!.body!)).toMatchObject({ channel: "production", version: "2.14.1", percent: 10 });
+    expect(JSON.parse(h.calls[0]!.body!).bundle).toBeUndefined();
   });
   it("rollback and status print railway wording", async () => {
     const cwd = project();

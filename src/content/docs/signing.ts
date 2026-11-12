@@ -9,7 +9,7 @@ export const signing: DocPage = {
     {
       heading: "Signing is on by default",
       body: [
-        "The init command creates an Ed25519 key pair in .hotrail/signing-key.json and adds that folder to .gitignore. Keep the private key out of source control. The public key is printed once. Put it in your Capacitor config as hotrailPublicKey.",
+        "The init command creates an Ed25519 key pair in .hotrail/signing-key.json and adds that folder to .gitignore. Keep the private key out of source control. init then prints a HotrailUpdater.configure block with your appId and the public key as publicKey, ready to paste into your app.",
         "On the first signed upload the public key is registered for the app. Every later upload is verified against it.",
       ],
     },
@@ -17,12 +17,11 @@ export const signing: DocPage = {
       heading: "What is signed",
       body: [
         "Upload hashes every file with SHA-256, builds a manifest of paths and hashes, and signs the manifest. Only files the server does not already have are sent. The plugin verifies the signature, then verifies the hash of every file it downloads.",
+        "upload --unsigned skips signing. It only works for an app that has never had a signed upload, such as a throwaway test app id. Once an app has a signing key, unsigned uploads are refused with unsigned_not_allowed.",
       ],
       code: {
         lang: "bash",
-        code: `npx @buffersol/hotrail upload
-# for a test only, skips signing:
-npx @buffersol/hotrail upload --unsigned`,
+        code: "npx @buffersol/hotrail upload",
       },
     },
     {
