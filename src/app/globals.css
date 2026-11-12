@@ -10,55 +10,61 @@
   --font-mono-family: var(--font-kit-mono), ui-monospace, monospace;
   --font-display-family: var(--font-kit-display), ui-sans-serif, system-ui, sans-serif;
 
-  /* raw ramp: ink on paper white (docs/design-brief.md §4) */
+  /* raw ramp: cobalt on bright white, "the departure board" (docs/design-brief.md §4) */
   --n-0: #ffffff;
-  --n-50: #f8f9fa;
-  --n-100: #f3f4f5;
-  --n-200: #e3e5e8;
-  --n-300: #c9cdd2;
-  --n-400: #8b929b;
-  --n-500: #5e656e;
-  --n-600: #4a5058;
-  --n-700: #2b3036;
-  --n-900: #0e1012;
-  --marker-500: #ffd23f; /* signal yellow: marker fill only, ink text on top */
+  --n-50: #f7f9fc;
+  --n-100: #f1f4f9;
+  --n-200: #e1e6ef;
+  --n-300: #c3cbd9;
+  --n-400: #7c879c; /* input borders, 3.5:1 on white */
+  --n-500: #525d72; /* muted text, 6.6:1 on white */
+  --n-600: #3b4559; /* subtle text, 9.6:1 on white */
+  --n-700: #1f2a44;
+  --n-900: #0a1633; /* ink, 17.6:1 on white */
+  --cobalt-50: #eef3fe;
+  --cobalt-100: #dbe5fd;
+  --cobalt-600: #1546c9; /* accent + actions, 7.6:1 on white */
+  --cobalt-700: #0f379f; /* hover, 10.2:1 on white */
+  --cobalt-900: #0a2470;
 
   /* role tokens: light */
   --surface: var(--n-0);
-  --surface-raised: var(--n-100);
+  --surface-raised: var(--n-50);
   --surface-sunken: var(--n-100);
-  --surface-inverse: var(--n-900);
+  --surface-inverse: var(--cobalt-900);
   --text: var(--n-900);
   --text-subtle: var(--n-600);
   --text-muted: var(--n-500);
   --text-inverse: var(--n-0);
+  --text-accent: var(--cobalt-600);
   --border: var(--n-200);
   --border-strong: var(--n-300);
   --border-input: var(--n-400);
-  --rule: var(--n-900);
-  --action: var(--n-900);
-  --action-hover: var(--n-700);
+  --rule: var(--cobalt-600);
+  --action: var(--cobalt-600);
+  --action-hover: var(--cobalt-700);
   --action-text: #ffffff;
-  --marker: var(--marker-500);
+  --marker: var(--cobalt-100); /* tint behind the live row, current page and <mark>; ink text on top (15.0:1) */
   --marker-ink: var(--n-900);
-  --focus: #1859d6; /* 5.6:1 on white (WCAG 1.4.11) */
+  --marker-bar: var(--cobalt-600); /* 4px edge on the live row and current page */
+  --focus: var(--cobalt-600);
   --success: #137a43;
   --success-surface: #e9f5ee;
   --warning: #8a5a00;
   --warning-surface: #fdf4dc;
   --danger: #c22e1f;
   --danger-surface: #fbecea;
-  /* The release board is light now: same paper, ink rails, yellow plates. */
+  /* Board tokens: same paper, cobalt plates with white headcodes, like a platform indicator. */
   --panel: var(--n-0);
   --panel-ink: var(--n-900);
   --panel-dim: var(--n-500);
-  --rail: var(--n-900);
-  --plate: var(--marker-500);
-  --plate-ink: var(--n-900);
+  --rail: var(--cobalt-600);
+  --plate: var(--cobalt-600);
+  --plate-ink: #ffffff;
   --lamp-red: #c22e1f;
-  --lamp-amber: #e9a400;
-  --lamp-green: #16934f;
-  --shadow-color: 210 10% 8%;
+  --lamp-amber: #b57a00;
+  --lamp-green: #13843f;
+  --shadow-color: 224 67% 12%;
   color-scheme: light;
 }
 
@@ -80,12 +86,14 @@
   --color-text-subtle: var(--text-subtle);
   --color-text-muted: var(--text-muted);
   --color-text-inverse: var(--text-inverse);
+  --color-text-accent: var(--text-accent);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
   --color-border-input: var(--border-input);
   --color-rule: var(--rule);
   --color-marker: var(--marker);
   --color-marker-ink: var(--marker-ink);
+  --color-marker-bar: var(--marker-bar);
   --color-action: var(--action);
   --color-action-hover: var(--action-hover);
   --color-action-text: var(--action-text);
@@ -137,12 +145,12 @@
 }
 
 /* ---- Named type styles (playbook §5). Use these, never loose size+weight pairs. ---- */
-@utility heading-1 { font-family: var(--font-display-family); font-size: 3.75rem; line-height: 1; font-weight: 700; font-stretch: 125%; letter-spacing: -0.03em; text-wrap: balance; }
-@utility heading-2 { font-family: var(--font-display-family); font-size: 3rem; line-height: 1; font-weight: 650; font-stretch: 112%; letter-spacing: -0.02em; text-wrap: balance; }
-@utility heading-3 { font-family: var(--font-display-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 650; font-stretch: 112%; letter-spacing: -0.015em; text-wrap: balance; }
-@utility heading-4 { font-family: var(--font-display-family); font-size: 1.875rem; line-height: 2.25rem; font-weight: 650; font-stretch: 112%; letter-spacing: -0.01em; text-wrap: balance; }
-@utility heading-5 { font-family: var(--font-display-family); font-size: 1.5rem; line-height: 2rem; font-weight: 650; font-stretch: 112%; text-wrap: balance; }
-@utility heading-6 { font-family: var(--font-display-family); font-size: 1.25rem; line-height: 1.75rem; font-weight: 650; font-stretch: 112%; text-wrap: balance; }
+@utility heading-1 { font-family: var(--font-display-family); font-size: 4rem; line-height: 1; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
+@utility heading-2 { font-family: var(--font-display-family); font-size: 3rem; line-height: 1; font-weight: 600; letter-spacing: -0.02em; text-wrap: balance; }
+@utility heading-3 { font-family: var(--font-display-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 600; letter-spacing: -0.015em; text-wrap: balance; }
+@utility heading-4 { font-family: var(--font-display-family); font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+@utility heading-5 { font-family: var(--font-display-family); font-size: 1.5rem; line-height: 2rem; font-weight: 600; text-wrap: balance; }
+@utility heading-6 { font-family: var(--font-display-family); font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; text-wrap: balance; }
 @utility title-1 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; }
 @utility title-2 { font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; }
 @utility title-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; }
@@ -163,6 +171,10 @@
 @utility caption-3 { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
 @utility caption-4 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
 @utility caption-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
+/* Departure board numerals (docs/design-brief.md §4): versions and percentages set huge, lining and tabular. */
+@utility numeral-1 { font-family: var(--font-display-family); font-size: 9rem; line-height: 0.82; font-weight: 500; letter-spacing: -0.05em; font-variant-numeric: lining-nums tabular-nums; }
+@utility numeral-2 { font-family: var(--font-display-family); font-size: 5rem; line-height: 0.85; font-weight: 500; letter-spacing: -0.04em; font-variant-numeric: lining-nums tabular-nums; }
+@utility numeral-3 { font-family: var(--font-display-family); font-size: 3rem; line-height: 1; font-weight: 500; letter-spacing: -0.03em; font-variant-numeric: lining-nums tabular-nums; }
 @utility figure-1 { font-family: var(--font-mono-family); font-size: 2.25rem; line-height: 2.5rem; font-weight: 500; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 
 @utility focus-ring {

@@ -27,6 +27,18 @@ function yearlySaving(plan: Plan): number | null {
   return m && y ? m.usd * 12 - y.usd : null;
 }
 
+/** Board style figure: whole dollars set huge, cents set small and raised, so four plans fit one row. */
+function Fare({ cents }: { cents: number }) {
+  const whole = Math.floor(cents / 100);
+  const rest = cents % 100;
+  return (
+    <span className="numeral-3 xl:numeral-2 whitespace-nowrap text-text-accent">
+      ${whole.toLocaleString("en-US")}
+      {rest ? <span className="heading-6 align-top">.{String(rest).padStart(2, "0")}</span> : null}
+    </span>
+  );
+}
+
 const RISK_FREE = "No credit card needed.";
 const RISK_PAID = "Cancel anytime from your account.";
 
@@ -42,7 +54,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         {title ? <h2 id={`${id}-title`} className="heading-4 md:heading-2 text-text">{title}</h2> : <span />}
         <div className="flex flex-col gap-2 md:items-end">
-            <div role="group" aria-label="Billing interval" className="inline-flex w-fit border border-text bg-surface">
+            <div role="group" aria-label="Billing interval" className="inline-flex w-fit border border-action bg-surface">
               {options.map((o) => (
                 <button
                   key={o.id}
@@ -51,7 +63,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                   onClick={() => setBilling(o.id)}
                   className={cn(
                     "min-h-11 px-4 button-sm transition-colors duration-300 ease-out-kit focus-visible:focus-ring",
-                    interval === o.id ? "bg-action text-action-text" : "text-text-subtle hover:text-text",
+                    interval === o.id ? "bg-action text-action-text" : "text-text-subtle hover:bg-marker hover:text-text",
                   )}
                 >
                   {o.label}
@@ -72,9 +84,11 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
               key={plan.id}
               className={cn(
                 "relative grid grid-rows-[auto_auto_auto_auto_1fr] border-b border-border p-6 md:border-r lg:row-span-5 lg:grid-rows-subgrid",
+                plan.featured && "bg-surface-raised",
                 "max-md:px-0 md:[&:nth-child(2n)]:border-r-0 lg:[&:nth-child(2n)]:border-r lg:[&:nth-child(4n)]:border-r-0",
               )}
             >
+              {plan.featured ? <span aria-hidden className="absolute inset-x-0 top-0 h-1 bg-marker-bar" /> : null}
               <div className="pb-6">
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="heading-6 text-text">{plan.name}</h3>
@@ -83,8 +97,8 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
                 <p className="body-6 mt-1 text-text-subtle">{plan.tagline}</p>
               </div>
               <div className="pb-6">
-                <p className="flex items-baseline gap-1">
-                  <span className="figure-1 text-text">{free ? "$0" : money(price.usd)}</span>
+                <p className="flex flex-col gap-2">
+                  <Fare cents={free ? 0 : price.usd} />
                   <span className="body-6 text-text-subtle">{free ? "free" : `per ${price.interval}`}</span>
                 </p>
                 {price && price.interval === "year" && yearlySaving(plan) ? (
@@ -118,7 +132,7 @@ export function PricingTable({ id = "pricing", title }: { id?: string; title?: s
         </div>
         <ul className="flex flex-col gap-1 body-6 text-text md:col-span-5">
           {product.scale.highlights.map((h) => (
-            <li key={h} className="flex items-start gap-2"><Check size={16} weight="regular" aria-hidden className="mt-0.5 shrink-0 text-text-muted" /><span>{h}</span></li>
+            <li key={h} className="flex items-start gap-2"><Check size={16} weight="regular" aria-hidden className="mt-0.5 shrink-0 text-text-accent" /><span>{h}</span></li>
           ))}
         </ul>
         <div className="md:col-span-3 md:justify-self-end">

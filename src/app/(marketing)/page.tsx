@@ -97,11 +97,11 @@ export default function HomePage() {
         >
           <table className="w-full border-collapse text-left">
             <caption className="caption-5 pb-2 text-left text-text-muted">Illustration, not a customer story</caption>
-            <thead><tr className="border-b border-rule"><th scope="col" className="w-32 py-2 pr-4 caption-3 text-text-subtle">Time</th><th scope="col" className="py-2 caption-3 text-text-subtle">What happened</th></tr></thead>
+            <thead><tr className="border-b border-rule"><th scope="col" className="w-40 py-2 pr-4 caption-3 text-text-subtle">Time</th><th scope="col" className="py-2 caption-3 text-text-subtle">What happened</th></tr></thead>
             <tbody>
               {incident.map((r, i) => (
                 <tr key={r.time} className="border-b border-border">
-                  <th scope="row" className="py-4 pr-4 align-top font-mono caption-1 tabular-nums text-text">{r.time}</th>
+                  <th scope="row" className="py-4 pr-4 align-top heading-5 tabular-nums text-text-accent">{r.time}</th>
                   <td className="py-4 body-3 text-text">{i === incident.length - 1 ? <><span className="text-text-subtle">{r.what.split(" With Hotrail")[0]}</span> <mark className="bg-marker px-1 text-marker-ink">With Hotrail{r.what.split(" With Hotrail")[1]}</mark></> : r.what}</td>
                 </tr>
               ))}

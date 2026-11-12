@@ -29,10 +29,10 @@ const LAMP: Record<Lamp, { glyph: string; letter: string; word: string; cls: str
   idle: { glyph: "○", letter: "-", word: "No bundle", cls: "text-text-muted" },
 };
 
-/** Headcode plate: the bundle's 4 character code on the signal yellow marker (same as the marketing board). */
+/** Headcode plate: the bundle's 4 character code, white on a cobalt plate (same as the marketing board). */
 export function Plate({ code, className }: { code: string; className?: string }) {
   return (
-    <span className={cn("inline-block rounded-sm border border-plate-ink bg-plate px-1 font-mono caption-3 tracking-widest text-plate-ink", className)}>
+    <span className={cn("inline-block rounded-sm bg-plate px-1 font-mono caption-3 tracking-widest text-plate-ink", className)}>
       {code}
     </span>
   );
@@ -48,11 +48,11 @@ function RolloutBar({ ch }: { ch: LineChannel }) {
     <span className="flex items-center gap-3" aria-hidden>
       <span className="relative block h-2 w-full bg-surface-sunken">
         <span
-          className={cn("absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500 ease-out-kit", ch.lamp === "red" ? "bg-lamp-red" : live ? "bg-text" : "bg-border-input")}
+          className={cn("absolute inset-y-0 left-0 w-full origin-left transition-transform duration-500 ease-out-kit", ch.lamp === "red" ? "bg-lamp-red" : live ? "bg-action" : "bg-border-input")}
           style={{ transform: `scaleX(${ch.headcode ? ch.percent / 100 : 0})` }}
         />
       </span>
-      <span className="w-12 shrink-0 text-right font-mono caption-2 tabular-nums text-text">{ch.headcode ? `${ch.percent}%` : "-"}</span>
+      <span className="w-16 shrink-0 text-right heading-5 tabular-nums text-text">{ch.headcode ? `${ch.percent}%` : "-"}</span>
     </span>
   );
 }
@@ -78,10 +78,10 @@ function Tracks({ channels, selected, onSelect }: { channels: LineChannel[]; sel
                   "relative grid min-h-14 w-full cursor-pointer grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors duration-300 ease-out-kit",
                   "md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,2fr)_88px_120px]",
                   "hover:bg-surface-sunken focus-visible:focus-ring focus-visible:-outline-offset-2",
-                  on && "bg-surface-sunken",
+                  on && "bg-marker hover:bg-marker",
                 )}
               >
-                {on ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-marker" /> : null}
+                {on ? <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-marker-bar" /> : null}
                 <span className="min-w-0">
                   <b className="block body-5 text-text">{c.name}</b>
                   <span className="block caption-5 text-text-muted">{c.platform === "all" ? "iOS + Android" : c.platform === "ios" ? "iOS" : "Android"}</span>
@@ -149,9 +149,10 @@ function Inspector({
       </dl>
       {ch && l ? (
         <div>
-          <div className="body-6"><span className={l.cls} aria-hidden>{l.glyph}</span> {l.word} · <span className="font-mono">{ch.percent}%</span></div>
+          <p className="numeral-2 text-text-accent">{ch.percent}<span className="heading-4">%</span></p>
+          <div className="mt-2 body-6"><span className={l.cls} aria-hidden>{l.glyph}</span> {l.word} on {ch.name}</div>
           <div className="my-2 h-2 bg-surface-sunken" role="progressbar" aria-label="Rollout" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ch.percent}>
-            <div className={cn("h-full w-full origin-left transition-transform duration-500 ease-out-kit", ch.paused ? "bg-lamp-red" : "bg-text")} style={{ transform: `scaleX(${ch.percent / 100})` }} />
+            <div className={cn("h-full w-full origin-left transition-transform duration-500 ease-out-kit", ch.paused ? "bg-lamp-red" : "bg-action")} style={{ transform: `scaleX(${ch.percent / 100})` }} />
           </div>
         </div>
       ) : null}
@@ -229,7 +230,7 @@ function BundlesTable({ bundles, selected, onSelect }: { bundles: LineBundle[]; 
         </thead>
         <tbody>
           {bundles.map((b) => (
-            <tr key={b.id} aria-selected={selected === b.id} className="h-11 border-b border-border last:border-b-0 aria-selected:bg-surface-sunken">
+            <tr key={b.id} aria-selected={selected === b.id} className="h-11 border-b border-border last:border-b-0 aria-selected:bg-marker">
               <td className="p-0">
                 <button type="button" onClick={() => onSelect(b)} className="flex min-h-11 cursor-pointer items-center gap-2 px-2 focus-visible:focus-ring" aria-label={`Select bundle ${b.headcode}`}>
                   <Plate code={b.headcode} />
