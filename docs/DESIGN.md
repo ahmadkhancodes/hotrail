@@ -9,14 +9,14 @@ A frontend or full-stack dev, or the release lead at a 2-200 person team (US/CA/
 For Capacitor teams who are stuck waiting 1 to 3 days on store review to fix a broken web bundle, Hotrail by BufferSol is the live update service with rollouts, auto-pause and one-click rollback at about half the Capgo price, with signing on by default and no third party in the update path, unlike Capgo's metered credits and Capawesome's fixed rollout steps.
 
 ## 3. Competitor audit (live sites, 5 Nov 2026; screenshots in docs/design/refs/)
-| Site | Hero claim | Hero visual | Palette / type | Density, proof | CTA |
-|---|---|---|---|---|---|
-| Capgo | "Ship Capacitor apps without the wait" | Dotted world map with pulsing nodes, no product UI | Navy-black, azure + white, Inter-style sans, italic logo | Low density; logo carousel with install counts, "9,400+ teams" | "Get started for free", 14-day trial |
-| Capawesome Cloud | "The CI/CD platform built for mobile apps" | None (centered text) | White, indigo/violet, Manrope-like, rounded buttons, pill badge, heart emoji | Low; customer logo wall, "1,803 users joined last month" | "Get started" / "Book a demo" |
-| OtaKit | "Ship app updates instantly" | Floating pastel app-icon tiles on a dot grid | White, black pill buttons, Inter, "NEW" pill | Low; no proof yet | "Start releasing free" |
-| Expo (price anchor) | OTA for React Native | Pricing tables | Black/white, big type, whitespace | Medium | Plans |
-| Railway (adjacent, loved) | "Ship software peacefully" | Real product canvas in a night-sky scene | Dusk purple, serif display + sans | Medium, real UI | Deploy |
-| Linear (adjacent, loved) | Product development system | Real product UI | Near-black, restrained, one accent | High, precise | Sign up |
+| Site | Hero claim | Palette / type | Density, proof | CTA |
+|---|---|---|
+| Capgo | "Ship Capacitor apps without the wait" | Navy-black, azure + white, Inter-style sans, italic logo | Low density; logo carousel with install counts, "9,400+ teams" | "Get started for free", 14-day trial |
+| Capawesome Cloud | "The CI/CD platform built for mobile apps" | White, indigo/violet, Manrope-like, rounded buttons, pill badge, heart emoji | Low; customer logo wall, "1,803 users joined last month" | "Get started" / "Book a demo" |
+| OtaKit | "Ship app updates instantly" | White, black pill buttons, Inter, "NEW" pill | Low; no proof yet | "Start releasing free" |
+| Expo (price anchor) | OTA for React Native | Black/white, big type, whitespace | Medium | Plans |
+| Railway (adjacent, loved) | "Ship software peacefully" | Dusk purple, serif display + sans | Medium, real UI | Deploy |
+| Linear (adjacent, loved) | Product development system | Near-black, restrained, one accent | High, precise | Sign up |
 
 **Category cliches (avoid):** centered headline over a dark field with a blue/indigo accent; abstract hero art (map, floating tiles, gradients) with no product in it; pill badge above the H1; logo walls; Inter. **Nobody shows the actual release control surface in the hero**, and nobody has a visual identity of its own. **The gap we own:** a distinctive physical metaphor (railway signal box) that is also the real UI, in a navy and amber enamel palette none of the three use.
 
@@ -30,27 +30,27 @@ For Capacitor teams who are stuck waiting 1 to 3 days on store review to fix a b
 ## 5. Palette: "signal navy and amber" (revised 5 Nov after orchestrator review)
 Change from the first draft: the railway green on warm paper was too close to DockCrate's dock green on warm paper, and all 50 BufferSol products are shown side by side. The primary family is now deep signal navy (blue black) with signal amber as the only highlight. The workbook's green stays only as the "go" lamp. Roles are unchanged, so this was a one file token swap.
 
-Two layers: raw then role; components use roles only. Light (default) / Dark "night shift" (follows OS, `[data-theme=dark]` override):
+Two layers: raw then role; components use roles only. Light only (dark mode removed by owner decision):
 
-| Role token | Light | Dark | Notes |
-|---|---|---|---|
-| `--bg` | #F6F5F0 | #0A101B | page |
-| `--surface` | #FFFFFF | #121B2B | cards, panels |
-| `--soft` | #ECEFF4 | #182338 | tinted wells, rails |
-| `--ink` | #0F1B2D | #E7ECF4 | text (AA, about 16:1 / 15:1) |
-| `--ink-muted` | #4A5668 | #9AA7BA | secondary (AA) |
-| `--border` | #D5DAE2 | #243148 | hairline 1 px |
-| `--track` | #1C2B44 | #5A6B87 | rails, 3 px |
-| `--panel` | #0F1B2D | #0B1422 | the signal box board, dark in both themes |
-| `--primary` | #14284B | #E7ECF4 | the one accent family: buttons, links (dark mode inverts to pale enamel) |
-| `--primary-hover` | #0E1D38 | #FFFFFF | |
-| `--on-primary` | #FFFFFF | #0A101B | white on #14284B is about 14:1 |
-| `--focus` (signal amber) | #E0A21B | #F0B93A | 3 px focus ring, selected tab underline, prompt `$` |
-| `--lamp-green` | #2E9E5B | #3DBB73 | state only |
-| `--lamp-amber` | #E0A21B | #F0B93A | state only; dark ink on amber, never white text |
-| `--lamp-red` | #C8372D | #E4574D | state only |
-| `--plate` | #F4F1E6 | #F4F1E6 | headcode enamel plate |
-| `--info` | #2C6E91 | #5FA8CF | |
+| Role token | Value | Notes |
+|---|---|---|
+| `--bg` | #F6F5F0 | page |
+| `--surface` | #FFFFFF | cards, panels |
+| `--soft` | #ECEFF4 | tinted wells, rails |
+| `--ink` | #0F1B2D | text (AA, about 16:1 / 15:1) |
+| `--ink-muted` | #4A5668 | secondary (AA) |
+| `--border` | #D5DAE2 | hairline 1 px |
+| `--track` | #1C2B44 | rails, 3 px |
+| `--panel` | #0F1B2D | the signal box board, dark panel |
+| `--primary` | #14284B | the one accent family: buttons, links |
+| `--primary-hover` | #0E1D38 | |
+| `--on-primary` | #FFFFFF | white on #14284B is about 14:1 |
+| `--focus` (signal amber) | #E0A21B | 3 px focus ring, selected tab underline, prompt `$` |
+| `--lamp-green` | #2E9E5B | state only |
+| `--lamp-amber` | #E0A21B | state only; dark ink on amber, never white text |
+| `--lamp-red` | #C8372D | state only |
+| `--plate` | #F4F1E6 | headcode enamel plate |
+| `--info` | #2C6E91 | |
 
 Rules: navy is the action colour, amber marks focus and selection, lamps are state only and always pair colour + glyph + text (G ● / A ▲ / R ■). Flat backgrounds, no gradients, no hero text gradient. Differs from Capgo's bright azure on near black, Capawesome's indigo and DockCrate's green. Dark backgrounds use this palette (override of the skill's six-value list, logged in DECISIONS.md).
 

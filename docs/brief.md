@@ -212,7 +212,7 @@ Feature parity highlights (Capgo / Capawesome / OtaKit): percentage rollout any 
 Defined in workbook (sheets 19-21): "the signal box".
 - Concept: railway signal-box mimic panel. Channels = horizontal tracks; bundles = "trains" with a 4-character headcode (e.g. 2K47) on an enamel plate; devices = stations; rollout = signal with red/amber/green aspects (arm angle = rollout %); rollback = train reverses into a siding. Mood: dependable, mechanical, legible, calm, exact. Avoid rockets/space/generic deploy clouds, playful/hype/neon.
 - Palette (light): primary #1E5B3F (hover #174A33), ink #16201B, ink-muted #4F5D55, bg #F6F7F4, surface #FFFFFF, soft #EAF1EC, border #D3DAD5, track #2B3530. Lamps: green #2E9E5B, amber #E0A21B (never white text), red #C8372D, white #F4F1E6 (route set on dark), info #2C6E91, focus #E0A21B 3 px ring.
-- Dark ("night shift", default follows OS): bg #0F1412, surface #18201C, ink #E6ECE8, ink-muted #9AA89F, primary #4FB585, border #2A3530, track #5D6B63; lamp glow `0 0 8px currentColor` at 40%.
+- Light only: the owner removed dark mode (no toggle, no OS fallback).
 - Typography: display Barlow Condensed (500/600), body Atkinson Hyperlegible (400/700), mono Red Hat Mono (400/500); self-hosted woff2 subsets (SIL OFL) served from /fonts, no Google Fonts CDN. Scale: display-xl 48/52, display-l 34/40, title 22/28, body 15/22, ui 14/20, small 12/16, headcode 18/18 600 tracking 0.08em.
 - Spacing/shape: 4 px grid (4, 8, 12, 16, 24, 32, 48, 64); radius sm 2, md 4, pill only for lamps; 1 px hairline borders, 3 px track border; two elevation levels (drawer shadow `0 8px 24px rgba(22,32,27,0.16)`); 32 px table rows; breakpoints 480/768/1024/1440 (track view becomes vertical list < 768).
 - Motion: 120 ms lamp cross-fade, 240 ms train/drawer (cubic-bezier(0.2,0,0,1)); no bounce; reduced-motion = opacity only. Optional "bell code" tick on auto-pause (off by default).
@@ -221,7 +221,7 @@ Defined in workbook (sheets 19-21): "the signal box".
 - Dataviz: adoption as stepped line on timetable grid; failures as red ticks on track; no donuts/rainbow.
 - Accessibility: status always colour + glyph + text (● G, ▲ A, ■ R); WCAG 2.2 AA; keyboard release flow.
 - Do not: purple-blue gradients, Inter/Space Grotesk/Roboto, emoji section markers, identical rounded card grids, AI sparkle icons, cream+terracotta, glassmorphism, rockets, Capgo azure/teal/slate palette, layouts, logo or "Release Control Room" phrase.
-- Tokens: create `packages/ui/tokens.css` (`--color-primary`, `--color-ink`, `--color-bg`, `--color-soft`, `--lamp-green/amber/red`, dark under `[data-theme=dark]` and prefers-color-scheme); Tailwind names primary, ink, bg, surface, soft, lamp-green, lamp-amber, lamp-red, track.
+- Tokens: create `packages/ui/tokens.css` (`--color-primary`, `--color-ink`, `--color-bg`, `--color-soft`, `--lamp-green/amber/red`); Tailwind names primary, ink, bg, surface, soft, lamp-green, lamp-amber, lamp-red, track.
 - Components: Track, Train (headcode plate), Signal, Station counter, Inspector drawer, Command palette, virtualised DataTable, Meter (gauge with lamp at 90%).
 - Screens (sheet 21): marketing home, pricing (MAU calculator + dated vs-Capgo column), compare pages, compliance guide, docs, sign in/up, onboarding checklist, Line (track view), bundle detail, release dialog, devices, events, settings (keys & signing, members, billing & usage, webhooks), builds (v1), emails (welcome, 90% usage, auto-pause alert). Each has empty/loading/error states and a signature detail in the workbook.
 

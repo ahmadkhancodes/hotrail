@@ -1,5 +1,5 @@
 /**
- * Playwright screenshots of every route at 375 and 1440, light and dark -> docs/qa/<date>/.
+ * Playwright screenshots of every route at 375 and 1440, light -> docs/qa/<date>/.
  *   BASE_URL=http://localhost:3000 npx tsx scripts/screenshots.ts [/extra /routes]
  */
 import { chromium } from "playwright";
@@ -14,10 +14,9 @@ async function main() {
   mkdirSync(OUT, { recursive: true });
   const browser = await chromium.launch();
   const problems: string[] = [];
-  for (const theme of ["light", "dark"] as const) {
+  for (const theme of ["light"] as const) {
     for (const width of WIDTHS) {
-      const ctx = await browser.newContext({ viewport: { width, height: width < 800 ? 812 : 900 }, deviceScaleFactor: 1, colorScheme: theme });
-      await ctx.addInitScript((t) => { try { localStorage.setItem("theme", t); } catch {} }, theme);
+      const ctx = await browser.newContext({ viewport: { width, height: width < 800 ? 812 : 900 }, deviceScaleFactor: 1, colorScheme: "light" });
       const page = await ctx.newPage();
       for (const r of ROUTES) {
         await page.goto(BASE + r, { waitUntil: "networkidle" });

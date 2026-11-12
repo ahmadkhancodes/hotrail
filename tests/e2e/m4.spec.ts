@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { writeZip } from "../../src/lib/ship/zip";
 
 // M4 pages on the memory driver: billing limits and overage panel, notification preferences, audit log with CSV export.
-// Screenshots at 375/1440, light/dark into docs/qa.
+// Screenshots at 375/1440, light into docs/qa.
 const APP = "com.example.northline.m4";
 const zip = writeZip([{ path: "index.html", data: new TextEncoder().encode("<html>m4</html>") }]);
 
@@ -33,10 +33,8 @@ test("billing limits, notification preferences, audit export", async ({ page, re
 
   mkdirSync("docs/qa", { recursive: true });
   const shoot = async (path: string, name: string) => {
-    for (const theme of ["light", "dark"] as const) {
+    for (const theme of ["light"] as const) {
       for (const width of [1440, 375]) {
-        await page.emulateMedia({ colorScheme: theme });
-        await page.evaluate((t) => localStorage.setItem("theme", t), theme);
         await page.setViewportSize({ width, height: width < 800 ? 812 : 900 });
         await page.goto(path);
         await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

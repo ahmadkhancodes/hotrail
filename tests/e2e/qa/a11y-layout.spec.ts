@@ -3,13 +3,12 @@ import { signInViaUi } from "./helpers";
 
 const PAGES = ["/app", "/app/devices", "/app/billing", "/app/settings/api-keys", "/app/settings/members", "/app/settings/notifications", "/app/settings/audit", "/app/settings/webhooks", "/app/settings/profile", "/app/settings/security", "/", "/pricing", "/docs", "/sign-in"];
 
-test("every page: named controls, pointer cursor, 44px tap targets on phones, no horizontal scroll, in light and dark", async ({ page, request }) => {
+test("every page: named controls, pointer cursor, 44px tap targets on phones, no horizontal scroll, in light", async ({ page, request }) => {
   test.setTimeout(300_000);
   await signInViaUi(page, request, `a11y+${Date.now()}@studio.test`, { org: "A11y Org" });
   for (const [width, height] of [[375, 812], [1440, 900]]) {
     await page.setViewportSize({ width, height });
-    for (const scheme of ["light", "dark"] as const) {
-      await page.emulateMedia({ colorScheme: scheme });
+    for (const scheme of ["light"] as const) {
       for (const p of PAGES) {
         await page.goto(p);
         await page.waitForLoadState("networkidle");

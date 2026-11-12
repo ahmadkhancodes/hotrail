@@ -4,7 +4,7 @@ import { buildManifest, generateSigningKeyPair, signManifest } from "@buffersol/
 import { writeZip } from "../../src/lib/ship/zip";
 
 // The Line view end to end on the memory driver: sign in, upload three bundles through the real API with an API key,
-// release them, send device beacons, then drive the console (Raise, Reverse) and capture 375/1440 light/dark.
+// release them, send device beacons, then drive the console (Raise, Reverse) and capture 375/1440 light.
 const APP = "com.example.ordering";
 const zip = (body: string) => writeZip([{ path: "index.html", data: new TextEncoder().encode(`<html>${body}</html>`) }, { path: "app.js", data: new TextEncoder().encode(body.repeat(200)) }]);
 
@@ -73,10 +73,8 @@ test("Line view: tracks, bundles table, inspector actions, states and screenshot
   await expect(page.getByRole("complementary", { name: /Bundle 1A01 detail/ })).toContainText("25%");
   await expect(page.getByRole("table", { name: "Bundles, newest first" }).getByRole("row")).toHaveCount(4);
 
-  for (const theme of ["light", "dark"] as const) {
+  for (const theme of ["light"] as const) {
     for (const width of [1440, 375]) {
-      await page.emulateMedia({ colorScheme: theme });
-      await page.evaluate((t) => localStorage.setItem("theme", t), theme);
       await page.setViewportSize({ width, height: width < 800 ? 812 : 900 });
       await page.reload();
       await expect(tracks).toBeVisible();
@@ -86,7 +84,6 @@ test("Line view: tracks, bundles table, inspector actions, states and screenshot
   }
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.emulateMedia({ colorScheme: "light" });
-  await page.evaluate(() => localStorage.setItem("theme", "light"));
   await page.reload();
 
   // Raise to 50%, live
