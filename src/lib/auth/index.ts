@@ -67,7 +67,8 @@ export function createAuth(db: BetterAuthOptions["database"]) {
       updateAge: 60 * 60 * 24,
       cookieCache: { enabled: true, maxAge: 300 },
     },
-    rateLimit: { enabled: true, window: 60, max: 60, storage: "database" },
+    // The verify link is opened from an email in a plain navigation: a 429 there is a raw JSON dead end, and the token is single use and unguessable, so it gets a roomy limit.
+    rateLimit: { enabled: true, window: 60, max: 60, storage: "database", customRules: { "/magic-link/verify": { window: 60, max: 30 } } },
     emailAndPassword: { enabled: false },
     socialProviders:
       e.GOOGLE_CLIENT_ID && e.GOOGLE_CLIENT_SECRET
@@ -117,6 +118,7 @@ export function createAuth(db: BetterAuthOptions["database"]) {
         defaultPrefix: `${product.slug.slice(0, 4)}_`,
         enableMetadata: true,
         requireName: true,
+        maximumNameLength: 60, // matches the 60 character limit of the create-key field
         rateLimit: { enabled: true, timeWindow: 60_000, maxRequests: 600 },
       }),
       nextCookies(),

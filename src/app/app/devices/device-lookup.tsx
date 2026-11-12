@@ -14,7 +14,7 @@ const ACTION: Record<string, { label: string; tone: "info" | "success" | "danger
 };
 const when = (iso: string) => new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "medium", timeZone: "UTC" }).format(new Date(iso)) + " UTC";
 
-export function DeviceLookup({ bundleId, initialQuery }: { bundleId: string; initialQuery: string }) {
+export function DeviceLookup({ bundleId, initialQuery, retentionDays }: { bundleId: string; initialQuery: string; retentionDays: number }) {
   const [q, setQ] = useState(initialQuery);
   const [state, setState] = useState<{ status: "idle" | "loading" | "error"; result: Result | null; message?: string }>({ status: "idle", result: null });
 
@@ -63,7 +63,7 @@ export function DeviceLookup({ bundleId, initialQuery }: { bundleId: string; ini
           <div>
             <h2 className="title-4 pb-2 text-text-subtle">Recent events</h2>
             {state.result!.events.length === 0 ? (
-              <p className="m-0 body-6 text-text-subtle">No events kept for this device. Raw events are kept for 7 days.</p>
+              <p className="m-0 body-6 text-text-subtle">No events kept for this device. Raw events are kept for {retentionDays} days on your plan.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left body-6 tabular-nums">

@@ -19,7 +19,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     <button
       type="button"
       aria-label={`Switch to ${next} theme`}
-      className={`inline-flex size-11 items-center justify-center rounded-md text-text-subtle transition-colors duration-300 hover:bg-surface-raised hover:text-text focus-visible:focus-ring ${className ?? ""}`}
+      className={`inline-flex size-11 shrink-0 items-center justify-center rounded-md text-text-subtle transition-colors duration-300 hover:bg-surface-raised hover:text-text focus-visible:focus-ring ${className ?? ""}`}
       onClick={() => {
         document.documentElement.dataset.theme = next;
         try { localStorage.setItem("theme", next); } catch {}
