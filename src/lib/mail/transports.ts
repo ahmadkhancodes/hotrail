@@ -3,7 +3,10 @@ import { log } from "@/lib/logger";
 import type { MailMessage, MailTransport, SendResult } from "./types";
 
 /** Dev/test/stub transport: keeps messages in memory and logs the subject (never the body). */
-export const outbox: (MailMessage & { from: string; id: string; at: Date })[] = [];
+type OutboxMessage = MailMessage & { from: string; id: string; at: Date };
+// Kept on globalThis: Next bundles each route separately, so a module-level array is not shared between the auth route and /api/dev/outbox.
+const g = globalThis as { __hotrailOutbox?: OutboxMessage[] };
+export const outbox: OutboxMessage[] = (g.__hotrailOutbox ??= []);
 
 export function consoleTransport(): MailTransport {
   return {

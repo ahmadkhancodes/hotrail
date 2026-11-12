@@ -4,6 +4,7 @@ const PORT = 3100;
 export default defineConfig({
   testDir: "tests/e2e",
   timeout: 60_000,
+  workers: 1, // Better Auth rate limits sign-in per IP, so specs that sign in must not run in parallel
   use: {
     baseURL: process.env.BASE_URL ?? `http://localhost:${PORT}`,
     // PW_CHROMIUM lets CI or a sandbox point at a system Chromium when Playwright's own download is absent.

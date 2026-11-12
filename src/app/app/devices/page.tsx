@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/app/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/states";
 import { cn } from "@/components/ui/cn";
+import { eventRetentionDays } from "@/lib/billing/limits";
 import { requireOrg } from "@/lib/auth/session";
 import { shipDeps } from "@/lib/ship/context";
 import { DeviceLookup } from "./device-lookup";
@@ -13,7 +14,8 @@ export const dynamic = "force-dynamic";
 export default async function DevicesPage({ searchParams }: { searchParams: Promise<{ app?: string; q?: string }> }) {
   const ctx = await requireOrg({ page: true });
   const { app: wanted, q } = await searchParams;
-  const apps = await (await shipDeps()).db.listApps(ctx.org.id);
+  const { db } = await shipDeps();
+  const apps = await db.listApps(ctx.org.id);
   if (apps.length === 0) {
     return (
       <>
@@ -22,6 +24,7 @@ export default async function DevicesPage({ searchParams }: { searchParams: Prom
       </>
     );
   }
+  const retentionDays = await eventRetentionDays(db, ctx.org.id);
   const current = apps.find((a) => a.bundleId === wanted) ?? apps[0]!;
   return (
     <>
@@ -36,7 +39,7 @@ export default async function DevicesPage({ searchParams }: { searchParams: Prom
           ))}
         </nav>
       ) : null}
-      <DeviceLookup key={current.bundleId} bundleId={current.bundleId} initialQuery={q ?? ""} />
+      <DeviceLookup key={current.bundleId} bundleId={current.bundleId} initialQuery={q ?? ""} retentionDays={retentionDays} />
     </>
   );
 }
