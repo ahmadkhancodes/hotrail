@@ -33,6 +33,11 @@ export async function unsubscribeUrl(email: string, scope: string) {
  * The one way to send mail. Checks the suppression list (transactional mail skips marketing scopes),
  * adds List-Unsubscribe + List-Unsubscribe-Post for non-transactional mail.
  */
+/** Subjects carry user text (org and inviter names): one line, no control characters, bounded length. */
+export function safeSubject(s: string): string {
+  return s.replace(/[\u0000-\u001f\u007f\u2028\u2029]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 200);
+}
+
 export async function sendMail(msg: MailMessage, transport: MailTransport = transportFromEnv()): Promise<SendResult> {
   const db = await getDb();
   const category = msg.category ?? "transactional";
@@ -46,7 +51,7 @@ export async function sendMail(msg: MailMessage, transport: MailTransport = tran
     headers["List-Unsubscribe"] = `<${url}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
-  return transport.send({ ...wire, headers, from: msg.from ?? env().MAIL_FROM ?? product.mailFrom });
+  return transport.send({ ...wire, subject: safeSubject(wire.subject), headers, from: msg.from ?? env().MAIL_FROM ?? product.mailFrom });
 }
 
 /**

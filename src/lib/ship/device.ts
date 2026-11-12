@@ -56,7 +56,8 @@ export function classifyAction(action: string | undefined): EventAction {
  * Beacon ingest (`statsUrl`). Always succeeds from the device's point of view. Registers last seen, stores outcome
  * events, and re-evaluates auto-pause after a failure. Runs on the Node runtime (it writes to the DB).
  */
-export async function ingestStats(deps: ShipDeps, b: StatsBeacon): Promise<{ stored: boolean }> {
+export async function ingestStats(deps: ShipDeps, raw: StatsBeacon): Promise<{ stored: boolean }> {
+  const b = cleanBeacon(raw);
   if (!b.app_id || !b.device_id || b.device_id.length > 128) return { stored: false };
   const app = await deps.db.getAppByBundleId(b.app_id);
   if (!app) return { stored: false };
@@ -83,7 +84,31 @@ export async function ingestStats(deps: ShipDeps, b: StatsBeacon): Promise<{ sto
 
 export interface DeviceChannelRequest { app_id?: string; device_id?: string; channel?: string; platform?: string }
 
-export async function getDeviceChannel(deps: ShipDeps, q: DeviceChannelRequest): Promise<{ channel: string | null; status: "default" | "override" | "none"; allowSet: boolean }> {
+/**
+ * Device endpoints are unauthenticated and take raw JSON. A non-string field such as `{"$regex": "^com\\.victim"}` used to
+ * reach Mongo as a query operator and select another customer's app, device or override (SECURITY-REVIEW S-1).
+ * Only strings survive, with bounded lengths; anything else is dropped.
+ */
+const str = (v: unknown, max: number): string | undefined => (typeof v === "string" && v.length > 0 && v.length <= max ? v : undefined);
+const DEVICE_FIELDS: Record<keyof StatsBeacon | "channel", number> = {
+  action: 64, app_id: 128, device_id: 128, version_name: 64, version_build: 32, platform: 16, custom_id: 128, channel: 32,
+};
+function cleanFields<T extends object>(raw: unknown, fields: readonly (keyof typeof DEVICE_FIELDS)[]): T {
+  const src = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const out: Record<string, string> = {};
+  for (const f of fields) {
+    const v = str(src[f], DEVICE_FIELDS[f]);
+    if (v !== undefined) out[f] = v;
+  }
+  return out as T;
+}
+export const cleanBeacon = (raw: unknown): StatsBeacon =>
+  cleanFields<StatsBeacon>(raw, ["action", "app_id", "device_id", "version_name", "version_build", "platform", "custom_id"]);
+export const cleanChannelRequest = (raw: unknown): DeviceChannelRequest =>
+  cleanFields<DeviceChannelRequest>(raw, ["app_id", "device_id", "channel", "platform"]);
+
+export async function getDeviceChannel(deps: ShipDeps, raw: DeviceChannelRequest): Promise<{ channel: string | null; status: "default" | "override" | "none"; allowSet: boolean }> {
+  const q = cleanChannelRequest(raw);
   if (!q.app_id || !q.device_id) return { channel: null, status: "none", allowSet: false };
   const app = await deps.db.getAppByBundleId(q.app_id);
   if (!app) return { channel: null, status: "none", allowSet: false };
@@ -94,7 +119,8 @@ export async function getDeviceChannel(deps: ShipDeps, q: DeviceChannelRequest):
 }
 
 /** Device picks its own channel, only when the channel allows self assignment. Dashboard overrides use setOverride below. */
-export async function selfAssignChannel(deps: ShipDeps, q: DeviceChannelRequest): Promise<{ status: "ok"; channel: string }> {
+export async function selfAssignChannel(deps: ShipDeps, raw: DeviceChannelRequest): Promise<{ status: "ok"; channel: string }> {
+  const q = cleanChannelRequest(raw);
   if (!q.app_id || !q.device_id || !q.channel) throw new HttpError(400, "invalid_input");
   const app = await deps.db.getAppByBundleId(q.app_id);
   if (!app) throw new HttpError(404, "app_not_found");
@@ -107,7 +133,8 @@ export async function selfAssignChannel(deps: ShipDeps, q: DeviceChannelRequest)
   return { status: "ok", channel: ch.name };
 }
 
-export async function clearDeviceChannel(deps: ShipDeps, q: DeviceChannelRequest): Promise<{ status: "ok" }> {
+export async function clearDeviceChannel(deps: ShipDeps, raw: DeviceChannelRequest): Promise<{ status: "ok" }> {
+  const q = cleanChannelRequest(raw);
   if (!q.app_id || !q.device_id) throw new HttpError(400, "invalid_input");
   const app = await deps.db.getAppByBundleId(q.app_id);
   if (!app) throw new HttpError(404, "app_not_found");

@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { getAuth } from "@/lib/auth";
+import { orgExportFor } from "@/lib/account-export";
 import { requireUser } from "@/lib/auth/session";
 import { getDb } from "@/lib/db";
 import { withApi } from "@/lib/http";
@@ -21,7 +22,11 @@ export const GET = withApi(async () => {
     exportedAt: new Date().toISOString(),
     user,
     sessions: (sessions as { id: string; createdAt: Date; userAgent?: string | null; ipAddress?: string | null }[]).map((s) => ({ id: s.id, createdAt: s.createdAt, userAgent: s.userAgent, ipAddress: s.ipAddress })),
-    organizations: await Promise.all(orgs.map(async (o) => ({ ...o, data: await db.exportOrgData(o.id) }))),
+    organizations: await Promise.all(orgs.map(async (o) => {
+      const full = (await auth.api.getFullOrganization({ headers: h, query: { organizationId: o.id } }).catch(() => null)) as { members?: { userId: string; role: string }[] } | null;
+      const role = full?.members?.find((m) => m.userId === user.id)?.role?.split(",")[0] ?? null;
+      return { ...o, role, data: orgExportFor(role, await db.exportOrgData(o.id)) };
+    })),
   };
   return new Response(JSON.stringify(data, null, 2), {
     headers: {

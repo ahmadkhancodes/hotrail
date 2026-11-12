@@ -2,7 +2,7 @@ import { uuidv7 } from "@/lib/ids";
 import { log } from "@/lib/logger";
 import type { MailMessage, MailTransport, SendResult } from "./types";
 
-/** Dev/test/stub transport: keeps messages in memory and logs the subject (never the body). */
+/** Dev/test/stub transport: keeps messages in memory and logs the message id only (subjects carry sign-in codes and names). */
 type OutboxMessage = MailMessage & { from: string; id: string; at: Date };
 // Kept on globalThis: Next bundles each route separately, so a module-level array is not shared between the auth route and /api/dev/outbox.
 const g = globalThis as { __hotrailOutbox?: OutboxMessage[] };
@@ -15,7 +15,7 @@ export function consoleTransport(): MailTransport {
       const id = uuidv7();
       outbox.push({ ...msg, id, at: new Date() });
       if (outbox.length > 200) outbox.shift();
-      log.info("mail_console", { subject: msg.subject, id });
+      log.info("mail_console", { id, category: msg.category ?? "transactional" });
       // Stub mode only (no mail provider yet): MAIL_CONSOLE_PRINT=1 prints the body so magic links can be used from logs.
       if ((process.env.NODE_ENV === "development" || process.env.MAIL_CONSOLE_PRINT === "1") && process.env.NODE_ENV !== "test")
         console.log(`\n--- mail ${id} ---\n${msg.text}\n---\n`);

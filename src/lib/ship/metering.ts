@@ -13,7 +13,7 @@ const ACTIVE_ROW_TTL_DAYS = 70;
  * republishes pointers so new downloads pause.
  */
 export async function recordActiveDevice(deps: ShipDeps, bundleId: string, deviceId: string): Promise<{ counted: boolean }> {
-  if (!bundleId || !deviceId || deviceId.length > 128) return { counted: false };
+  if (typeof bundleId !== "string" || typeof deviceId !== "string" || !bundleId || !deviceId || deviceId.length > 128 || bundleId.length > 128) return { counted: false };
   const app = await deps.db.getAppByBundleId(bundleId);
   if (!app) return { counted: false };
   const now = deps.now();

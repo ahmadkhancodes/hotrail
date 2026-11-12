@@ -68,7 +68,7 @@ The CLI e2e test "upload only key" now registers the signing key with an all-sco
 ## P2
 
 - ~~`src/lib/ship/router.ts:84`: signed blob PUT reads the body before the signature~~ **fixed** (`verifyBlobSignature` runs first; test in `battle-hardening.test.ts`).
-- `src/lib/auth/index.ts:68`: the 5 minute session cookie cache means a revoked session works for up to 5 minutes. Org API keys survive member removal (by design; say so in the docs).
+- `src/lib/auth/index.ts:68`: the 5 minute session cookie cache means a revoked session works for up to 5 minutes. Org API keys survive member removal (by design; say so in the docs). **Status: fixed 2026-11-12 (cookie cache off, SECURITY-REVIEW S-4).**
 - `src/lib/webhooks/outbound.ts`: endpoints are never disabled after repeated failures (the brief says 50).
 - R2 custom domain makes every key public, including `ptr/` (override device ids) and `pending/`. Serve only `zips/`, `manifests/` and `blobs/` from the CDN (a Worker or a separate bucket).
 - ~~`packages/core/src/manifest.ts:22` case-colliding paths~~ **fixed** (core `buildManifest` and server `validateManifest` reject case-folded duplicates).

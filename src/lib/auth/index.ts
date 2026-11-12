@@ -10,6 +10,7 @@ import { sendMailSafe } from "@/lib/mail";
 import { inviteEmail, magicLinkEmail } from "@/lib/mail/templates";
 import { isDisposableEmail } from "@/lib/security/disposable";
 import { auditHook } from "./audit-hook";
+import { magicLinkEmailLimit } from "./email-limit";
 import { ac, roles } from "./roles";
 
 // Better Auth: magic link, passkeys, TOTP, orgs + roles, API keys (hashed, prefix shown).
@@ -65,7 +66,9 @@ export function createAuth(db: BetterAuthOptions["database"]) {
     session: {
       expiresIn: 60 * 60 * 24 * 30,
       updateAge: 60 * 60 * 24,
-      cookieCache: { enabled: true, maxAge: 300 },
+      // No cookie cache: a cached session_data cookie is trusted without a DB read, so a copied cookie kept working for
+      // up to 5 minutes after sign-out or revocation (SECURITY-REVIEW S-4). Every session read now hits the session store.
+      cookieCache: { enabled: false },
     },
     // The verify link is opened from an email in a plain navigation: a 429 there is a raw JSON dead end, and the token is single use and unguessable, so it gets a roomy limit.
     rateLimit: { enabled: true, window: 60, max: 60, storage: "database", customRules: { "/magic-link/verify": { window: 60, max: 30 } } },
@@ -79,7 +82,7 @@ export function createAuth(db: BetterAuthOptions["database"]) {
       additionalFields: { analyticsConsent: { type: "boolean", required: false, defaultValue: false, input: true } },
     },
     account: { accountLinking: { enabled: true, trustedProviders: ["google"] } },
-    hooks: { after: auditHook },
+    hooks: { before: magicLinkEmailLimit, after: auditHook },
     databaseHooks: {
       user: {
         create: {
