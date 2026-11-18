@@ -75,7 +75,7 @@ Do not port: anonymous users (`POST /auth/anonymous`, `mergeUser`, `anon` JWT cl
 - Port: `@sentry/nextjs` (new library, needs owner approval per CLAUDE.md rule) with the same `scrubEvent` as `beforeSend`; log structured JSON `{level, code, route, userId}` and never log emails, tokens, codes or bodies. Re-use `consent.ts` logic as a pure function (region from `Accept-Language`/`x-vercel-ip-country` instead of `Intl`) plus a cookie banner that stores `analytics=on|off`; load PostHog/GA only after consent. Keep the event-name union approach (no free text, no health/PII values).
 
 ### 1.12 Email sending
-- `server/email/{Email,index}.ts`: `EmailSender.send(to, subject, text)`, Resend over `fetch`, `EMAIL_PROVIDER=resend|log|none`, `EMAIL_FROM` default is hard-coded "Trayo <no-reply@trayo.app>" (must be env-driven per app). Plain text only. Not in Jotflow.
+- `server/email/{Email,index}.ts`: `EmailSender.send(to, subject, text)`, Resend over `fetch`, `EMAIL_PROVIDER=resend|log|none`, `EMAIL_FROM` default is hard-coded "Trayo <hotrail@buffersoltech.com>" (must be env-driven per app). Plain text only. Not in Jotflow.
 - Port: `src/lib/email/*`. Add an HTML template option, a verified sending domain per app in Resend, and `sentLog` kept for tests. Same-domain From per app (deliverability).
 
 ### 1.13 Account deletion and data export (privacy)
