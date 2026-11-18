@@ -24,6 +24,46 @@ export function consoleTransport(): MailTransport {
   };
 }
 
+/**
+ * BufferSol mail gateway (POST {url}/v1/send, Bearer key). The gateway forces this app's From, so no `from` is sent.
+ * `record: "metadata"` keeps sign-in codes / links out of the gateway log. One Idempotency-Key covers every attempt,
+ * so a retry after a timeout that did reach the gateway never double-sends. Retries 429/502/503 and network errors once.
+ */
+const GATEWAY_RETRY = new Set([429, 502, 503]);
+export function gatewayTransport(url: string, key: string, fetchFn: typeof fetch = fetch, attempts = 2): MailTransport {
+  return {
+    name: "gateway",
+    async send(msg): Promise<SendResult> {
+      const idem = `hotrail-${uuidv7()}`;
+      const body = JSON.stringify({
+        to: msg.to, subject: msg.subject, text: msg.text, html: msg.html, replyTo: msg.replyTo,
+        record: "metadata", category: msg.category === "marketing" ? "marketing" : "transactional",
+      });
+      let status = 0;
+      for (let attempt = 1; attempt <= attempts; attempt++) {
+        try {
+          const res = await fetchFn(`${url.replace(/\/+$/, "")}/v1/send`, {
+            method: "POST",
+            headers: { authorization: `Bearer ${key}`, "content-type": "application/json", "idempotency-key": idem },
+            body,
+            signal: AbortSignal.timeout(8000),
+          });
+          if (res.ok) {
+            const j = (await res.json().catch(() => ({}))) as { id?: string; messageId?: string };
+            return { id: j.messageId ?? j.id ?? uuidv7(), provider: "gateway", accepted: true };
+          }
+          status = res.status;
+          if (!GATEWAY_RETRY.has(status)) break;
+        } catch {
+          status = 0;
+        }
+        if (attempt < attempts) await new Promise((r) => setTimeout(r, 300));
+      }
+      throw new Error(`mail_send_failed_${status}`);
+    },
+  };
+}
+
 /** Transactional provider adapter (Resend REST over fetch, no SDK). */
 export function resendTransport(apiKey: string, fetchFn: typeof fetch = fetch): MailTransport {
   return {

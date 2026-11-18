@@ -46,7 +46,7 @@ export const product = {
   companyUrl: "https://buffersoltech.com",
   host: "hotrail.buffersoltech.com",
   url: process.env.NEXT_PUBLIC_APP_URL ?? "https://hotrail.buffersoltech.com",
-  supportEmail: "contact@buffersoltech.com",
+  supportEmail: "hotrail@buffersoltech.com",
   legalEmail: "contact@buffersoltech.com",
   mailFrom: "Hotrail <hello@hotrail.buffersoltech.com>",
   description:

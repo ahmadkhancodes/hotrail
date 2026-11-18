@@ -3,13 +3,18 @@ import { appUrl, env } from "@/lib/env";
 import { getDb } from "@/lib/db";
 import { log } from "@/lib/logger";
 import { hmacSha256Hex } from "@/lib/ids";
-import { consoleTransport, resendTransport, smtpTransport } from "./transports";
+import { consoleTransport, gatewayTransport, resendTransport, smtpTransport } from "./transports";
 import type { MailMessage, MailTransport, SendResult } from "./types";
 
 export type { MailMessage, MailTransport, SendResult } from "./types";
 
 export function transportFromEnv(): MailTransport {
   const e = env();
+  // Gateway wins whenever MAIL_GATEWAY_URL is set; Resend stays only as the fallback when it is unset.
+  if (e.MAIL_GATEWAY_URL) {
+    if (!e.MAIL_GATEWAY_KEY) throw new Error("MAIL_GATEWAY_URL is set but MAIL_GATEWAY_KEY is missing");
+    return gatewayTransport(e.MAIL_GATEWAY_URL, e.MAIL_GATEWAY_KEY);
+  }
   const p = e.MAIL_PROVIDER ?? (e.RESEND_API_KEY ? "resend" : "console");
   if (p === "resend" && e.RESEND_API_KEY) return resendTransport(e.RESEND_API_KEY);
   if (p === "smtp") return smtpTransport();
@@ -51,7 +56,7 @@ export async function sendMail(msg: MailMessage, transport: MailTransport = tran
     headers["List-Unsubscribe"] = `<${url}>`;
     headers["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click";
   }
-  return transport.send({ ...wire, subject: safeSubject(wire.subject), headers, from: msg.from ?? env().MAIL_FROM ?? product.mailFrom });
+  return transport.send({ ...wire, replyTo: msg.replyTo ?? product.supportEmail, subject: safeSubject(wire.subject), headers, from: msg.from ?? env().MAIL_FROM ?? product.mailFrom });
 }
 
 /**
